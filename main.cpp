@@ -5,11 +5,11 @@
 int main()
 {
 	try{
-		Server myServer("127.0.0.1", 7512);
+		Server myServer("127.0.0.1", 3232);
 		std::cout << myServer << std::endl;
 		WebServer	myWebServer;
 		myWebServer.appendServer(myServer);
-		myWebServer.showServerList();
+		// myWebServer.showServerList();
 		myWebServer.runWebServer();
 	}
 	catch(char const *s)

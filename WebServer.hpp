@@ -1,6 +1,7 @@
 #pragma once
 #include "Server.hpp"
 #include "Client.hpp"
+#include "Debuger.hpp"
 #include <sys/select.h>
 #include <list>
 
@@ -9,18 +10,18 @@ typedef std::list<Server>::iterator server;
 class WebServer
 {
 private:
+	Logger					_webLogger;
 	std::list<Server>		_serverList;
 	std::list<Client>		_clientList;
 	fd_set					_fdsToRead;
 	fd_set					_fdsToWrite;
 	fd_set					_actualFds;
-	int						_fdMax;
 	int						setActualConnections();
 	int						checkActualConnections();
 	int						readActualRequests();
 	int						acceptNewConnections();
-	client					&detachConnection(client &cIt);
 	int						getRequest(client &cIt);
+	client					&detachConnection(client &cIt);
 public:
 	WebServer();
 	void				appendServer(const Server &newServer);
@@ -34,26 +35,33 @@ public:
 	~WebServer();
 };
 
-WebServer::WebServer() : _fdMax(0)
+WebServer::WebServer()
 {
-	std::cout << "Create server with empty servers." << std::endl;
+	_webLogger << sys <<"Create WebServer without servers." << Logger::endl;
 }
 
 WebServer::~WebServer()
 {
+	_webLogger << sys << "WebServer off." << Logger::endl;
 }
 
-WebServer::WebServer(std::list<Server> serverList) : _serverList(serverList), _fdMax(0)
+WebServer::WebServer(std::list<Server> serverList) : _serverList(serverList)
 {
-	std::cout << "Create server using servers list." << std::endl;
+	_webLogger << sys << "Create WebServer without servers." << Logger::endl;
 }
 
 void		WebServer::appendServer(const Server &newServer)
 {
-	/* Bad allocation case */
-	_serverList.push_back(newServer);
-	std::cout << "New server was added to server list and currently has "\
-	<< _serverList.size() << " elements." << std::endl;
+	try
+	{
+		_serverList.push_back(newServer);
+	}
+	catch(const std::exception& e)
+	{
+		_webLogger << error << e.what();
+		return ;
+	}
+	_webLogger << sys << "Add server: " << newServer << Logger::endl;
 }
 
 void				WebServer::showServerList()
@@ -68,6 +76,7 @@ void				WebServer::showServerList()
 
 client					&WebServer::detachConnection(client &cIt)
 {
+	_webLogger << warning << "Connection closed. socket: " << cIt->getClientSocket() << Logger::endl;
 	close(cIt->getClientSocket());
 	FD_CLR(cIt->getClientSocket(), &_fdsToRead);
 	cIt = _clientList.erase(cIt);
@@ -78,20 +87,21 @@ int						WebServer::getRequest(client &cIt)
 {
 	std::stringstream	msg;
 	char	buffer[1024];
-	bzero(buffer, 1024);
+	memset(buffer, 0, 1024);
 	int	read = 0;
 	while ((read = recv(cIt->getClientSocket(), buffer, 1023, MSG_DONTWAIT)) > 0)
 	{
-		std::cout << "getRequest::Read request\n";
+		_webLogger << verbose << "Read request from socket: "\
+				<< cIt->getClientSocket() << Logger::endl;
 		buffer[read] = '\0';
 		msg << buffer;
 	}
 	if (msg.str().empty() && read == 0)
 	{
-		std::cout << "End of the connection.\n";
+		_webLogger << reqread << "Сlient closed the connection" << Logger::endl;
 		return (1);
 	}
-	std::cout << "\033[32m Message \033[0m \n" << msg.str() << std::endl;
+	std::cout << "\033[34m Message \033[0m \n" << msg.str() << std::endl;
 	return (0);
 }
 
@@ -103,16 +113,14 @@ int						WebServer::setActualConnections()
 	client	cIt = _clientList.begin();
 	while (sIt != _serverList.end())
 	{
-		std::cout << "Set socket: " << sIt->getServerSocket() << std::endl;
+		_webLogger << verbose << "Listen server socket: " << sIt->getServerSocket() << Logger::endl;
 		FD_SET(sIt->getServerSocket(), &_fdsToRead);
-		_fdMax = sIt->getServerSocket();
 		sIt++;
 	}
 	while (cIt != _clientList.end())
 	{
+		_webLogger << verbose << "Listen client socket: " << cIt->getClientSocket() << Logger::endl;
 		FD_SET(cIt->getClientSocket(), &_fdsToRead);
-		std::cout << "Client socket: " << cIt->getClientSocket() << " set to read\n";
-		_fdMax = cIt->getClientSocket();
 		cIt++;
 	}
 	return (0);
@@ -120,7 +128,7 @@ int						WebServer::setActualConnections()
 
 int						WebServer::checkActualConnections()
 {
-	if (select(_fdMax + 1, &_fdsToRead, NULL, NULL, NULL) == -1)
+	if (select(FD_SETSIZE, &_fdsToRead, NULL, NULL, NULL) == -1)
 		return (-1);
 	return (0);
 }
@@ -133,17 +141,19 @@ int						WebServer::acceptNewConnections()
 	int							newSocket;
 	while (sIt != _serverList.end())
 	{
-		bzero(&clientName, clientLen);
+		memset(&clientName, 0, clientLen);
 		if (FD_ISSET(sIt->getServerSocket(), &_fdsToRead))
 		{
-			std::cout << "Server socket: "<< sIt->getServerSocket() << std::endl;
+			_webLogger << request << "New connection request to "<< sIt->getServerSocket() << Logger::endl;
 			int	newSocket = accept(sIt->getServerSocket(),\
 			reinterpret_cast<sockaddr *>(&clientName), &clientLen);
 			if (newSocket == -1)
-				throw ("Acception error.");
+			{
+				_webLogger << warning << "Connection refused."<< sIt->getServerSocket() << Logger::endl;
+				return (1);
+			}
 			fcntl(newSocket, F_SETFL, O_NONBLOCK);
 			_clientList.push_back(Client(newSocket, clientName));
-			std::cout << "New connection was created.\n";
 		}
 		sIt++;
 	}
@@ -158,12 +168,11 @@ int						WebServer::readActualRequests()
 	{
 		if (FD_ISSET(cIt->getClientSocket(), &_fdsToRead))
 		{
-			std::cout << "Read request.\n";
+			_webLogger << verbose << "Read request from: "\
+				<< cIt->getClientSocket() << Logger::endl;
 			if (!(resReq = getRequest(cIt)))
 			{
 				cIt = detachConnection(cIt);
-				if (resReq == 1)
-					throw ("Error with reading request.");
 				continue ;
 			}
 		}
@@ -174,12 +183,11 @@ int						WebServer::readActualRequests()
 
 int						WebServer::runWebServer()
 {
-    sockaddr_in clientAddr;
-    socklen_t   clientLen = sizeof(clientAddr);
+	sockaddr_in	clientAddr;
+	socklen_t	clientLen = sizeof(clientAddr);
 
 	while (1)
 	{
-		std::cout << "...\n";
 		setActualConnections();
 		if (checkActualConnections() != -1)
 		{

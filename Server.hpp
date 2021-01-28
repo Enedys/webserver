@@ -2,6 +2,7 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <cstring>
 
 #include "sys/types.h"
 #include "sys/socket.h"
@@ -34,8 +35,8 @@ Server::Server()
 
 Server::~Server()
 {
-    if (_fdSocket != -1)
-        close(_fdSocket);
+    // if (_fdSocket != -1)
+    //     close(_fdSocket);
 }
 
 Server::Server(std::string serverName, unsigned int port) try :
@@ -62,7 +63,7 @@ int    Server::createSocket()
     fcntl(_fdSocket, F_SETFL, O_NONBLOCK);
     if (setsockopt(_fdSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
         throw "Socket options error.";
-    bzero(&_sockAddr, sizeof(_sockAddr));
+    memset(&_sockAddr, 0, sizeof(_sockAddr));
     _sockAddr.sin_family = AF_INET;
     if  (_serverName == "localhost")
         _sockAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
@@ -97,7 +98,7 @@ int                 Server::getServerSocket() const
 
 std::ostream    &operator<<(std::ostream &o, const Server &s)
 {
-    o << "Server name: " << s.getServerName() << ", port: " << s.getServePort()\
-    << ", socket fd: " << s.getServerSocket();
+    o << "host: " << s.getServerName() << ", port: " << s.getServePort()\
+    << ", socket: " << s.getServerSocket();
     return (o);
 }
