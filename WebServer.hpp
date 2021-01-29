@@ -121,13 +121,13 @@ int						WebServer::setActualConnections()
 	{
 		if ((*cIt)->requestRecieved())
 		{
-			std::cout << "\033[32mHERE!\033[0m\n";
+			// std::cout << "\033[32mHERE!\033[0m\n";
 			FD_SET((*cIt)->getClientSocket(), &_fdsToWrite);
 			_webLogger << verbose << "Client socket to write: " << (*cIt)->getClientSocket() << Logger::endl;
 		}
 		else
 		{
-			std::cout << "\033[35mHERE!\033[0m\n";
+			// std::cout << "\033[35mHERE!\033[0m\n";
 			_webLogger << verbose << "Listen client socket: " << (*cIt)->getClientSocket() << Logger::endl;
 			FD_SET((*cIt)->getClientSocket(), &_fdsToRead);
 		}

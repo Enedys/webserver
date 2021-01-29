@@ -67,6 +67,7 @@ public:
 		case reqread:
 			_msgColor = "\033[32m";
 			_msgPrefix = "#[ReadReq]#\t";
+			break;
 		default:
 			_msgPrefix = "";
 			_msgColor = "\033[34;1m";

@@ -66,6 +66,9 @@ int				Request::readRequest(Logger *_webLogger)
 	}
 	_isRecieved = 1;
 	std::cout << "\033[33m MSG: \033[0m \n" << request.str() << std::endl;
+	/* This action must be in response processing */
+	request.clear();
+	request.str("");
 	return (0);
 }
 
