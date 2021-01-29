@@ -1,25 +1,25 @@
 #pragma once
 #include "Server.hpp"
 #include "Client.hpp"
-#include "Debuger.hpp"
-#include <sys/select.h>
-#include <list>
+#include "Debugger.hpp"
+#include "includes.hpp"
 
-typedef std::list<Client>::iterator client;
+typedef std::list<Client *>::iterator client;
 typedef std::list<Server>::iterator server;
 class WebServer
 {
 private:
 	Logger					_webLogger;
 	std::list<Server>		_serverList;
-	std::list<Client>		_clientList;
+	std::list<Client *>		_clientList;
 	fd_set					_fdsToRead;
 	fd_set					_fdsToWrite;
 	fd_set					_actualFds;
-	int						setActualConnections();
 	int						checkActualConnections();
-	int						readActualRequests();
 	int						acceptNewConnections();
+	int						setActualConnections();
+	int						readActualRequests();
+	int						sendActualResponses();
 	int						getRequest(client &cIt);
 	client					&detachConnection(client &cIt);
 public:
@@ -76,9 +76,9 @@ void				WebServer::showServerList()
 
 client					&WebServer::detachConnection(client &cIt)
 {
-	_webLogger << warning << "Connection closed. socket: " << cIt->getClientSocket() << Logger::endl;
-	close(cIt->getClientSocket());
-	FD_CLR(cIt->getClientSocket(), &_fdsToRead);
+	_webLogger << warning << "Connection closed. socket: " << (*cIt)->getClientSocket() << Logger::endl;
+	close((*cIt)->getClientSocket());
+	FD_CLR((*cIt)->getClientSocket(), &_fdsToRead);
 	cIt = _clientList.erase(cIt);
 	return (cIt);
 }
@@ -89,10 +89,10 @@ int						WebServer::getRequest(client &cIt)
 	char	buffer[1024];
 	memset(buffer, 0, 1024);
 	int	read = 0;
-	while ((read = recv(cIt->getClientSocket(), buffer, 1023, MSG_DONTWAIT)) > 0)
+	while ((read = recv((*cIt)->getClientSocket(), buffer, 1023, MSG_DONTWAIT)) > 0)
 	{
 		_webLogger << verbose << "Read request from socket: "\
-				<< cIt->getClientSocket() << Logger::endl;
+				<< (*cIt)->getClientSocket() << Logger::endl;
 		buffer[read] = '\0';
 		msg << buffer;
 	}
@@ -119,8 +119,18 @@ int						WebServer::setActualConnections()
 	}
 	while (cIt != _clientList.end())
 	{
-		_webLogger << verbose << "Listen client socket: " << cIt->getClientSocket() << Logger::endl;
-		FD_SET(cIt->getClientSocket(), &_fdsToRead);
+		if ((*cIt)->requestRecieved())
+		{
+			std::cout << "\033[32mHERE!\033[0m\n";
+			FD_SET((*cIt)->getClientSocket(), &_fdsToWrite);
+			_webLogger << verbose << "Client socket to write: " << (*cIt)->getClientSocket() << Logger::endl;
+		}
+		else
+		{
+			std::cout << "\033[35mHERE!\033[0m\n";
+			_webLogger << verbose << "Listen client socket: " << (*cIt)->getClientSocket() << Logger::endl;
+			FD_SET((*cIt)->getClientSocket(), &_fdsToRead);
+		}
 		cIt++;
 	}
 	return (0);
@@ -128,7 +138,7 @@ int						WebServer::setActualConnections()
 
 int						WebServer::checkActualConnections()
 {
-	if (select(FD_SETSIZE, &_fdsToRead, NULL, NULL, NULL) == -1)
+	if (select(FD_SETSIZE, &_fdsToRead, &_fdsToWrite, NULL, NULL) == -1)
 		return (-1);
 	return (0);
 }
@@ -153,7 +163,7 @@ int						WebServer::acceptNewConnections()
 				return (1);
 			}
 			fcntl(newSocket, F_SETFL, O_NONBLOCK);
-			_clientList.push_back(Client(newSocket, clientName));
+			_clientList.push_back(new Client(newSocket, clientName));
 		}
 		sIt++;
 	}
@@ -166,15 +176,53 @@ int						WebServer::readActualRequests()
 	int		resReq = 0;
 	while (_clientList.end() != cIt)
 	{
-		if (FD_ISSET(cIt->getClientSocket(), &_fdsToRead))
+		if (FD_ISSET((*cIt)->getClientSocket(), &_fdsToRead))
 		{
 			_webLogger << verbose << "Read request from: "\
-				<< cIt->getClientSocket() << Logger::endl;
-			if (!(resReq = getRequest(cIt)))
+				<< (*cIt)->getClientSocket() << Logger::endl;
+			if ((resReq = (*cIt)->readRequest(&_webLogger)))
 			{
 				cIt = detachConnection(cIt);
 				continue ;
 			}
+		}
+		cIt++;
+	}
+	return (0);
+}
+
+
+
+int						WebServer::sendActualResponses()
+{
+
+	char resp[] = "HTTP/1.1 200 OK\r\n"
+	"Server: nginx/1.2.1\r\n"
+	"Date: Sat, 08 Mar 2014 22:53:46 GMT\r\n"
+	"Content-Type: application/octet-stream\r\n"
+	"Content-Length: 7\r\n"
+	"Last-Modified: Sat, 08 Mar 2014 22:53:30 GMT\r\n"
+	"Connection: keep-alive\r\n"
+	"Accept-Ranges: bytes\r\n\r\n"
+	"Wisdom";
+
+
+
+	client	cIt = _clientList.begin();
+	int		resReq = 0;
+	while (_clientList.end() != cIt)
+	{
+		if (FD_ISSET((*cIt)->getClientSocket(), &_fdsToWrite))
+		{
+			_webLogger << verbose << "Send response to socket: "\
+				<< (*cIt)->getClientSocket() << Logger::endl;
+			/* cIt->sendResponse() must be here*/
+			send((*cIt)->getClientSocket(), resp, sizeof(resp), MSG_DONTWAIT);
+			(*cIt)->setWaitRequestStatus(false); // setWaitRequestStatus();
+
+			// close((*cIt)->getClientSocket());
+			// delete *cIt;
+			// cIt = _clientList.erase(cIt);
 		}
 		cIt++;
 	}
@@ -191,11 +239,15 @@ int						WebServer::runWebServer()
 		setActualConnections();
 		if (checkActualConnections() != -1)
 		{
+			sendActualResponses();
 			readActualRequests();
 			acceptNewConnections();
 		}
 		else
-			throw ("Select error.");
+		{
+			_webLogger << error <<"Select error." << Logger::endl;
+		}
+		_webLogger << Logger::endl;
 		usleep(1000000);
 	}
 }

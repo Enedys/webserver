@@ -1,15 +1,5 @@
 #pragma once
-#include <string>
-#include <iostream>
-#include <sstream>
-#include <cstring>
-
-#include "sys/types.h"
-#include "sys/socket.h"
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include "fcntl.h"
-#include "unistd.h"
+#include "includes.hpp"
 
 class Server
 {
@@ -57,48 +47,47 @@ void     Server::closeSocket()
 
 int    Server::createSocket()
 {
-    int yes = 1;
-    if ((_fdSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-        throw ("Socket creation error");
-    fcntl(_fdSocket, F_SETFL, O_NONBLOCK);
-    if (setsockopt(_fdSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
-        throw "Socket options error.";
-    memset(&_sockAddr, 0, sizeof(_sockAddr));
-    _sockAddr.sin_family = AF_INET;
-    if  (_serverName == "localhost")
-        _sockAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	// int yes = 1;
+	if ((_fdSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+		throw ("Socket creation error");
+	fcntl(_fdSocket, F_SETFL, O_NONBLOCK);
+	// if (setsockopt(_fdSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
+	// 	throw "Socket options error.";
+	memset(&_sockAddr, 0, sizeof(_sockAddr));
+	_sockAddr.sin_family = AF_INET;
+	if  (_serverName == "localhost")
+		_sockAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     else if (_serverName == "any")
-        _sockAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+		_sockAddr.sin_addr.s_addr = htonl(INADDR_ANY);
     else if ((_sockAddr.sin_addr.s_addr = inet_addr(_serverName.c_str()))\
-                == INADDR_NONE)
-        throw ("Server addres error");
-    _sockAddr.sin_port = htons(_port);
-    if (bind(_fdSocket, reinterpret_cast<sockaddr *>(&_sockAddr), sizeof(_sockAddr)))
-        throw ("Bind error.");
-    if (listen(_fdSocket, 10))
+				== INADDR_NONE)
+		throw ("Server addres error");
+	_sockAddr.sin_port = htons(_port);
+	if (bind(_fdSocket, reinterpret_cast<sockaddr *>(&_sockAddr), sizeof(_sockAddr)))
+		throw ("Bind error.");
+	if (listen(_fdSocket, 10))
 		throw ("Listen failed.");
-    // std::cout << *this << std::endl;
-    return (1);
+	return (1);
 }
 
-std::string const   &Server::getServerName() const
+std::string const	&Server::getServerName() const
 {
-    return (_serverName);
+	return (_serverName);
 }
 
-unsigned int        Server::getServePort() const
+unsigned int		Server::getServePort() const
 {
-    return (_port);
+	return (_port);
 }
 
-int                 Server::getServerSocket() const
+int					Server::getServerSocket() const
 {
-    return (_fdSocket);
+	return (_fdSocket);
 }
 
-std::ostream    &operator<<(std::ostream &o, const Server &s)
+std::ostream		&operator<<(std::ostream &o, const Server &s)
 {
-    o << "host: " << s.getServerName() << ", port: " << s.getServePort()\
-    << ", socket: " << s.getServerSocket();
-    return (o);
+	o << "host: " << s.getServerName() << ", port: " << s.getServePort()\
+	<< ", socket: " << s.getServerSocket();
+	return (o);
 }

@@ -2,32 +2,27 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include "includes.hpp"
+#include "Request.hpp"
 
-#include "sys/types.h"
-#include "sys/socket.h"
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include "fcntl.h"
-#include "unistd.h"
-
-class Client
+class Client : public Request
 {
 private:
-    int                 _fdSocket;
-    struct sockaddr_in  _sockAddr;
+	int					_fdSocket;
+	struct sockaddr_in	_sockAddr;
+	// Request				_request;
+	Client();
 public:
-    const std::string   &getClientName() const;
 	void				closeSocket();
-    int                 getClientSocket() const;
+	const std::string   &getClientName() const;
+	int					getClientSocket() const;
 	int					setClientSocket(int socket);
-    Client();
-    Client(int socket, const struct sockaddr_in &sockAddr);
-    ~Client();
+	// int				getRequest(Logger *_webLogger);
+	// bool				requestRecieved();
+	// void				setWaitRequestStatus();
+	Client(int socket, const struct sockaddr_in &sockAddr);
+	virtual ~Client();
 };
-
-Client::Client()
-{
-}
 
 Client::~Client()
 {
@@ -35,30 +30,45 @@ Client::~Client()
 }
 
 Client::Client(int socket, const struct sockaddr_in &sockAddr) :
-_fdSocket(socket), _sockAddr(sockAddr)
+Request(socket), _fdSocket(socket), _sockAddr(sockAddr)
 {
 }
 
-void     Client::closeSocket()
+void				Client::closeSocket()
 {
 }
 
-int                 Client::getClientSocket() const
+int					Client::getClientSocket() const
 {
-    return (_fdSocket);
+	return (_fdSocket);
 }
 
 int					Client::setClientSocket(int socket)
 {
-	if (socket > 0 && socket < 1025)
+	if (socket > 0)
 		_fdSocket = socket;
 	else
 		throw "Error with setig socket into Client.";
 	return (0);
 }
 
-std::ostream    &operator<<(std::ostream &o, const Client &s)
+std::ostream	&operator<<(std::ostream &o, const Client &s)
 {
-    o << "Client socket: " << s.getClientSocket();
-    return (o);
+	o << "Client socket: " << s.getClientSocket();
+	return (o);
 }
+
+// int					Client::getRequest(Logger *_webLogger)
+// {
+// 	return (_request.readRequest(_webLogger));
+// }
+
+// bool				Client::requestRecieved()
+// {
+// 	return (_request.isRecieved());
+// }
+
+// void				Client::setWaitRequestStatus()
+// {
+// 	_request.setStatus(false);
+// }
