@@ -1,5 +1,11 @@
 #pragma once
 #include "includes.hpp"
+// #include <utility>
+#include <map>
+
+// typedef std::pair<std::string, std::string>	stringPair;
+typedef std::map<std::string, std::string>	stringMap;
+typedef std::map<std::string, std::string>::iterator	mapIter;
 
 class Server
 {
@@ -8,19 +14,71 @@ private:
     unsigned int        _port;
     std::string         _serverName;
     struct sockaddr_in  _sockAddr;
+	std::string			_root;		//_locations enought to define server
+	stringMap			_locations; //correspondese location -> root ?
     int                 createSocket();
     void                 closeSocket();
 public:
     const std::string   &getServerName() const;
     unsigned int        getServePort() const;
     int                 getServerSocket() const;
-    Server();
+    const std::string	getRoot() const;
+    void				setRoot(const std::string &root);
+	void				setServePort(unsigned int port);
+    void				setServerName(const std::string &sName);
+	void				appendLocation(const std::string &location, std::string const &root);
+	std::string			getUri(std::string const &location);
+	
+	Server();
     Server(std::string serverName, unsigned int port);
     ~Server();
 };
 
 Server::Server()
 {
+}
+
+void				Server::setRoot(const std::string &root){_root = root;};
+void				Server::setServePort(unsigned int port) {_port = port;};
+void				Server::setServerName(const std::string &sName) {_serverName = sName;}; 
+void				Server::appendLocation(const std::string &location, std::string const &root="")
+{
+	if (root == "")
+		_locations[location] = _root;
+	else
+		_locations[location] = root;		
+}
+
+std::string			Server::getUri(std::string const &uri)
+{
+	mapIter	itLoc = _locations.begin();
+	mapIter	itBest = _locations.end();
+	size_t	pos = 0;
+	int		first = 1;
+	// std::string	filename = uri.substr(uri.find_last_of('/'));
+	// size_t	pos = uri.find_last_of('/'); //possible case delim==npos?
+	// std::string	path = uri.substr(0, pos + 1);
+	while (itLoc != _locations.end())
+	{
+		if ((pos = uri.find(itLoc->first)) == std::string::npos)
+		{
+			itLoc++;
+			continue ;
+		}
+		if (first)
+		{
+			itBest = itLoc;
+			first = 0;
+		}
+		else if (itLoc->first.length() > itBest->first.length())
+			itBest = itLoc;
+		itLoc++;
+	}
+	if (itBest == _locations.end())
+		return ("/");
+	if (itBest->second == "/")
+		return (uri.substr(itBest->first.length()));
+	return (itBest->second + uri.substr(itBest->first.length()));
 }
 
 Server::~Server()
@@ -47,12 +105,12 @@ void     Server::closeSocket()
 
 int    Server::createSocket()
 {
-	// int yes = 1;
+	int yes = 1;
 	if ((_fdSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 		throw ("Socket creation error");
 	fcntl(_fdSocket, F_SETFL, O_NONBLOCK);
-	// if (setsockopt(_fdSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
-	// 	throw "Socket options error.";
+	if (setsockopt(_fdSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
+		throw "Socket options error.";
 	memset(&_sockAddr, 0, sizeof(_sockAddr));
 	_sockAddr.sin_family = AF_INET;
 	if  (_serverName == "localhost")

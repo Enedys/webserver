@@ -22,3 +22,5 @@
 #include <fstream>
 #include <exception>
 #include <ctime>
+
+#define CRLF	"\r\n\r\n"

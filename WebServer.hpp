@@ -15,6 +15,7 @@ private:
 	fd_set					_fdsToRead;
 	fd_set					_fdsToWrite;
 	fd_set					_actualFds;
+	int						max_fd;
 	int						checkActualConnections();
 	int						acceptNewConnections();
 	int						setActualConnections();
@@ -83,28 +84,6 @@ client					&WebServer::detachConnection(client &cIt)
 	return (cIt);
 }
 
-int						WebServer::getRequest(client &cIt)
-{
-	std::stringstream	msg;
-	char	buffer[1024];
-	memset(buffer, 0, 1024);
-	int	read = 0;
-	while ((read = recv((*cIt)->getClientSocket(), buffer, 1023, MSG_DONTWAIT)) > 0)
-	{
-		_webLogger << verbose << "Read request from socket: "\
-				<< (*cIt)->getClientSocket() << Logger::endl;
-		buffer[read] = '\0';
-		msg << buffer;
-	}
-	if (msg.str().empty() && read == 0)
-	{
-		_webLogger << reqread << "Сlient closed the connection" << Logger::endl;
-		return (1);
-	}
-	std::cout << "\033[34m Message \033[0m \n" << msg.str() << std::endl;
-	return (0);
-}
-
 int						WebServer::setActualConnections()
 {
 	FD_ZERO(&_fdsToRead);
@@ -119,15 +98,15 @@ int						WebServer::setActualConnections()
 	}
 	while (cIt != _clientList.end())
 	{
-		if ((*cIt)->requestRecieved())
+		if ((*cIt)->getRequestStatus() == responseReady)
 		{
-			std::cout << "\033[32mHERE!\033[0m\n";
+			std::cout << "\033[32mwHERE!\033[0m\n";
 			FD_SET((*cIt)->getClientSocket(), &_fdsToWrite);
 			_webLogger << verbose << "Client socket to write: " << (*cIt)->getClientSocket() << Logger::endl;
 		}
-		else
+		if ((*cIt)->getRequestStatus() < responseReady)
 		{
-			std::cout << "\033[35mHERE!\033[0m\n";
+			std::cout << "\033[35mrHERE!\033[0m\n";
 			_webLogger << verbose << "Listen client socket: " << (*cIt)->getClientSocket() << Logger::endl;
 			FD_SET((*cIt)->getClientSocket(), &_fdsToRead);
 		}
@@ -146,7 +125,7 @@ int						WebServer::checkActualConnections()
 int						WebServer::acceptNewConnections()
 {
 	server	sIt = _serverList.begin();
-	struct sockaddr_in			clientName;
+	sockaddr_in					clientName;
 	socklen_t					clientLen = sizeof(clientName);
 	int							newSocket;
 	while (sIt != _serverList.end())
@@ -182,15 +161,16 @@ int						WebServer::readActualRequests()
 				<< (*cIt)->getClientSocket() << Logger::endl;
 			if ((resReq = (*cIt)->readRequest(&_webLogger)))
 			{
+				std::cout << "WTF%?" << std::endl;
 				cIt = detachConnection(cIt);
 				continue ;
 			}
+			std::cout << "WTFF?" << std::endl;
 		}
 		cIt++;
 	}
 	return (0);
 }
-
 
 
 int						WebServer::sendActualResponses()
@@ -199,12 +179,16 @@ int						WebServer::sendActualResponses()
 	char resp[] = "HTTP/1.1 200 OK\r\n"
 	"Server: nginx/1.2.1\r\n"
 	"Date: Sat, 08 Mar 2014 22:53:46 GMT\r\n"
-	"Content-Type: application/octet-stream\r\n"
-	"Content-Length: 7\r\n"
-	"Last-Modified: Sat, 08 Mar 2014 22:53:30 GMT\r\n"
-	"Connection: keep-alive\r\n"
-	"Accept-Ranges: bytes\r\n\r\n"
-	"Wisdom";
+	"Content-Type: text/html\r\n"
+	"Content-Length: 59\r\n"
+	"Last-Modified: Sat, 08 Mar 2014 22:53:30 GMT\r\n\r\n";
+	char bodya[] = "<html>"
+	"<head>"
+	"</head>"
+ 	"<body>"
+   	"<h1>Hello World<h1>"
+ 	"</body>"
+	"</html>";
 
 
 
@@ -216,13 +200,10 @@ int						WebServer::sendActualResponses()
 		{
 			_webLogger << verbose << "Send response to socket: "\
 				<< (*cIt)->getClientSocket() << Logger::endl;
-			/* cIt->sendResponse() must be here*/
+			/* cIt->sendResponse() must be here */
 			send((*cIt)->getClientSocket(), resp, sizeof(resp), MSG_DONTWAIT);
-			(*cIt)->setWaitRequestStatus(false); // setWaitRequestStatus();
-
-			// close((*cIt)->getClientSocket());
-			// delete *cIt;
-			// cIt = _clientList.erase(cIt);
+			send((*cIt)->getClientSocket(), bodya, sizeof(bodya), MSG_DONTWAIT);
+			(*cIt)->setRequestStatus(none); // setWaitRequestStatus();
 		}
 		cIt++;
 	}
