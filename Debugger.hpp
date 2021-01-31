@@ -94,14 +94,10 @@ private:
 	std::ostream			*_stream;
 	time_t					_startLogTime;
 	Message					_msg;
-	class LoggerException : std::exception
+	class LoggerException : public std::exception
 	{
-		private:
-			std::string		_error;
-			LoggerException();
 		public:
-			LoggerException(const char *error) : _error(error) {};
-			virtual const char	*what() const throw() {return _error.c_str();};
+			virtual const char	*what() const throw() {return ("LoggerError");};
 	};
 public:
 	static const std::string 	endl;
@@ -115,7 +111,7 @@ public:
 		_stream = new std::ofstream(fileName.c_str(), std::ios::trunc);
 		if (!static_cast<std::fstream *>(_stream)->is_open() ||\
 			static_cast<std::fstream *>(_stream)->fail())
-			throw LoggerException("Can not create log-file.");
+			throw LoggerException();
 		_startLogTime = time(NULL);
 	}
 	catch (const std::exception &e)
