@@ -161,11 +161,9 @@ int						WebServer::readActualRequests()
 				<< (*cIt)->getClientSocket() << Logger::endl;
 			if ((resReq = (*cIt)->readRequest(&_webLogger)))
 			{
-				std::cout << "WTF%?" << std::endl;
 				cIt = detachConnection(cIt);
 				continue ;
 			}
-			std::cout << "WTFF?" << std::endl;
 		}
 		cIt++;
 	}
@@ -180,7 +178,7 @@ int						WebServer::sendActualResponses()
 	"Server: nginx/1.2.1\r\n"
 	"Date: Sat, 08 Mar 2014 22:53:46 GMT\r\n"
 	"Content-Type: text/html\r\n"
-	"Content-Length: 59\r\n"
+	"Content-Length: 58\r\n"
 	"Last-Modified: Sat, 08 Mar 2014 22:53:30 GMT\r\n\r\n";
 	char bodya[] = "<html>"
 	"<head>"
@@ -201,8 +199,8 @@ int						WebServer::sendActualResponses()
 			_webLogger << verbose << "Send response to socket: "\
 				<< (*cIt)->getClientSocket() << Logger::endl;
 			/* cIt->sendResponse() must be here */
-			send((*cIt)->getClientSocket(), resp, sizeof(resp), MSG_DONTWAIT);
-			send((*cIt)->getClientSocket(), bodya, sizeof(bodya), MSG_DONTWAIT);
+			send((*cIt)->getClientSocket(), resp, sizeof(resp) - 1, MSG_DONTWAIT);
+			send((*cIt)->getClientSocket(), bodya, sizeof(bodya) - 1, MSG_DONTWAIT);
 			(*cIt)->setRequestStatus(none); // setWaitRequestStatus();
 		}
 		cIt++;
@@ -225,10 +223,8 @@ int						WebServer::runWebServer()
 			acceptNewConnections();
 		}
 		else
-		{
 			_webLogger << error <<"Select error." << Logger::endl;
-		}
-		_webLogger << Logger::endl;
+		_webLogger << fatal << "..." << Logger::endl;
 		usleep(1000000);
 	}
 }

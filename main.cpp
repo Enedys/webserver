@@ -5,7 +5,7 @@
 int main()
 {
 	try{
-		Server myServer("127.0.0.1", 3233);
+		Server myServer("127.0.0.1", 3535);
 		std::cout << myServer << std::endl;
 		WebServer	myWebServer;
 		myWebServer.appendServer(myServer);
@@ -17,8 +17,6 @@ int main()
 		std::cout << fileUri << std::endl;
 		myWebServer.runWebServer();
 	}
-
-		
 	catch(char const *s)
 	{
 		std::cout << s << std::endl;

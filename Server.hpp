@@ -38,7 +38,7 @@ public:
 			/* coplien form */ 
 	Server	&operator=(const Server &s);
 	Server(std::string serverName, unsigned int port);
-	Server(const Server &s);
+	// Server(const Server &s);
 	~Server();
 };
 
@@ -126,16 +126,17 @@ catch(char const *s)
 	std::cout << s << std::endl;
 };
 
-Server::Server(const Server &s) try :
-	_port(s._port), _serverName(s._serverName), _root(s._root),
-	_locations(s._locations), _socket(-1)
-{
-	createSocket();
-}
-catch(const char *s)
-{
-	std::cout << s << std::endl;
-}
+// Server::Server(const Server &s) try :
+// 	_port(s._port), _serverName(s._serverName), _root(s._root),
+// 	_locations(s._locations)
+// {
+// 	std::cout << "COPY" << std::endl;
+// 	createSocket();
+// }
+// catch(const char *ss)
+// {
+// 	std::cout << ss << std::endl;
+// }
 
 Server	&Server::operator=(const Server &s)
 {
@@ -145,6 +146,7 @@ Server	&Server::operator=(const Server &s)
 	_locations = s._locations;
 	closeSocket();
 	createSocket();																/* Exception may be thrown here */
+	return (*this);
 }
 
 std::ostream		&operator<<(std::ostream &o, const Server &s)

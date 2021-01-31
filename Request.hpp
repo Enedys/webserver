@@ -37,7 +37,7 @@ public:
 	void				setRequestStatus(RequestStatus s);
 	int					readRequest(Logger *_webLogger);
 	virtual ~Request();
-	Request(int &fd) : _status(none), socket(fd)
+	Request(int fd) : _status(none), socket(fd)
 	{
 		_methods.push_back("GET");
 		_methods.push_back("PUT");
