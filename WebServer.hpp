@@ -104,7 +104,7 @@ int						WebServer::setActualConnections()
 			FD_SET((*cIt)->getClientSocket(), &_fdsToWrite);
 			_webLogger << verbose << "Client socket to write: " << (*cIt)->getClientSocket() << Logger::endl;
 		}
-		if ((*cIt)->getRequestStatus() < responseReady)
+		if ((*cIt)->getRequestStatus() != responseReady)
 		{
 			std::cout << "\033[35mrHERE!\033[0m\n";
 			_webLogger << verbose << "Listen client socket: " << (*cIt)->getClientSocket() << Logger::endl;

@@ -3,11 +3,17 @@
 #include "Debugger.hpp"
 #include <algorithm>
 #include <map>
+#include <cstring>
+
+#define MAX_URI_LENGTH		4096
+#define	MAX_REQUEST_SIZE	8192
 
 typedef enum
 {
 	none,
-	requestProc,
+	firstLine,
+	headersProc,
+	bodyProc,
 	responseReady,
 }	RequestStatus;
 
@@ -20,33 +26,46 @@ private:
 	std::map<std::string, std::string>	headersMap;
 	RequestStatus						_status;
 	int									socket;
+	int									_errorCode;
+	int									_bodySize;
 	std::string							_buffer;
 
-	int				getRequest();
 	int				processRequest();
+
 	void			printRequest();
-	std::string		getValue(std::string &s, std::string::iterator &sep);
 	int				parseStartLine();
 	int				validateStartLine();
 	int				parseHeaders();
 	int				validateHeaders();
 	std::list<std::string>		_methods;
+	std::map<int, std::string>	_errors;
+	void			setErrorCodes();
 	Request();
 public:
 	RequestStatus		getRequestStatus() const;
 	void				setRequestStatus(RequestStatus s);
 	int					readRequest(Logger *_webLogger);
 	virtual ~Request();
-	Request(int fd) : _status(none), socket(fd)
+	Request(int fd) : _status(none), socket(fd), _bodySize(0)
 	{
 		_methods.push_back("GET");
 		_methods.push_back("PUT");
 		_methods.push_back("POST");
 		_methods.push_back("HEAD");
+		_methods.push_back("OPTIONS");
+		setErrorCodes();
 	};
-
 	// static std::list<std::string>		headers;
 };
+
+void			Request::setErrorCodes()
+{
+	_errors[400] = "Bad Request";
+	_errors[404] = "Not Found";
+	_errors[414] = "URI Too Long";
+	_errors[501] = "Not Implemented";
+	_errors[505] = "HTTP Version Not Supported";
+}
 
 RequestStatus	Request::getRequestStatus() const
 {
@@ -87,23 +106,26 @@ int				Request::readRequest(Logger *_webLogger)
 			*_webLogger << verbose << "Read request from socket: "\
 					<< socket << Logger::endl;
 		buffer[read] = '\0';
-		_buffer = buffer;
-		request << buffer;
+		_buffer += buffer;
 		size_t pos = _buffer.find(CRLF);
-		if (_status == none && ((pos = _buffer.find(CRLF)) != std::string::npos))
-		{
-			*_webLogger << verbose << "Request gets" << Logger::endl;
-			/* Here must be more complex error analysis */
-			if (getRequest())
+		std::cout << buffer << std::endl;
+		if (_status == none && pos != std::string::npos)
+			if (parseStartLine())
 				return (1);
-			printRequest();
-			processRequest();
-			_status = requestProc;
+		if (parseHeaders())
+			return (1);
+		if (_status < bodyProc && _buffer.length() > MAX_REQUEST_SIZE)
+			return ((_errorCode = 400));
+		if (_status == headersProc)
+		{
+			if (validateHeaders())
+				return (1);
+			else
+				_status = bodyProc;
 		}
-		if (_status == requestProc) //else if
+		printRequest();
+		if (_status == bodyProc)
 		{
-			if (processRequest())
-				return (1);
 			_status = responseReady;
 		}
 	}
@@ -113,98 +135,109 @@ int				Request::readRequest(Logger *_webLogger)
 			*_webLogger << reqread << "Сlient closed the connection" << Logger::endl;
 		return (1);
 	}
-	// std::cout << "\033[33m MSG: \033[0m" << read<< "\n" << request.str() << std::endl;
 	return (0);
-}
-
-int			Request::getRequest()
-{
-	if (parseStartLine()  == 1)
-		return (1);
-	if (validateStartLine() == 1)
-		return (1);
-	if (parseHeaders() == 1)
-		return (1);
-	if (validateHeaders() == 1)
-		return (1);
-	return (0);
-}
-
-std::string			Request::getValue(std::string &s, std::string::iterator &sep)
-{
-	std::string	value;
-	if (*(++sep) == ' ')
-		sep++;
-	if (*(s.end() - 2) == ' ')
-		value = s.substr(sep - s.begin(), s.end() - sep - 2);
-	else
-		value = s.substr(sep - s.begin(), s.end() - sep - 1);
-	return (value);
 }
 
 int			Request::validateHeaders()
 {
+	if (headersMap["host"] == "")
+		return ((_errorCode = 400));
+	mapIter	trEn = headersMap.find("transfer-encoding");
+	mapIter	contLen = headersMap.find("content-length");
+	if (trEn != headersMap.end() && contLen != headersMap.end())
+		return ((_errorCode = 400));
+	if (trEn == headersMap.end() && contLen == headersMap.end())
+		_bodySize = 0;
+	if (contLen != headersMap.end())
+	{
+		if ((_bodySize = std::atoi(contLen->second.c_str())) < 0)
+			return ((_errorCode = 400));
+		return (0);
+	}
+	if (trEn != headersMap.end())
+	{
+		if (trEn->second.find("chunked") != std::string::npos)
+			_bodySize = -1;
+		return ((_errorCode = 400));
+	}
 	return (0);
 }
 
 int			Request::parseHeaders()
 {
-	std::string				field;
-	std::string				value;
-	std::string				key;
-	mapIter					inMap;
-	std::string::iterator	pos;
-	while(1)
+	size_t	crlfPos;
+	size_t	sepPos;
+	std::string	toAnalisys;
+	while (_status == firstLine && \
+		(crlfPos = _buffer.find(CRLF)) != std::string::npos)
 	{
-		std::getline(request, field, '\n');
-		if (request.fail() || field[field.length() - 1] != '\r')
-			return (1);
-		if (field == "\r")
-			return (0);
-		if ((pos = std::find(field.begin(), field.end(), ':')) == field.end())
-			return (1);
-		key = field.substr(0, pos - field.begin());
-		if (key.find(' ') != std::string::npos)
-			return (1);
+		if (crlfPos == 0)
+		{
+			_status = headersProc;
+			_buffer = _buffer.substr(crlfPos + 2);
+			return (0) ; // end of headers
+		}
+		toAnalisys = _buffer.substr(0, crlfPos);
+		sepPos = toAnalisys.find(':');
+		if (sepPos == std::string::npos)
+			return ((_errorCode = 400));
+		std::string	key = toAnalisys.substr(0, sepPos);
+		if (key.find(' ') != std::string::npos ||\
+			key.find('\t') != std::string::npos)
+			return ((_errorCode =  400));
 		for (int i = 0; i < key.length(); i++)
 			key.at(i) = std::tolower(key.at(i));
-		value = getValue(field, pos);
+		std::string	trimmedValue;
+		trimmedValue = toAnalisys.substr(sepPos + 1, crlfPos - sepPos - 1);
+		trimmedValue.erase(0, trimmedValue.find_first_not_of(" \t"));
+		trimmedValue.erase(trimmedValue.find_last_not_of(" \t") + 1);
+		mapIter					inMap;
 		inMap = headersMap.find(key);
+		if ((key == "host" || key == "content-length") && inMap != headersMap.end())
+			return ((_errorCode = 400));
 		if (inMap != headersMap.end())
-			headersMap[inMap->second] = inMap->second + "," + value;
+			headersMap[key] = inMap->second + ", " + trimmedValue;
 		else
-			headersMap[key] = value;	
+			headersMap[key] = trimmedValue;
+		_buffer = _buffer.substr(crlfPos + 2);
 	}
 	return (0);
 }
 
 int			Request::validateStartLine()
 {
-	if (std::find(_methods.begin(), _methods.end(), startLine["method"]) == _methods.end())
-		return (1);
+	if (std::find(_methods.begin(), _methods.end(),\
+		startLine["method"]) == _methods.end())
+		return ((_errorCode = 501));
 	if (startLine["version"] != "HTTP/1.1")
-		return (1);
+		return ((_errorCode = 505));
+	if (startLine["uri"].length() > MAX_URI_LENGTH)
+		return ((_errorCode = 414));
+	if (startLine["method"] != "OPTIONS" && startLine["uri"].at(0) != '/')
+		return ((_errorCode = 404));			//NOT FOUND OR BAD REQUEST? (404 vs 400)
+	if (startLine["method"] == "OPTIONS" && \
+		(startLine["uri"] != "*" && startLine["uri"].at(0) != '/'))
+		return ((_errorCode = 400));
 	return (0);
 }
 
 int			Request::parseStartLine()
 {
-	std::string	arg;
-	std::getline(request, arg, ' ');
-	if (!request.eof() && !request.fail())
-		startLine["method"] = arg;
-	else
-		return (1);
-	std::getline(request, arg, ' ');
-	if (!request.eof() && !request.fail())
-		startLine["uri"] = arg;
-	else
-		return (1);
-	std::getline(request, arg);
-	if (!request.eof() && !request.fail()\
-		&& arg[arg.length() - 1] == '\r')
-		startLine["version"] = arg.substr(0, arg.length() - 1);
-	else
+	size_t	crlfPos = _buffer.find(CRLF);
+	if (crlfPos == std::string::npos || crlfPos == 0)
+		return ((_errorCode = 400));
+	size_t	spacePos1 = _buffer.find(' ');
+	if (spacePos1 == std::string::npos || spacePos1 > crlfPos)
+		return ((_errorCode = 400));
+	startLine["method"] = _buffer.substr(0, spacePos1);
+	size_t	spacePos2 = _buffer.find(' ', spacePos1 + 1);
+	if (spacePos2 == std::string::npos || spacePos2 > crlfPos)
+		return ((_errorCode = 400));
+	startLine["uri"] = _buffer.substr(spacePos1 + 1, spacePos2);
+	startLine["version"] = _buffer.substr(spacePos2 + 1, crlfPos - spacePos2 - 1);
+	_buffer = _buffer.substr(crlfPos + 2);
+	_status = firstLine;
+	if (validateStartLine())
 		return (1);
 	return (0);
 }
