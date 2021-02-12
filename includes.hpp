@@ -40,5 +40,11 @@ typedef std::map<std::string, std::string>					stringMap;
 typedef std::map<std::string, std::string>::iterator		mapIter;
 typedef std::map<std::string, std::string>::const_iterator	constMapIter;
 
+typedef	enum
+{
+	ok,
+	inprogress,
+	error
+}		MethodStatus;
 
 #define CRLF	"\r\n"
