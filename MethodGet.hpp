@@ -5,6 +5,17 @@
 # include <sys/stat.h>
 
 # include "Method.hpp"
+# include "Response.hpp"
+
+typedef	enum
+{
+	noRequest,
+	noMethod,
+	errorReadBody = 400,
+	errorProcessBody = 400,
+	okWaitingMoreChunks = 400,
+	ok = 200
+}		ErrorStatus;
 
 typedef struct	Header {
 	std::string header;
@@ -33,17 +44,17 @@ private:
 	methodGet();
 
 public:
-	methodGet(int socket, t_serv config);//if status not ok don't call MethodGet in Response
+	methodGet(int socket, t_serv *config);//if status not ok don't call MethodGet in Response
 	~methodGet();
 
 	int			getStatus() const { return this->_status; };//will be retrieved from Response
 	OurHeader	*getHeader() const { return this->_header; };// std::map	getHeader
 	std::string	*getBody() const { return this->_body; };
 
-	void	run()
+	int		run()
 	{
-		this->createHeader();//createErrorHeader()?//senError?
-		this->sendHeader();//when
+		// this->createHeader();//createErrorHeader()?//senError?
+		// this->sendHeader();//when
 
 		std::string content = "";
 		std::string path = getPath();//путь из хедера?
