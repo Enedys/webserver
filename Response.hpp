@@ -2,31 +2,39 @@
 #include "includes.hpp"
 #include "Method.hpp"
 #include "Request.hpp"
+#include "Parser.hpp"
+
+typedef	enum
+{
+	noRequest,
+	noMethod,
+}		ResponseStatus;
+
+typedef Parser::t_serv	t_serv;
 
 class Response
 {
 private:
-	Request			*request;
-	IMethod			*method;
+	const t_serv	*_config;
+	int				_socket;
+	Request			*_request;
+	IMethod			*_method;
+	ResponseStatus	prepareResponse();
 	int				setRequest();
-	RequestStatus	prepareResponse();
 	int				sendRequest();
 	std::string		getLocation();
-	
+	Response();
 	/* data */
 public:
-	Response(/* args */);
+	Response(int socket, const t_serv *conf);
 	~Response();
 };
 
-ReuqestStatus		Response::prepareRequest()
+RequestStatus		Response::prepareResponse()
 {
-	if (requset)
-	{
-		switch
-	}
+	if (!request)
+		return (noRequest);
 }
 
-Response::Response() : request(NULL), method(NULL) {};
-
+Response::Response(int socket, const t_serv *conf) : _socket(socket), _config(conf), _request(NULL), _method(NULL) {};
 Response::~Response() {};
