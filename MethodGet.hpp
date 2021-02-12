@@ -42,7 +42,7 @@ typedef struct	Header {
 
 
 
-class MethodGet : public IMethod
+class MethodGet : public AMethod
 {
 private:
 	int				_socket;
