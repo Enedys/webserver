@@ -21,7 +21,6 @@ class Request
 {
 	typedef std::map<std::string, std::string>::iterator	mapIter;
 private:
-	std::stringstream					request;
 	std::map<std::string, std::string>	startLine;
 	std::map<std::string, std::string>	headersMap;
 	RequestStatus						_status;

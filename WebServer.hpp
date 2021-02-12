@@ -21,7 +21,6 @@ private:
 	int						setActualConnections();
 	int						readActualRequests();
 	int						sendActualResponses();
-	int						getRequest(client &cIt);
 	client					&detachConnection(client &cIt);
 public:
 	WebServer();

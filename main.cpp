@@ -7,7 +7,8 @@ int main()
 	try{
 		Server myServer("127.0.0.1", 3535);
 		std::cout << myServer << std::endl;
-		WebServer	myWebServer;
+		WebServer	myWebS
+		erver;
 		myWebServer.appendServer(myServer);
 		// myWebServer.showServerList();
 		myServer.setRoot("/");

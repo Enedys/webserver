@@ -32,7 +32,7 @@ public:
 	void				appendLocation(const std::string &location,\
 										std::string const &root);
 	
-			/* funcrion to transform uri from http-requst into file-path on server */
+			/* function to transform uri from http-requst into file-path on server */
 	std::string			getUri(std::string const &location);
 
 			/* coplien form */ 
