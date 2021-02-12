@@ -19,12 +19,12 @@ typedef enum
 
 class Request
 {
-	typedef std::map<std::string, std::string>::iterator	mapIter;
 private:
 	std::map<std::string, std::string>	startLine;
 	std::map<std::string, std::string>	headersMap;
 	RequestStatus						_status;
 	int									socket;
+protected:
 	int									_errorCode;
 	int									_bodySize;
 	std::string							_buffer;
@@ -36,16 +36,21 @@ private:
 	int				validateStartLine();
 	int				parseHeaders();
 	int				validateHeaders();
-	std::list<std::string>		_methods;
-	std::map<int, std::string>	_errors;
+	std::list<std::string>				_methods;
+	std::map<int, std::string>			_errors;
 	void			setErrorCodes();
 	Request();
 public:
-	RequestStatus		getRequestStatus() const;
+	const std::list<std::string>	getValidMethod() const {return (_methods); };
+	RequestStatus		getRequestStatus() const { return (_status); };
+	const stringMap		getStartLine() const {return (startLine); };
+	const stringMap		getHeadersMap() const { return (headersMap); };
+	const int			getErrorCode() const { return (_errorCode); };
+	const int			getSocket() const { return (socket); };
 	void				setRequestStatus(RequestStatus s);
 	int					readRequest(Logger *_webLogger);
 	virtual ~Request();
-	Request(int fd) : _status(none), socket(fd), _bodySize(0)
+	Request(int fd) : _status(none), socket(fd), _bodySize(0), _errorCode(0)
 	{
 		_methods.push_back("GET");
 		_methods.push_back("PUT");
@@ -54,7 +59,6 @@ public:
 		_methods.push_back("OPTIONS");
 		setErrorCodes();
 	};
-	// static std::list<std::string>		headers;
 };
 
 void			Request::setErrorCodes()
@@ -66,15 +70,7 @@ void			Request::setErrorCodes()
 	_errors[505] = "HTTP Version Not Supported";
 }
 
-RequestStatus	Request::getRequestStatus() const
-{
-	return (_status);
-}
-
-void			Request::setRequestStatus(RequestStatus status)
-{
-	_status = status;
-}
+void			Request::setRequestStatus(RequestStatus status) { _status = status; }
 
 void			Request::printRequest()
 {

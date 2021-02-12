@@ -1,22 +1,26 @@
 #pragma once
 #include "includes.hpp"
 
-class IMethod
+class AMethod
 {
 private:
+	stringMap	_headersMap;
+	int			_status;
 public:
-	IMethod(/* args */);
-	void	CreateHeader();
-	void	createErrorHeader();
-	void	sendHeader();
-	void	sendError();
-	virtual ~IMethod();
+	AMethod(/* args */);
+	virtual int		createHeader();
+	virtual int		createErrorHeader();
+	virtual int		sendHeader();
+	virtual int		readBody();
+	virtual int		processRequest(std::string	const &location);
+	virtual int		sendBody();
+	virtual ~AMethod() = 0;
 };
 
-IMethod::IMethod(/* args */)
+AMethod::AMethod()
 {
 }
 
-IMethod::~IMethod()
+AMethod::~AMethod()
 {
 }

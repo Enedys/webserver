@@ -6,35 +6,103 @@
 
 typedef	enum
 {
+	ok,
 	noRequest,
 	noMethod,
+	invalidRequest,
+
+	defaultState,
+	readingBody,
+	processingResponse,
+	sendingHeader,
+	sendingBody,
+	finishState,
+	// headerError,
 }		ResponseStatus;
+
+
 
 typedef Parser::t_serv	t_serv;
 
 class Response
 {
 private:
-	const t_serv	*_config;
+	t_serv const	*_config;
 	int				_socket;
-	Request			*_request;
-	IMethod			*_method;
-	ResponseStatus	prepareResponse();
+	Request	const	*_request;
+	AMethod			*_method;
+	ResponseStatus	_status;
+	int				setMethod();
+	ResponseStatus	sendResponse();
 	int				setRequest();
-	int				sendRequest();
 	std::string		getLocation();
 	Response();
 	/* data */
 public:
-	Response(int socket, const t_serv *conf);
+	Response(const t_serv *conf, Request const *request);
 	~Response();
 };
 
-RequestStatus		Response::prepareResponse()
+ResponseStatus		Response::sendResponse()
 {
-	if (!request)
+	if (!_request)
 		return (noRequest);
+	setMethod();
+	if (!_method || _socket == -1)
+		return (noMethod);
+	int		res = 0;
+	switch(_status)
+	{
+		case defaultState:
+			res = _method->createHeader() ? 0;
+	}
+
 }
 
-Response::Response(int socket, const t_serv *conf) : _socket(socket), _config(conf), _request(NULL), _method(NULL) {};
-Response::~Response() {};
+int				Response::setMethod()
+{
+	if (!_request)
+		return (noRequest);
+	if (_method)
+		return (ok);
+	if (_request->getErrorCode())
+	{
+		_method = new MethodError;
+		return (ok);
+	}
+	const stringMap line = _request->getStartLine();
+	constMapIter	method = line.find("method");
+	if (method == line.cend())
+	{
+		_method = new MethodError;
+		return (ok);
+	}
+	if (method->second == "GET")
+		_method = new MethodGet;
+	else if (method->second == "HEAD")
+		_method = new MethodHead;
+	else if (method->second == "OPTION")
+		_method = new MethodOption;
+	else if (method->second == "PUT")
+		_method = new MethodPut;
+	else if (method->second == "POST")
+		_method = new MethodPost;
+	else
+		return (invalidRequest);
+	return (ok);
+}
+
+Response::Response(const t_serv *conf, Request const *request) :
+	_config(conf), _request(request), _method(NULL), _status(defaultState)
+{
+	if (!_request)
+		return ;
+	if (_request)
+		_socket = _request->getSocket();
+	setMethod();
+};
+
+Response::~Response() 
+{
+	delete _method;
+};

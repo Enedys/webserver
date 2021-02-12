@@ -5,6 +5,9 @@
 #include <iostream>
 #include <sstream>
 #include <cstring>
+#include <map>
+#include <list>
+#include <vector>
 
 /* Client/Server includes */
 #include "sys/types.h"
@@ -22,5 +25,20 @@
 #include <fstream>
 #include <exception>
 #include <ctime>
+
+/* Methods */
+#include "Method.hpp"
+#include "MethodGet.hpp"
+#include "MethodHead.hpp"
+#include "MethodPut.hpp"
+#include "MethodPost.hpp"
+#include "MethodOption.hpp"
+#include "MethodError.hpp"
+
+/* Typedefs */
+typedef std::map<std::string, std::string>					stringMap;
+typedef std::map<std::string, std::string>::iterator		mapIter;
+typedef std::map<std::string, std::string>::const_iterator	constMapIter;
+
 
 #define CRLF	"\r\n"
