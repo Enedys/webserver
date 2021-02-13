@@ -109,13 +109,6 @@ MethodStatus	MethodGet::createHeader() {
 };
 
 MethodStatus		MethodGet::sendHeader(int socket) {
-	// char header[] = "HTTP/1.1 200 OK\r\n"
-	// "Server: nginx/1.2.1\r\n"
-	// "Date: Sat, 08 Mar 2014 22:53:46 GMT\r\n"
-	// "Content-Type: text/html\r\n"
-	// "Content-Length: 58\r\n"
-	// "Last-Modified: Sat, 08 Mar 2014 22:53:30 GMT\r\n\r\n";
-
 	std::string headerStr;
 	mapToString(_headersMap, &headerStr);
 	// std::string &headerStr = mapToString(_headersMap, headerStr);
