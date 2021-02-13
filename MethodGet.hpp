@@ -9,7 +9,6 @@
 # include <sys/time.h>
 
 # include "Method.hpp"
-# include "Response.hpp"
 
 class AMethod;
 # define BUFSIZE 1024
@@ -40,8 +39,10 @@ public:
 	MethodStatus	createHeader();
 	MethodStatus	createErrorHeader() { return ok; };
 	MethodStatus	sendHeader(int socket);
-	MethodStatus	processRequest(std::string &path);
+	MethodStatus	processRequest(std::string const &path);
 	MethodStatus	sendBody(int socket);
+    MethodStatus	readBody(int socket) { return (ok); };
+    // MethodStatus	processRequest(std::string	const &location) { return (ok); };
 
 	typedef	enum
 	{

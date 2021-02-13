@@ -42,7 +42,7 @@ public:
 
 	/* Actual approach to server creation */
 	Server(t_serv const &config);
-	t_serv const	*getConfigPtr() const;
+	t_serv const		*getConfigPtr() const;
 	int					createSocketByStruct();
 };
 
