@@ -1,6 +1,7 @@
 # include "MethodGet.hpp"
 
-MethodGet::MethodGet(t_serv *config) : _config(config) {
+// MethodGet::MethodGet(t_serv const *config) : _config(config) {
+MethodGet::MethodGet(t_serv const *config) : AMethod(config) {
 	// check_path_validity?
 };//200
 
@@ -46,7 +47,7 @@ int		MethodGet::processRequest(std::string &path) {
 	return ok;
 };
 
-int		MethodGet::sendBody(std::string &path, int socket) {
+int		MethodGet::sendBody(int socket) {
 	// char	buf[1024];
 	// while (!infile.eof())
 	// {
@@ -57,16 +58,17 @@ int		MethodGet::sendBody(std::string &path, int socket) {
 
 // check_socket
 	int fd;
-	if ((fd = open(path.c_str(), O_RDONLY)) <= 0){
+	if ((fd = open(_path.c_str(), O_RDONLY | O_NONBLOCK)) <= 0){
 		_status = errorOpeningURL;
 		return error;
 	}
 
-	int		ret;
+	size_t	ret;
 	char	buf[BUFSIZE];
 
 	while (ret = read(fd, buf, BUFSIZE) > 0){// >= 0 //
-		int sent = send(socket, buf, ret, 0);
+		// int sent = send(socket, buf, ret, 0);//write O_NONBLOCK
+		int sent = write(socket, buf, ret);//, O_NONBLOCK);
 		if (sent == 0)//
 			break ;
 		if (sent < 0){
