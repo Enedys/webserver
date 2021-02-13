@@ -22,44 +22,35 @@
 #include <unistd.h>
 #include <map>
 
+typedef struct s_serv
+{
+	std::string host;
+	int			port;
+	std::map<int, std::string> error_pages;
+	std::string serverName;
+	int 		bodySizeLimit;
+	std::vector<struct s_loc> locs;
+} t_serv;
+
+struct s_loc
+{
+	std::string path; // rename to locPath?
+	std::string root;
+	std::string fileRequestIsDir;
+	bool autoindex;
+	bool getAvailable;
+	bool postAvailable;
+	bool headAvailable;
+	bool putAvailable;
+};
+
 class Parser
 {
 	public:
 		Parser();
-
 		~Parser();
 		void parse(const std::string& file);
-
-	struct s_loc
-	{
-		std::string path; // refactir to locPath?
-		std::string root;
-		std::string fileRequestIsDir;
-		bool autoindex;
-		bool getAvailable;
-		bool postAvailable;
-		bool headAvailable;
-		bool putAvailable;
-	};
-
-	typedef struct s_serv{
-		std::string host;
-		int			port;
-		std::map<int, std::string> error_pages;
-		std::string root;
-		std::string serverName;
-		int 		bodySizeLimit;
-		std::vector<struct s_loc> locs;
-	} t_serv;
-
-	std::vector<t_serv> servers;
-
-		std::string host;
-		int			port;
-		std::string errorPage;
-		std::string root;
-		std::string serverName;
-		int 		bodySizeLimit;
+		std::vector<t_serv> servers;
 
 	private:
 		enum Token
@@ -75,12 +66,14 @@ class Parser
 			COMMENT,
 			ERROR
 		};
-		std::istream* in;
-		std::string   file;
 		Token nextToken;
 		std::string nextValue;
 
+		std::istream* in;
 
+		t_serv serv;
+		struct s_loc loc;
+		std::string root;
 
 		Token getNextToken(std::string &value);
 		Token lexToken(std::string &value);
@@ -88,14 +81,28 @@ class Parser
 		Token lexNewline(std::string &value);
 		Token lexIdentifier(std::string &value);
 		Token lexComment(std::string &value);
+
 		void 	parseServer();
 		void	parseValues();
+		void 	parseLocValues();
 		void 	parseLocation();
 		void 	getRoot();
 		void 	getHost();
 		void 	getServerName();
 		void 	getErrorPage();
+		void 	getPageSize();
+		void 	getLocRoot();
+		void 	getLocAutoindex();
+		void 	getLocFileIsDir();
+		void 	getLocDenyMethod();
+		void 	initServ();
+		void 	initLoc();
+
 		void	error(const std::string& msg);
+
+		int 	validateErrorStr(const std::string &str);
+		void 	fillRootLoc();
+		void 	splitHost(const std::string &val);
 };
 
 
