@@ -165,3 +165,7 @@ MethodStatus		MethodGet::sendBody(int socket) {
 	_status = okSuccess;
 	return ok;
 }
+
+MethodStatus	createErrorHeader() { return ok; };
+
+MethodStatus	readBody(int socket) { return ok; };

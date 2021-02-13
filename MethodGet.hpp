@@ -37,12 +37,11 @@ public:
 	~MethodGet();
 
 	MethodStatus	createHeader();
-	MethodStatus	createErrorHeader() { return ok; };
+	MethodStatus	createErrorHeader();
 	MethodStatus	sendHeader(int socket);
 	MethodStatus	processRequest(std::string const &path);
 	MethodStatus	sendBody(int socket);
-    MethodStatus	readBody(int socket) { return (ok); };
-    // MethodStatus	processRequest(std::string	const &location) { return (ok); };
+	MethodStatus	readBody(int socket);
 
 	typedef	enum
 	{
