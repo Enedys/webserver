@@ -4,9 +4,11 @@
 # include <iostream>
 # include <sys/stat.h>
 # include <fstream>
+# include <fcntl.h>//write nonblock
 
 # include "Method.hpp"
 # include "Response.hpp"
+# include "includes.hpp"
 
 # define BUFSIZE 1024
 
@@ -45,15 +47,15 @@ typedef	enum
 class MethodGet : public AMethod
 {
 private:
-	t_serv			*_config;
-	int				_status;
+	// t_serv			*_config;
+	int				_status;//
 
 	MethodGet(MethodGet & const src);
 	MethodGet & operator=(MethodGet & const src);
-	MethodGet();
+	// MethodGet();
 
 public:
-	MethodGet(t_serv *config);//if status not ok don't call MethodGet in Response
+	MethodGet(t_serv const *config);
 	~MethodGet();
 
 	int	createHeader() {};
@@ -63,7 +65,7 @@ public:
 
 	// std::string	*headerToString(OurHeader *buf);// const
 
-	int		getStatus() const { return this->_status; };//will be retrieved from Response
+	// int		getStatus() const { return this->_status; };//will be retrieved from Response
 	int		processRequest(std::string &path);
 	int		sendBody(std::string &path, int socket);
 };
