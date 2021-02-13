@@ -1,39 +1,28 @@
 #pragma once
 #include "includes.hpp"
 
-typedef enum
-{
-	verbose,
-	request,
-	reqread,
-	warning,
-	error,
-	fatal,
-	sys,
-	reset,
-} LogLevel;
+
 
 class Message
 {
-private:
-protected:
-	std::string		_msg;
-	LogLevel		_msgLvl;
-	std::string		_msgColor;
-	std::string		_msgPrefix;
 public:
+typedef enum
+	{
+		verbose,
+		request,
+		reqread,
+		warning,
+		error,
+		fatal,
+		sys,
+		reset,
+	} LogLevel;
 	static	const	std::string	resetColor;
 	static	const	std::string	coutStyleColor;
 	Message() {};
 	Message(const char *s, LogLevel lvl = verbose) {setLvl(lvl); setMsg(s);};
 	Message(const std::string &s, LogLevel lvl = verbose) {setLvl(lvl); setMsg(s);};
-	
-
-	void			setLvl(LogLevel lvl)
-	{
-		_msgLvl = lvl;
-	}
-
+	void			setLvl(LogLevel lvl){_msgLvl = lvl; };
 	template <class T>
 	Message			&setMsg(T s)
 	{
@@ -80,6 +69,11 @@ public:
 	const std::string		&getMsgPrefix() const {return (_msgPrefix);};
 	const LogLevel			getMsgLvl() const {return (_msgLvl);};
 	~Message() {};
+	protected:
+	std::string		_msg;
+	LogLevel		_msgLvl;
+	std::string		_msgColor;
+	std::string		_msgPrefix;
 };
 const std::string	Message::resetColor = "\033[0m";
 const std::string	Message::coutStyleColor = "\033[36m";
@@ -87,6 +81,7 @@ const std::string	Message::coutStyleColor = "\033[36m";
 
 class Logger
 {
+	typedef Message::LogLevel	LogLevel;
 private:
 	int						_isFile;
 	LogLevel				_lvl;
@@ -101,11 +96,11 @@ private:
 	};
 public:
 	static const std::string 	endl;
-	Logger() : _lvl(verbose), _stream(&std::cerr), _isFile(0)
+	Logger() : _lvl(Message::verbose), _stream(&std::cerr), _isFile(0)
 	{_startLogTime = time(NULL);};
-	Logger(std::ostream &file, LogLevel lvl = verbose) : _lvl(lvl), _stream(&file), _isFile(0)
+	Logger(std::ostream &file, LogLevel lvl = Message::verbose) : _lvl(lvl), _stream(&file), _isFile(0)
 	{_startLogTime = time(NULL);};
-	Logger(std::string &fileName, LogLevel lvl = verbose) try :
+	Logger(std::string &fileName, LogLevel lvl = Message::verbose) try :
 	_lvl(lvl), _isFile(1)
 	{
 		_stream = new std::ofstream(fileName.c_str(), std::ios::trunc);

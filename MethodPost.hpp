@@ -10,10 +10,6 @@ public:
     ~MethodPost();
 };
 
-MethodPost::MethodPost(/* args */)
-{
-}
-
 MethodPost::~MethodPost()
 {
 }
