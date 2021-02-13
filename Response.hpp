@@ -4,12 +4,10 @@
 #include "Request.hpp"
 #include "Parser.hpp"
 
-typedef Parser::t_serv	t_serv;
-
 class Response
 {
 	public:
-	Response(const t_serv *conf, Request const *request);
+	Response(const serv_config *conf, Request const *request);
 	~Response();
 	typedef		enum
 	{
@@ -178,7 +176,7 @@ int				Response::setMethod()
 	return (defaultStatus);
 }
 
-Response::Response(const t_serv *conf, Request const *request) :
+Response::Response(const serv_config *conf, Request const *request) :
 	_config(conf), _request(request), _method(NULL), _stage(defaultState)
 {
 	if (!_request)
