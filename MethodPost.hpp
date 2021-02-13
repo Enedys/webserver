@@ -4,8 +4,9 @@ class MethodPost: public AMethod
 {
 private:
     /* data */
-public:
     MethodPost(/* args */);
+public:
+	MethodPost(const serv_config *config) : AMethod(config) {};
     ~MethodPost();
 };
 

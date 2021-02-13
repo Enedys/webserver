@@ -4,8 +4,9 @@ class MethodError : public AMethod
 {
 private:
     /* data */
-public:
     MethodError(/* args */);
+public:
+	MethodError(const serv_config *config) : AMethod(config) {};
     ~MethodError();
 };
 

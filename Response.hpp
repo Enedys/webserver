@@ -66,6 +66,7 @@ Response::responseStatus		Response::sendResponse()
 			else if (res == error)
 				_stage = errorHeader;
 		case processingResponse:
+
 			res = _method->processRequest("location");
 			if (res == ok)
 				_stage = sendingHeader;
@@ -88,7 +89,7 @@ Response::responseStatus		Response::sendResponse()
 			if (res == error)
 				return (sendingError);	//same logic as sendingHeaderError
 			else if (res == ok)
-				_stage = defaultStage;
+				_stage = defaultState;
 			return (defaultStatus);
 	}
 }
@@ -114,7 +115,7 @@ int				Response::setMethod()
 		return (defaultStatus);
 	}
 	if (method->second == "GET")
-		_method = new MethodGet();
+		_method = new MethodGet(_config);
 	else if (method->second == "HEAD")
 		_method = new MethodHead;
 	else if (method->second == "OPTION")

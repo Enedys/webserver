@@ -1,11 +1,14 @@
+#pragma once
 #include "includes.hpp"
+
 
 class MethodHead: public AMethod
 {
 private:
     /* data */
-public:
     MethodHead(/* args */);
+public:
+	MethodHead(const serv_config *config) : AMethod(config) {};
     ~MethodHead();
 };
 

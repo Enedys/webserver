@@ -4,12 +4,13 @@
 class AMethod
 {
 private:
-	stringMap		_headersMap;
-	int				_status;
-	int				_fd;
-	t_serv const	*_config;
+	stringMap			_headersMap;
+	int					_status;
+	int					_fd;
+	const serv_config	*_config;
+	AMethod();
 public:
-	AMethod(t_serv const *config) _config(config) {};
+	AMethod(serv_config const *config) : _config(config) {};
 	virtual MethodStatus	createHeader();
 	virtual MethodStatus	createErrorHeader();
 	virtual MethodStatus	sendHeader(int socket);
@@ -19,10 +20,6 @@ public:
 	virtual ~AMethod() = 0;
 };
 
-AMethod::AMethod()
-{
-}
+AMethod::AMethod() {};
 
-AMethod::~AMethod()
-{
-}
+AMethod::~AMethod() {};
