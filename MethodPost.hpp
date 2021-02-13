@@ -1,4 +1,5 @@
-#include "includes.hpp"
+#include "include_resources.hpp"
+#include "Parser.hpp"
 
 class MethodPost: public AMethod
 {
@@ -6,7 +7,7 @@ private:
     /* data */
     MethodPost(/* args */);
 public:
-	MethodPost(const serv_config *config, Request const *req) : AMethod(config, req) {};
+	MethodPost(const t_serv *config, Request const *req) : AMethod(config, req) {};
     ~MethodPost();
 };
 

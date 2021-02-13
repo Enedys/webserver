@@ -1,6 +1,6 @@
 #pragma once
-#include "includes.hpp"
-
+#include "include_resources.hpp"
+#include "Parser.hpp"
 
 class MethodHead: public AMethod
 {
@@ -8,7 +8,7 @@ private:
     /* data */
     MethodHead(/* args */);
 public:
-	MethodHead(const serv_config *config, Request const *req) : AMethod(config, req) {};
+	MethodHead(const t_serv *config, Request const *req) : AMethod(config, req) {};
     ~MethodHead();
 };
 

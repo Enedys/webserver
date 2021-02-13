@@ -1,5 +1,7 @@
 #pragma once
-#include "includes.hpp"
+#include "include_resources.hpp"
+#include "Parser.hpp"
+#include "Request.hpp"
 
 class AMethod
 {
@@ -8,10 +10,10 @@ protected:
 	Request const		*_request;
 	int					_status;
 	int					_fd;
-	const serv_config	*_config;
+	const t_serv		*_config;
 	AMethod();
 public:
-	AMethod(serv_config const *config, Request const *request) : _config(config), _request(request) {};
+	AMethod(t_serv const *config, Request const *request) : _config(config), _request(request) {};
 	virtual MethodStatus	createHeader();
 	virtual MethodStatus	createErrorHeader();
 	virtual MethodStatus	sendHeader(int socket);
@@ -22,5 +24,4 @@ public:
 };
 
 AMethod::AMethod() {};
-
 AMethod::~AMethod() {};
