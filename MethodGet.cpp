@@ -1,9 +1,8 @@
 # include "MethodGet.hpp"
 
-// MethodGet::MethodGet(t_serv const *config) : _config(config) {
-MethodGet::MethodGet(t_serv const *config) : AMethod(config) {
-	// check_path_validity?
-};//200
+MethodGet::MethodGet(t_serv const *config, Request const *request) : AMethod(config, request) {
+	// check_path_validity?//200
+};
 
 MethodGet::~MethodGet(){};
 
@@ -46,8 +45,10 @@ long		GetFileSize(std::string filename)
 	return rc == 0 ? stat_buf.st_size : -1;
 }
 
-void		mapToString(stringMap const &map, std::string *output){
-	for (constMapIter it = map.begin(); it != map.end(); ++it)
+void		mapToString(stringMap const &startLine, stringMap const &headersMap, std::string *output){
+	*output += startLine.find("method")->second + " " + startLine.find("uri")->second + " " + startLine.find("version")->second;
+
+	for (constMapIter it = headersMap.begin(); it != headersMap.end(); ++it)
 		*output += (it->first) + ":" + (it->second) + "\n";
 }
 
@@ -82,9 +83,14 @@ MethodStatus	MethodGet::createHeader() {
 		return error;
 	char *contentLength = ft_itoa(fileSize);
 
+	// std::map<std::string, std::string> startLine = _request->getStartLine();
+	// std::string f_line = startLine["method"] + " " + startLine["uri"] + " " + startLine["version"];
 
-	_headersMap.insert(std::pair<std::string, std::string>("", "HTTP/1.1 200 OK"));
+	// _headersMap.insert(std::pair<std::string, std::string>("", f_line));
+
+	_request->getHeadersMap();
 	_headersMap.insert(std::pair<std::string, std::string>("Server", "nginx/1.2.1"));
+
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Length", contentLength));
 	_headersMap.insert(std::pair<std::string, std::string>("Date", _date));
@@ -110,10 +116,9 @@ MethodStatus	MethodGet::createHeader() {
 
 MethodStatus		MethodGet::sendHeader(int socket) {
 	std::string headerStr;
-	mapToString(_headersMap, &headerStr);
-	// std::string &headerStr = mapToString(_headersMap, headerStr);
+	mapToString(_request->getStartLine(), _headersMap, &headerStr);
 
-	if (send(socket, headerStr.c_str(), headerStr.length(), 0) < 0){//reinterpret_cast<const void *>	// if (send(socket, reinterpret_cast<const void *>(header), strlen(header), 0) < 0){//reinterpret
+	if (send(socket, headerStr.c_str(), headerStr.length(), 0) < 0){
 		_status = errorSendHeader;
 		return error;
 	}

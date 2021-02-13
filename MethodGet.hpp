@@ -29,14 +29,12 @@
 class MethodGet : public AMethod
 {
 private:
-	int				_status;//
-
 	MethodGet(MethodGet & const src);
 	MethodGet & operator=(MethodGet & const src);
 	// MethodGet();
 
 public:
-	MethodGet(t_serv const *config);
+	MethodGet(t_serv const *config, Request	const *_request);
 	~MethodGet();
 
 	MethodStatus	createHeader();
