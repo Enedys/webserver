@@ -15,6 +15,9 @@
 class Response
 {
 	public:
+	typedef std::vector<s_loc>::iterator						locIter;
+	typedef std::vector<s_loc>::const_iterator				constLocIter;
+
 	Response(const t_serv *conf, Request const *request);
 	~Response();
 	typedef		enum
@@ -192,7 +195,7 @@ Response::Response(const t_serv *conf, Request const *request) :
 	setMethod();
 };
 
-Response::~Response() 
+Response::~Response()
 {
 	delete _method;
 };

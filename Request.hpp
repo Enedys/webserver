@@ -5,10 +5,6 @@
 #define MAX_URI_LENGTH		4096
 #define	MAX_REQUEST_SIZE	8192
 
-
-class Request
-{
-
 	typedef enum
 	{
 		none,
@@ -17,6 +13,11 @@ class Request
 		bodyProc,
 		responseReady,
 	}	RequestStatus;
+
+class Request
+{
+
+
 
 private:
 	std::map<std::string, std::string>	startLine;

@@ -8,10 +8,10 @@
 # include <time.h>
 # include <sys/time.h>
 
-# include "Method.hpp"
+// # include "Method.hpp"
 # include "Response.hpp"
-# include "includes.hpp"
 
+// class AMethod
 # define BUFSIZE 1024
 
 
