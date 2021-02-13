@@ -147,7 +147,7 @@ MethodStatus		MethodGet::sendBody(int socket) {
 	size_t	ret;
 	char	buf[BUFSIZE];
 
-	while (ret = read(_fd, buf, BUFSIZE) >= 0){
+	while ((ret = read(_fd, buf, BUFSIZE)) >= 0){
 		int sent = write(socket, buf, ret);
 		if (sent == 0)
 			break ;

@@ -38,7 +38,7 @@ public:
 	~MethodGet();
 
 	MethodStatus	createHeader();
-	MethodStatus	createErrorHeader() {};
+	MethodStatus	createErrorHeader() { return ok; };
 	MethodStatus	sendHeader(int socket);
 	MethodStatus	processRequest(std::string &path);
 	MethodStatus	sendBody(int socket);
