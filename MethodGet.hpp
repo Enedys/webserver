@@ -67,7 +67,7 @@ public:
 
 	// int		getStatus() const { return this->_status; };//will be retrieved from Response
 	int		processRequest(std::string &path);
-	int		sendBody(std::string &path, int socket);
+	int		sendBody(int socket);
 };
 
 // int		readContent(void);

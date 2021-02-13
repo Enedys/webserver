@@ -37,6 +37,11 @@ int		MethodGet::processRequest(std::string &path) {
 		return error;
 	}
 
+	if ((_fd = open(path.c_str(), O_RDONLY | O_NONBLOCK)) <= 0){
+		_status = errorOpeningURL;
+		return error;
+	}
+
 	// std::ifstream body(path);
 	// body.open(path.c_str());
 	// if (!body.is_open()){
@@ -48,25 +53,11 @@ int		MethodGet::processRequest(std::string &path) {
 };
 
 int		MethodGet::sendBody(int socket) {
-	// char	buf[1024];
-	// while (!infile.eof())
-	// {
-	// 	infile.read (buf, sizeof(buf));
-	// 	socket->write(buf,infile.gcount());
-	// }
-	// body.close();
-
-// check_socket
-	int fd;
-	if ((fd = open(_path.c_str(), O_RDONLY | O_NONBLOCK)) <= 0){
-		_status = errorOpeningURL;
-		return error;
-	}
-
+// check_socket here too?
 	size_t	ret;
 	char	buf[BUFSIZE];
 
-	while (ret = read(fd, buf, BUFSIZE) > 0){// >= 0 //
+	while (ret = read(_fd, buf, BUFSIZE) > 0){// >= 0 //
 		// int sent = send(socket, buf, ret, 0);//write O_NONBLOCK
 		int sent = write(socket, buf, ret);//, O_NONBLOCK);
 		if (sent == 0)//
@@ -80,7 +71,7 @@ int		MethodGet::sendBody(int socket) {
 		_status = errorReadingURL;
 		return error;
 	}
-	close(fd);
+	close(_fd);
 	_status = 200;
 	return ok;
 }
