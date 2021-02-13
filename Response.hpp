@@ -22,8 +22,6 @@
 
 class Response
 {
-	typedef std::vector<s_loc>::iterator						locIter;
-	typedef std::vector<s_loc>::const_iterator					constLocIter;
 	public:
 	typedef std::vector<s_loc>::iterator						locIter;
 	typedef std::vector<s_loc>::const_iterator				constLocIter;
