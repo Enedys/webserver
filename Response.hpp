@@ -12,6 +12,13 @@
 #include "MethodOption.hpp"
 #include "MethodError.hpp"
 
+// class MethodError;
+// class MethodGet;
+// class MethodHead;
+// class MethodOption;
+// class MethodPost;
+// class MethodPut;
+
 class Response
 {
 	public:
