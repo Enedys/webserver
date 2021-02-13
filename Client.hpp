@@ -18,7 +18,7 @@ public:
 	int					getClientSocket() const;
 	int					setClientSocket(int socket);
 
-	Client(int socket, const struct sockaddr_in &sockAddr);
+	Client(int socket, const struct sockaddr_in &sockAddr, serv_config const *config);
 	virtual ~Client();
 };
 
@@ -27,8 +27,8 @@ Client::~Client()
 	closeSocket();
 }
 
-Client::Client(int socket, const struct sockaddr_in &sockAddr) :
-Request(socket), _socket(socket), _sockAddr(sockAddr)
+Client::Client(int socket, const struct sockaddr_in &sockAddr, serv_config const *config) :
+Request(socket), Response(config, this), _socket(socket), _sockAddr(sockAddr)
 {
 }
 
