@@ -56,7 +56,7 @@ public:
 
 		errorSendHeader = 1,
 		okWaitingMoreChunks = 1,//222 wtf
-		ok = 200
+		okSuccess = 200
 	}		ErrorStatus;
 	// std::string	*headerToString(OurHeader *buf);// const
 
