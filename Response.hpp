@@ -13,11 +13,19 @@
 // #include "TestMethod.hpp"
 // class AMethod;
 
+// class MethodError;
+// class MethodGet;
+// class MethodHead;
+// class MethodOption;
+// class MethodPost;
+// class MethodPut;
+
 class Response
 {
-	typedef std::vector<s_loc>::iterator						locIter;
-	typedef std::vector<s_loc>::const_iterator					constLocIter;
 	public:
+	typedef std::vector<s_loc>::iterator						locIter;
+	typedef std::vector<s_loc>::const_iterator				constLocIter;
+
 	Response(const t_serv *conf, Request const *request);
 	~Response();
 	typedef		enum
