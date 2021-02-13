@@ -16,26 +16,37 @@ HEADERS			=	Client.hpp \
 					Response.hpp \
 					Server.hpp \
 					WebServer.hpp \
+					include_resources.hpp \
 					includes.hpp
 
-SRC				=	MethodGet.cpp \
+SRC				=	Client.cpp \
+					Debugger.cpp \
+					Method.cpp \
+					MethodError.cpp \
+					MethodGet.cpp \
+					MethodHead.cpp \
+					MethodOption.cpp \
+					MethodPost.cpp \
+					MethodPut.cpp \
 					Parser.cpp \
-					main.cpp \
-					mainololo.cpp \
-					test.cpp
+					Request.cpp \
+					Response.cpp \
+					Server.cpp \
+					WebServer.cpp \
+					main.cpp
 
-OBJ = $(SRC:.c=.o)
+OBJ = $(SRC:.cpp=.o)
 
 .PHONY: all clean fclean re run
 
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	echo "out make"
-	gcc $(FLAGS) -o $(NAME) $(OBJ)
+	echo "Danone!"
+	clang++ $(FLAGS) -o $(NAME) $(OBJ)
 
-%.o:%.c $(HEADERS)
-	gcc -c -g $< -o $@
+%.o:%.cpp
+	clang++ -c -g $< -o $@
 
 clean:
 	rm -rf $(OBJ)
