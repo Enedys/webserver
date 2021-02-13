@@ -3,7 +3,7 @@
 
 class AMethod
 {
-private:
+protected:
 	stringMap			_headersMap;
 	int					_status;
 	int					_fd;
