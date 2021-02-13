@@ -12,26 +12,6 @@
 
 # define BUFSIZE 1024
 
-typedef	enum
-{
-	// errorCreateHeader = 1,
-	// errorCreateErrorHeader = 1,
-	// errorReadBody = 1,
-	// errorProcessBody = 1,
-	notFound = 404,
-	errorOpeningURL = 403,//
-	errorReadingURL = 1,
-	errorSocket = 1,
-
-	errorSendHeader = 1,
-	okWaitingMoreChunks = 1,//222 wtf
-	ok = 200
-}		ErrorStatus;
-
-// typedef struct	Header {
-// 	std::string header;
-// 	// std::map<string, string> {"header_name" : "value"}
-// }				OurHeader;
 
 // std::string		generateHeader(std::string content, std::string path, int code)
 // {
@@ -47,7 +27,6 @@ typedef	enum
 class MethodGet : public AMethod
 {
 private:
-	// t_serv			*_config;
 	int				_status;//
 
 	MethodGet(MethodGet & const src);
@@ -58,16 +37,30 @@ public:
 	MethodGet(t_serv const *config);
 	~MethodGet();
 
-	int	createHeader() {};
-	int	createErrorHeader() {};
-	int	sendHeader(int socket);
-	int	sendError() {};
+	MethodStatus	createHeader() {};
+	MethodStatus	createErrorHeader() {};
+	MethodStatus	sendHeader(int socket);
+	MethodStatus	processRequest(std::string &path);
+	MethodStatus	sendBody(int socket);
 
+	typedef	enum
+	{
+		// errorCreateHeader = 1,
+		// errorCreateErrorHeader = 1,
+		// errorReadBody = 1,
+		// errorProcessBody = 1,
+		notFound = 404,
+		errorOpeningURL = 403,//
+		errorReadingURL = 1,
+		errorSocket = 1,
+
+		errorSendHeader = 1,
+		okWaitingMoreChunks = 1,//222 wtf
+		ok = 200
+	}		ErrorStatus;
 	// std::string	*headerToString(OurHeader *buf);// const
 
 	// int		getStatus() const { return this->_status; };//will be retrieved from Response
-	int		processRequest(std::string &path);
-	int		sendBody(int socket);
 };
 
 // int		readContent(void);

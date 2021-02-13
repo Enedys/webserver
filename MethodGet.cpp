@@ -11,7 +11,7 @@ MethodGet::~MethodGet(){};
 // {
 // };
 
-int		MethodGet::sendHeader(int socket) {
+MethodStatus		MethodGet::sendHeader(int socket) {
 	// std::string *header = headerToString(_header);
 	char header[] = "HTTP/1.1 200 OK\r\n"
 	"Server: nginx/1.2.1\r\n"
@@ -30,7 +30,7 @@ int		MethodGet::sendHeader(int socket) {
 	return ok;
 };
 
-int		MethodGet::processRequest(std::string &path) {
+MethodStatus		MethodGet::processRequest(std::string &path) {
 	struct stat	st;
 	if (stat(path.c_str(), &st) == -1){//lstat?
 		_status = notFound;
@@ -52,7 +52,7 @@ int		MethodGet::processRequest(std::string &path) {
 	return ok;
 };
 
-int		MethodGet::sendBody(int socket) {
+MethodStatus		MethodGet::sendBody(int socket) {
 // check_socket here too?
 	size_t	ret;
 	char	buf[BUFSIZE];
