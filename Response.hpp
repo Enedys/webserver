@@ -1,13 +1,21 @@
 #pragma once
-#include "includes.hpp"
+#include "include_resources.hpp"
 #include "Method.hpp"
 #include "Request.hpp"
 #include "Parser.hpp"
 
+#include "Method.hpp"
+#include "MethodGet.hpp"
+#include "MethodHead.hpp"
+#include "MethodPut.hpp"
+#include "MethodPost.hpp"
+#include "MethodOption.hpp"
+#include "MethodError.hpp"
+
 class Response
 {
 	public:
-	Response(const serv_config *conf, Request const *request);
+	Response(const t_serv *conf, Request const *request);
 	~Response();
 	typedef		enum
 	{
@@ -29,7 +37,7 @@ class Response
 	}			stageStatus;
 
 private:
-	serv_config const	*_config;
+	t_serv const		*_config;
 	int					_socket;
 	Request	const		*_request;
 	AMethod				*_method;
@@ -176,7 +184,7 @@ int				Response::setMethod()
 	return (defaultStatus);
 }
 
-Response::Response(const serv_config *conf, Request const *request) :
+Response::Response(const t_serv *conf, Request const *request) :
 	_config(conf), _request(request), _method(NULL), _stage(defaultState)
 {
 	if (!_request)

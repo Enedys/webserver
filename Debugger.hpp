@@ -1,7 +1,5 @@
 #pragma once
-#include "includes.hpp"
-
-
+#include "include_resources.hpp"
 
 class Message
 {
