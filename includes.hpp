@@ -26,14 +26,27 @@
 #include <exception>
 #include <ctime>
 
-/* Typedefs */
-typedef std::map<std::string, std::string>					stringMap;
-typedef std::map<std::string, std::string>::iterator		mapIter;
-typedef std::map<std::string, std::string>::const_iterator	constMapIter;
-
 /* Andrew */
 #include "Parser.hpp"
-typedef Parser::t_serv										serv_config;
+typedef t_serv										serv_config;
+typedef s_loc										serv_loc;
+
+/* Danya */
+#include "Server.hpp"
+#include "Client.hpp"
+#include "WebServer.hpp"
+#include "Request.hpp"
+#include "Response.hpp"
+
+/* Typedefs */
+typedef std::list<Client *>::iterator						client;
+typedef std::vector<serv_config>::iterator					server;
+typedef std::map<std::string, std::string>					stringMap;
+typedef std::map<std::string, std::string>::iterator		mapIter;
+typedef std::vector<serv_loc>::iterator						locIter;
+typedef std::vector<serv_loc>::const_iterator				constLocIter;
+typedef std::map<std::string, std::string>::const_iterator	constMapIter;
+
 
 typedef	enum
 {

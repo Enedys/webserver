@@ -9,12 +9,14 @@ class Server
 {
 private:
 	int					_socket;		/* file descriptor analog for network applications*/
+	struct sockaddr_in 	_sockAddr;		/* c/c++ structure for sockets */
+	
 	unsigned int		_port;			/* ordinary network port http://blabla:port/ */
 	std::string			_serverName;	/* ip address of the listening server '127.0.0.1' by default */
-	struct sockaddr_in 	_sockAddr;		/* c/c++ structure for sockets */
 	std::string			_root;			/* root directory of the server. like in nginx configs */
 	stringMap			_locations;		/* also like in nginx. location to translate requset uri into directory on server */
 	
+	serv_config			_server;
 	int					createSocket();	/* the main function for server creation. throw (const char *) an exception if the server failed to create */
 	void				closeSocket();
 	Server();
@@ -40,6 +42,10 @@ public:
 	Server(std::string serverName, unsigned int port);
 	// Server(const Server &s);
 	~Server();
+	
+	/* Actual approach to server creation */
+	Server(serv_config const &config);
+	int					Server::createSocketByStruct();
 };
 
 Server::Server() {};
@@ -84,38 +90,6 @@ int					Server::createSocket()
 	return (1);
 }
 
-std::string			Server::getUri(std::string const &uri)							/* Itrates by the location and find it as substring into uri. */
-{																					/* Remebver most longest corresponding */
-	mapIter	itLoc = _locations.begin();
-	mapIter	itBest = _locations.end();
-	size_t	pos = 0;
-	int		first = 1;
-	// std::string	filename = uri.substr(uri.find_last_of('/'));					/* may be useful */
-	// size_t	pos = uri.find_last_of('/'); //possible case delim==npos?
-	// std::string	path = uri.substr(0, pos + 1);
-	while (itLoc != _locations.end())
-	{
-		if ((pos = uri.find(itLoc->first)) == std::string::npos)
-		{
-			itLoc++;
-			continue ;
-		}
-		if (first)
-		{
-			itBest = itLoc;
-			first = 0;
-		}
-		else if (itLoc->first.length() > itBest->first.length())
-			itBest = itLoc;
-		itLoc++;
-	}
-	if (itBest == _locations.end())													/* what path should return if location for such uri does not exist ? */
-		return ("/");
-	if (itBest->second == "/")
-		return (uri.substr(itBest->first.length()));
-	return (itBest->second + uri.substr(itBest->first.length()));
-}
-
 Server::Server(std::string serverName, unsigned int port) try :
 		_serverName(serverName), _port(port), _root("")
 {
@@ -126,24 +100,15 @@ catch(char const *s)
 	std::cout << s << std::endl;
 };
 
-// Server::Server(const Server &s) try :
-// 	_port(s._port), _serverName(s._serverName), _root(s._root),
-// 	_locations(s._locations)
-// {
-// 	std::cout << "COPY" << std::endl;
-// 	createSocket();
-// }
-// catch(const char *ss)
-// {
-// 	std::cout << ss << std::endl;
-// }
-
 Server	&Server::operator=(const Server &s)
 {
 	_port = s._port;
 	_serverName = s._serverName;
 	_root = s._root;
 	_locations = s._locations;
+
+
+	_server = s._server;
 	closeSocket();
 	createSocket();																/* Exception may be thrown here */
 	return (*this);
@@ -154,4 +119,43 @@ std::ostream		&operator<<(std::ostream &o, const Server &s)
 	o << "host: " << s.getServerName() << ", port: " << \
 	s.getServePort() << ", socket: " << s.getServerSocket();
 	return (o);
+}
+
+/* ***************************************** */
+
+
+
+Server::Server(serv_config const &conf) try : _server(conf)
+{
+	createSocketByStruct();
+}
+catch(char const *s)
+{
+	std::cout << s << std::endl;
+};
+
+int					Server::createSocketByStruct()
+{
+	int yes = 1;
+	if ((_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+		throw ("Socket creation error");
+	fcntl(_socket, F_SETFL, O_NONBLOCK);
+	if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)		/* for reusing _socket with same id */
+		throw ("Socket options error.");
+	memset(&_sockAddr, 0, sizeof(_sockAddr));
+	_sockAddr.sin_family = AF_INET;
+	if  (_server.serverName == "localhost")
+		_sockAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	else if (_server.serverName == "any")
+		_sockAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	else if ((_sockAddr.sin_addr.s_addr = inet_addr(_server.serverName.c_str()))\
+				== INADDR_NONE)
+		throw ("Server addres error");
+	_sockAddr.sin_port = htons(_server.port);
+	if (bind(_socket, reinterpret_cast<sockaddr *>(&_sockAddr), sizeof(_sockAddr)))	/* set corresponding beteween socket and server ip:port */
+		throw ("Bind error.");
+	if (listen(_socket, 10))														/* open socket for listening and set max connections number for current server */
+		throw ("Listen failed.");
+	return (1);
+	
 }

@@ -37,17 +37,17 @@ public:
 
 WebServer::WebServer()
 {
-	_webLogger << sys <<"Create WebServer without servers." << Logger::endl;
+	_webLogger << Message::sys <<"Create WebServer without servers." << Logger::endl;
 }
 
 WebServer::~WebServer()
 {
-	_webLogger << sys << "WebServer off." << Logger::endl;
+	_webLogger << Message::sys << "WebServer off." << Logger::endl;
 }
 
 WebServer::WebServer(std::list<Server> serverList) : _serverList(serverList)
 {
-	_webLogger << sys << "Create WebServer without servers." << Logger::endl;
+	_webLogger << Message::sys << "Create WebServer without servers." << Logger::endl;
 }
 
 void		WebServer::appendServer(const Server &newServer)
@@ -61,7 +61,7 @@ void		WebServer::appendServer(const Server &newServer)
 		_webLogger << error << e.what();
 		return ;
 	}
-	_webLogger << sys << "Add server: " << newServer << Logger::endl;
+	_webLogger << Message::sys << "Add server: " << newServer << Logger::endl;
 }
 
 void				WebServer::showServerList()
@@ -76,7 +76,7 @@ void				WebServer::showServerList()
 
 client					&WebServer::detachConnection(client &cIt)
 {
-	_webLogger << warning << "Connection closed. socket: " << (*cIt)->getClientSocket() << Logger::endl;
+	_webLogger << Message::warning << "Connection closed. socket: " << (*cIt)->getClientSocket() << Logger::endl;
 	close((*cIt)->getClientSocket());
 	FD_CLR((*cIt)->getClientSocket(), &_fdsToRead);
 	cIt = _clientList.erase(cIt);
@@ -91,7 +91,7 @@ int						WebServer::setActualConnections()
 	client	cIt = _clientList.begin();
 	while (sIt != _serverList.end())
 	{
-		_webLogger << verbose << "Listen server socket: " << sIt->getServerSocket() << Logger::endl;
+		_webLogger << Message::verbose << "Listen server socket: " << sIt->getServerSocket() << Logger::endl;
 		FD_SET(sIt->getServerSocket(), &_fdsToRead);
 		sIt++;
 	}
@@ -101,12 +101,12 @@ int						WebServer::setActualConnections()
 		{
 			std::cout << "\033[32mwHERE!\033[0m\n";
 			FD_SET((*cIt)->getClientSocket(), &_fdsToWrite);
-			_webLogger << verbose << "Client socket to write: " << (*cIt)->getClientSocket() << Logger::endl;
+			_webLogger << Message::verbose << "Client socket to write: " << (*cIt)->getClientSocket() << Logger::endl;
 		}
 		if ((*cIt)->getRequestStatus() != responseReady)
 		{
 			std::cout << "\033[35mrHERE!\033[0m\n";
-			_webLogger << verbose << "Listen client socket: " << (*cIt)->getClientSocket() << Logger::endl;
+			_webLogger << Message::verbose << "Listen client socket: " << (*cIt)->getClientSocket() << Logger::endl;
 			FD_SET((*cIt)->getClientSocket(), &_fdsToRead);
 		}
 		cIt++;
@@ -132,12 +132,12 @@ int						WebServer::acceptNewConnections()
 		memset(&clientName, 0, clientLen);
 		if (FD_ISSET(sIt->getServerSocket(), &_fdsToRead))
 		{
-			_webLogger << request << "New connection request to "<< sIt->getServerSocket() << Logger::endl;
+			_webLogger << Message::request << "New connection request to "<< sIt->getServerSocket() << Logger::endl;
 			int	newSocket = accept(sIt->getServerSocket(),\
 			reinterpret_cast<sockaddr *>(&clientName), &clientLen);
 			if (newSocket == -1)
 			{
-				_webLogger << warning << "Connection refused."<< sIt->getServerSocket() << Logger::endl;
+				_webLogger << Message::warning << "Connection refused."<< sIt->getServerSocket() << Logger::endl;
 				return (1);
 			}
 			fcntl(newSocket, F_SETFL, O_NONBLOCK);
@@ -156,7 +156,7 @@ int						WebServer::readActualRequests()
 	{
 		if (FD_ISSET((*cIt)->getClientSocket(), &_fdsToRead))
 		{
-			_webLogger << verbose << "Read request from: "\
+			_webLogger << Message::verbose << "Read request from: "\
 				<< (*cIt)->getClientSocket() << Logger::endl;
 			if ((resReq = (*cIt)->readRequest(&_webLogger)))
 			{
@@ -195,7 +195,7 @@ int						WebServer::sendActualResponses()
 	{
 		if (FD_ISSET((*cIt)->getClientSocket(), &_fdsToWrite))
 		{
-			_webLogger << verbose << "Send response to socket: "\
+			_webLogger << Message::verbose << "Send response to socket: "\
 				<< (*cIt)->getClientSocket() << Logger::endl;
 			/* cIt->sendResponse() must be here */
 			send((*cIt)->getClientSocket(), resp, sizeof(resp) - 1, MSG_DONTWAIT);
@@ -223,7 +223,7 @@ int						WebServer::runWebServer()
 		}
 		else
 			_webLogger << error <<"Select error." << Logger::endl;
-		_webLogger << fatal << "..." << Logger::endl;
+		_webLogger << Message::fatal << "..." << Logger::endl;
 		usleep(1000000);
 	}
 }
