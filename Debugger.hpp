@@ -4,7 +4,7 @@
 class Message
 {
 public:
-typedef enum
+	typedef enum
 	{
 		verbose,
 		request,
@@ -18,9 +18,9 @@ typedef enum
 	static	const	std::string	resetColor;
 	static	const	std::string	coutStyleColor;
 	Message() {};
-	Message(const char *s, LogLevel lvl = verbose) {setLvl(lvl); setMsg(s);};
-	Message(const std::string &s, LogLevel lvl = verbose) {setLvl(lvl); setMsg(s);};
-	void			setLvl(LogLevel lvl){_msgLvl = lvl; };
+	Message(const char *s, LogLevel lvl = verbose);
+	Message(const std::string &s, LogLevel lvl = verbose);
+	void			setLvl(LogLevel lvl);
 	template <class T>
 	Message			&setMsg(T s)
 	{
@@ -62,10 +62,10 @@ typedef enum
 		}
 		return (*this);
 	};
-	const std::string		&getMsgColor() const {return (_msgColor);};
-	const std::string		&getMsg() const {return (_msg);};
-	const std::string		&getMsgPrefix() const {return (_msgPrefix);};
-	const LogLevel			getMsgLvl() const {return (_msgLvl);};
+	const std::string		&getMsgColor() const;
+	const std::string		&getMsg() const;
+	const std::string		&getMsgPrefix() const;
+	const LogLevel			getMsgLvl() const;
 	~Message() {};
 	protected:
 	std::string		_msg;
@@ -73,9 +73,6 @@ typedef enum
 	std::string		_msgColor;
 	std::string		_msgPrefix;
 };
-const std::string	Message::resetColor = "\033[0m";
-const std::string	Message::coutStyleColor = "\033[36m";
-
 
 class Logger
 {
@@ -94,55 +91,14 @@ private:
 	};
 public:
 	static const std::string 	endl;
-	Logger() : _lvl(Message::verbose), _stream(&std::cerr), _isFile(0)
-	{_startLogTime = time(NULL);};
-	Logger(std::ostream &file, LogLevel lvl = Message::verbose) : _lvl(lvl), _stream(&file), _isFile(0)
-	{_startLogTime = time(NULL);};
-	Logger(std::string &fileName, LogLevel lvl = Message::verbose) try :
-	_lvl(lvl), _isFile(1)
-	{
-		_stream = new std::ofstream(fileName.c_str(), std::ios::trunc);
-		if (!static_cast<std::fstream *>(_stream)->is_open() ||\
-			static_cast<std::fstream *>(_stream)->fail())
-			throw LoggerException();
-		_startLogTime = time(NULL);
-	}
-	catch (const std::exception &e)
-	{
-		std::cerr << e.what() << std::endl;
-	}
-	~Logger()
-	{
-		if (_isFile)
-			static_cast<std::fstream *>(_stream)->close();
-	}
-	void			setLogLevel(LogLevel newLvl) {_lvl = newLvl;};
-
-	Logger	&operator<<(const Message &o)
-	{
-		if (o.getMsgLvl() >= _lvl)
-			*_stream << time(NULL) - _startLogTime << "\t" << o.getMsgColor()\
-			<< o.getMsgPrefix() << o.resetColor << o.getMsg();
-		return (*this);
-	};
-	Logger	&operator<<(const LogLevel &lvl)
-	{
-		_msg.setLvl(lvl);
-		return (*this);
-	}
-
-	Logger	&operator<<(const char *s)
-	{
-		if (s == Logger::endl)
-		{
-			*_stream << std::endl;
-			return (*this);
-		}
-		_msg.setMsg(s);
-		Logger::operator<<(_msg);
-		return (*this);
-	};
-
+	Logger();
+	Logger(std::ostream &file, LogLevel lvl = Message::verbose);
+	Logger(std::string &fileName, LogLevel lvl = Message::verbose);
+	~Logger();
+	void			setLogLevel(LogLevel newLvl);
+	Logger	&operator<<(const Message &o);
+	Logger	&operator<<(const LogLevel &lvl);
+	Logger	&operator<<(const char *s);
 	template <class T>
 	Logger &operator<<(T o)
 	{
@@ -150,4 +106,3 @@ public:
 		return (*this);
 	}
 };
-const std::string	Logger::endl = "\n";

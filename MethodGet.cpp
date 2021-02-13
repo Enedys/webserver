@@ -1,4 +1,5 @@
 # include "MethodGet.hpp"
+// # include "TestMethod.hpp"
 
 MethodGet::MethodGet(t_serv const *config, Request const *request) : AMethod(config, request) {
 	// check_path_validity?//200
@@ -127,7 +128,7 @@ MethodStatus		MethodGet::sendHeader(int socket) {
 	return ok;
 };
 
-MethodStatus		MethodGet::processRequest(std::string &path) {
+MethodStatus		MethodGet::processRequest(std::string const &path) {
 	struct stat	st;
 	if (stat(path.c_str(), &st) == -1){//lstat?
 		_status = notFound;

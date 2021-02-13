@@ -23,7 +23,7 @@ void		WebServer::appendServer(Server *newServer)
 	}
 	catch(const std::exception& e)
 	{
-		_webLogger << error << e.what();
+		_webLogger << Message::error << e.what();
 		return ;
 	}
 	_webLogger << Message::sys << "Add server: " << newServer << Logger::endl;
@@ -62,13 +62,13 @@ int						WebServer::setActualConnections()
 	}
 	while (cIt != _clientList.end())
 	{
-		if ((*cIt)->getRequestStatus() == responseReady)
+		if ((*cIt)->getRequestStatus() == Request::responseReady)
 		{
 			std::cout << "\033[32mwHERE!\033[0m\n";
 			FD_SET((*cIt)->getClientSocket(), &_fdsToWrite);
 			_webLogger << Message::verbose << "Client socket to write: " << (*cIt)->getClientSocket() << Logger::endl;
 		}
-		if ((*cIt)->getRequestStatus() != responseReady)
+		if ((*cIt)->getRequestStatus() != Request::responseReady)
 		{
 			std::cout << "\033[35mrHERE!\033[0m\n";
 			_webLogger << Message::verbose << "Listen client socket: " << (*cIt)->getClientSocket() << Logger::endl;
@@ -165,7 +165,7 @@ int						WebServer::sendActualResponses()
 			/* cIt->sendResponse() must be here */
 			send((*cIt)->getClientSocket(), resp, sizeof(resp) - 1, MSG_DONTWAIT);
 			send((*cIt)->getClientSocket(), bodya, sizeof(bodya) - 1, MSG_DONTWAIT);
-			(*cIt)->setRequestStatus(none); // setWaitRequestStatus();
+			(*cIt)->setRequestStatus(Request::none); // setWaitRequestStatus();
 		}
 		cIt++;
 	}
@@ -187,7 +187,7 @@ int						WebServer::runWebServer()
 			acceptNewConnections();
 		}
 		else
-			_webLogger << error <<"Select error." << Logger::endl;
+			_webLogger << Message::error <<"Select error." << Logger::endl;
 		_webLogger << Message::fatal << "..." << Logger::endl;
 		usleep(1000000);
 	}

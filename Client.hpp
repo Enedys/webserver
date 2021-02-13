@@ -1,8 +1,10 @@
 #pragma once
-#include "include_resources.hpp"
+//#include "include_resources.hpp"
 #include "Parser.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
+
+// struct s_serv;
 
 class Client : public Request, public Response
 {
@@ -16,6 +18,7 @@ public:
 	int					getClientSocket() const;
 	int					setClientSocket(int socket);
 
-	Client(int socket, const struct sockaddr_in &sockAddr, t_serv const *config);
+	Client(int socket, const struct sockaddr_in &sockAddr, s_serv const *config);
 	virtual ~Client();
 };
+

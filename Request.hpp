@@ -1,6 +1,8 @@
 #pragma once
+// class Logger;
+
 #include "Debugger.hpp"
-#include "include_resources.hpp"
+//#include "include_resources.hpp" 
 
 #define MAX_URI_LENGTH		4096
 #define	MAX_REQUEST_SIZE	8192
@@ -9,6 +11,7 @@
 class Request
 {
 
+public:
 	typedef enum
 	{
 		none,
@@ -18,6 +21,16 @@ class Request
 		responseReady,
 	}	RequestStatus;
 
+	const std::list<std::string>	getValidMethod() const {return (_methods); };
+	RequestStatus		getRequestStatus() const { return (_status); };
+	const stringMap		getStartLine() const {return (startLine); };
+	const stringMap		getHeadersMap() const { return (headersMap); };
+	const int			getErrorCode() const { return (_errorCode); };
+	const int			getSocket() const { return (socket); };
+	void				setRequestStatus(RequestStatus s);
+	int					readRequest(Logger *_webLogger);
+	virtual ~Request();
+	Request(int fd);
 private:
 	std::map<std::string, std::string>	startLine;
 	std::map<std::string, std::string>	headersMap;
@@ -39,17 +52,6 @@ protected:
 	std::map<int, std::string>			_errors;
 	void			setErrorCodes();
 	Request();
-public:
-	const std::list<std::string>	getValidMethod() const {return (_methods); };
-	RequestStatus		getRequestStatus() const { return (_status); };
-	const stringMap		getStartLine() const {return (startLine); };
-	const stringMap		getHeadersMap() const { return (headersMap); };
-	const int			getErrorCode() const { return (_errorCode); };
-	const int			getSocket() const { return (socket); };
-	void				setRequestStatus(RequestStatus s);
-	int					readRequest(Logger *_webLogger);
-	virtual ~Request();
-	Request(int fd);
 };
 
 

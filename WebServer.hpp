@@ -1,8 +1,8 @@
 #pragma once
-#include "include_resources.hpp"
+//#include "include_resources.hpp"
 #include "Server.hpp"
 #include "Client.hpp"
-#include "Debugger.hpp"
+// #include "Debugger.hpp"
 
 class WebServer
 {

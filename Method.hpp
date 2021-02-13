@@ -14,14 +14,11 @@ protected:
 	AMethod();
 public:
 	AMethod(t_serv const *config, Request const *request) : _config(config), _request(request) {};
-	virtual MethodStatus	createHeader();
-	virtual MethodStatus	createErrorHeader();
-	virtual MethodStatus	sendHeader(int socket);
-	virtual MethodStatus	readBody(int socket);
-	virtual MethodStatus	processRequest(std::string	const &location);
-	virtual MethodStatus	sendBody(int socket);
-	virtual ~AMethod() = 0;
+	virtual MethodStatus	createHeader() = 0;
+	virtual MethodStatus	createErrorHeader() = 0;
+	virtual MethodStatus	sendHeader(int socket) = 0;
+	virtual MethodStatus	readBody(int socket) = 0;
+	virtual MethodStatus	processRequest(std::string	const &location) = 0;
+	virtual MethodStatus	sendBody(int socket) = 0;
+	virtual ~AMethod();
 };
-
-AMethod::AMethod() {};
-AMethod::~AMethod() {};
