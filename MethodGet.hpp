@@ -29,8 +29,8 @@
 class MethodGet : public AMethod
 {
 private:
-	MethodGet(MethodGet & const src);
-	MethodGet & operator=(MethodGet & const src);
+	MethodGet(MethodGet const & src);
+	MethodGet & operator=(MethodGet const & src);
 	// MethodGet();
 
 public:

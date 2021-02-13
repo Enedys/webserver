@@ -89,12 +89,13 @@ MethodStatus	MethodGet::createHeader() {
 	// _headersMap.insert(std::pair<std::string, std::string>("", f_line));
 
 	_request->getHeadersMap();
+	// default fields:
 	_headersMap.insert(std::pair<std::string, std::string>("Server", "nginx/1.2.1"));
-
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Length", contentLength));
 	_headersMap.insert(std::pair<std::string, std::string>("Date", _date));
 
+	// fields specific to method:
 	_headersMap.insert(std::pair<std::string, std::string>("Last-Modified", _lastModified));
 	_headersMap.insert(std::pair<std::string, std::string>("Accept-Charsets", "-"));
 	_headersMap.insert(std::pair<std::string, std::string>("Accept-Language", "-"));
