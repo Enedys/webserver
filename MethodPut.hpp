@@ -6,7 +6,7 @@ private:
     /* data */
     MethodPut(/* args */);
 public:
-	MethodPut(const serv_config *config) : AMethod(config) {};
+	MethodPut(const serv_config *config, Request const *req) : AMethod(config, req) {};
     ~MethodPut();
 };
 

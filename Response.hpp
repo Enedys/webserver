@@ -38,10 +38,47 @@ private:
 	stageStatus			_stage;
 	int					setMethod();
 	responseStatus		sendResponse();
-	int					setRequest();
-	std::string			getLocation();
+	int					setRequest(Request const *request);
+	std::string			getPath(std::string const &uri);
 	Response();
 };
+
+int								Response::setRequest(Request const *request)
+{
+	_request = request;
+	if (_request)
+		return (0);
+	return (1);
+}
+
+std::string						Response::getPath(std::string const &uri)
+{
+	constLocIter	itLoc = _config->locs.begin();
+	constLocIter	itBest = _config->locs.end();
+	size_t	pos = 0;
+	// std::string	filename = uri.substr(uri.find_last_of('/'));					/* may be useful */
+	// size_t	pos = uri.find_last_of('/'); //possible case delim==npos?
+	// std::string	path = uri.substr(0, pos + 1);
+	while (itLoc != _config->locs.end())
+	{
+		if ((pos = uri.find(itLoc->path)) == std::string::npos)
+		{
+			itLoc++;
+			continue ;
+		}
+		if (itBest == _config->locs.end())
+			itBest = itLoc;
+		else if (itLoc->path.length() > itBest->path.length())
+			itBest = itLoc;
+		itLoc++;
+	}
+	if (itBest == _config->locs.end())													/* what path should return if location for such uri does not exist ? */
+		return ("/");
+	if (itBest->root == "/")
+		return (uri.substr(itBest->path.length()));
+	return (itBest->root + uri.substr(itBest->path.length()));
+}
+
 
 Response::responseStatus		Response::sendResponse()
 {
@@ -50,7 +87,8 @@ Response::responseStatus		Response::sendResponse()
 	setMethod();
 	if (!_method || _socket == -1)
 		return (noMethod);
-	MethodStatus res;
+	MethodStatus	res;
+	std::string		path;
 	switch(_stage)
 	{
 		case defaultState:
@@ -66,8 +104,8 @@ Response::responseStatus		Response::sendResponse()
 			else if (res == error)
 				_stage = errorHeader;
 		case processingResponse:
-
-			res = _method->processRequest("location");
+			path = getPath(_request->getStartLine().find("method")->second);
+			res = _method->processRequest(path); ////
 			if (res == ok)
 				_stage = sendingHeader;
 			else if (res == error)
@@ -95,17 +133,22 @@ Response::responseStatus		Response::sendResponse()
 			_stage = defaultState;
 			return (defaultStatus);
 	}
+	return (defaultStatus);
 }
 
 int				Response::setMethod()
 {
 	if (!_request)
 		return (noRequest);
-	if (_method)
+	if (_socket == -1)
+		_socket = _request->getSocket();
+	if (_method && _stage != defaultState)
 		return (defaultStatus);
+	if (defaultState && _method)
+		delete _method;
 	if (_request->getErrorCode())
 	{
-		_method = new MethodError(_config);
+		_method = new MethodError(_config, _request);
 		_stage = errorHeader;
 		return (defaultStatus);
 	}
@@ -113,22 +156,25 @@ int				Response::setMethod()
 	constMapIter	method = line.find("method");
 	if (method == line.cend())
 	{
-		_method = new MethodError(_config);
+		_method = new MethodError(_config, _request);
 		_stage = errorHeader;
 		return (defaultStatus);
 	}
 	if (method->second == "GET")
-		_method = new MethodGet(_config);
+		_method = new MethodGet(_config, _request);
 	else if (method->second == "HEAD")
-		_method = new MethodHead(_config);
+		_method = new MethodHead(_config, _request);
 	else if (method->second == "OPTION")
-		_method = new MethodOption(_config);
+		_method = new MethodOption(_config, _request);
 	else if (method->second == "PUT")
-		_method = new MethodPut(_config);
+		_method = new MethodPut(_config, _request);
 	else if (method->second == "POST")
-		_method = new MethodPost(_config);
+		_method = new MethodPost(_config, _request);
 	else
+	{
+		_method = new MethodError(_config, _request);
 		return (invalidRequest);
+	}
 	return (defaultStatus);
 }
 
@@ -137,8 +183,6 @@ Response::Response(const t_serv *conf, Request const *request) :
 {
 	if (!_request)
 		return ;
-	if (_request)
-		_socket = _request->getSocket();
 	setMethod();
 };
 

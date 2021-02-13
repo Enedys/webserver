@@ -6,7 +6,7 @@ private:
     /* data */
     MethodPost(/* args */);
 public:
-	MethodPost(const serv_config *config) : AMethod(config) {};
+	MethodPost(const serv_config *config, Request const *req) : AMethod(config, req) {};
     ~MethodPost();
 };
 

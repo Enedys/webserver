@@ -17,6 +17,8 @@ private:
 	
 	int					createSocket();	/* the main function for server creation. throw (const char *) an exception if the server failed to create */
 	void				closeSocket();
+	
+	std::vector<serv_config> servers;
 	Server();
 public:
 			/* getters and setters */
@@ -82,38 +84,6 @@ int					Server::createSocket()
 	if (listen(_socket, 10))														/* open socket for listening and set max connections number for current server */
 		throw ("Listen failed.");
 	return (1);
-}
-
-std::string			Server::getUri(std::string const &uri)							/* Itrates by the location and find it as substring into uri. */
-{																					/* Remebver most longest corresponding */
-	mapIter	itLoc = _locations.begin();
-	mapIter	itBest = _locations.end();
-	size_t	pos = 0;
-	int		first = 1;
-	// std::string	filename = uri.substr(uri.find_last_of('/'));					/* may be useful */
-	// size_t	pos = uri.find_last_of('/'); //possible case delim==npos?
-	// std::string	path = uri.substr(0, pos + 1);
-	while (itLoc != _locations.end())
-	{
-		if ((pos = uri.find(itLoc->first)) == std::string::npos)
-		{
-			itLoc++;
-			continue ;
-		}
-		if (first)
-		{
-			itBest = itLoc;
-			first = 0;
-		}
-		else if (itLoc->first.length() > itBest->first.length())
-			itBest = itLoc;
-		itLoc++;
-	}
-	if (itBest == _locations.end())													/* what path should return if location for such uri does not exist ? */
-		return ("/");
-	if (itBest->second == "/")
-		return (uri.substr(itBest->first.length()));
-	return (itBest->second + uri.substr(itBest->first.length()));
 }
 
 Server::Server(std::string serverName, unsigned int port) try :

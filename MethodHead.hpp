@@ -8,7 +8,7 @@ private:
     /* data */
     MethodHead(/* args */);
 public:
-	MethodHead(const serv_config *config) : AMethod(config) {};
+	MethodHead(const serv_config *config, Request const *req) : AMethod(config, req) {};
     ~MethodHead();
 };
 
