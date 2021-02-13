@@ -7,7 +7,7 @@ int main()
 
 		//Server myServer("127.0.0.1", 3535);
 		Parser	parser;
-		parser.parse("webserver.conf");
+		parser.parse("webserv.conf");
 		WebServer	myWebServer;
 		for (int i = 0; i < parser.servers.size(); i++)
 			myWebServer.appendServer(new Server(parser.servers[i]));
