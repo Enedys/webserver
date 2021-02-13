@@ -5,6 +5,8 @@
 # include <sys/stat.h>
 # include <fstream>
 # include <fcntl.h>//write nonblock
+# include <time.h>
+# include <sys/time.h>
 
 # include "Method.hpp"
 # include "Response.hpp"
@@ -37,7 +39,7 @@ public:
 	MethodGet(t_serv const *config);
 	~MethodGet();
 
-	MethodStatus	createHeader() {};
+	MethodStatus	createHeader();
 	MethodStatus	createErrorHeader() {};
 	MethodStatus	sendHeader(int socket);
 	MethodStatus	processRequest(std::string &path);
