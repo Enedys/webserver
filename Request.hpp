@@ -98,7 +98,7 @@ int				Request::readRequest(Logger *_webLogger)
 	while ((read = recv(socket, buffer, 511, MSG_DONTWAIT)) > 0)
 	{
 		if (_webLogger)
-			*_webLogger << verbose << "Read request from socket: "\
+			*_webLogger << Message::verbose << "Read request from socket: "\
 					<< socket << Logger::endl;
 		buffer[read] = '\0';
 		_buffer += buffer;
@@ -127,7 +127,7 @@ int				Request::readRequest(Logger *_webLogger)
 	if (read == 0)// && request.str().empty())
 	{
 		if (_webLogger)
-			*_webLogger << reqread << "Сlient closed the connection" << Logger::endl;
+			*_webLogger << Message::reqread << "Сlient closed the connection" << Logger::endl;
 		return (1);
 	}
 	return (0);

@@ -10,10 +10,6 @@ public:
     ~MethodError();
 };
 
-MethodError::MethodError(/* args */)
-{
-}
-
 MethodError::~MethodError()
 {
 }

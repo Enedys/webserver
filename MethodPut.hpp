@@ -10,10 +10,6 @@ public:
     ~MethodPut();
 };
 
-MethodPut::MethodPut(/* args */)
-{
-}
-
 MethodPut::~MethodPut()
 {
 }

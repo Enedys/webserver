@@ -31,15 +31,15 @@ class Response
 	}			stageStatus;
 
 private:
-	t_serv const	*_config;
-	int				_socket;
-	Request	const	*_request;
-	AMethod			*_method;
-	stageStatus		_stage;
-	int				setMethod();
-	responseStatus	sendResponse();
-	int				setRequest();
-	std::string		getLocation();
+	serv_config const	*_config;
+	int					_socket;
+	Request	const		*_request;
+	AMethod				*_method;
+	stageStatus			_stage;
+	int					setMethod();
+	responseStatus		sendResponse();
+	int					setRequest();
+	std::string			getLocation();
 	Response();
 };
 
@@ -89,7 +89,10 @@ Response::responseStatus		Response::sendResponse()
 			if (res == error)
 				return (sendingError);	//same logic as sendingHeaderError
 			else if (res == ok)
-				_stage = defaultState;
+				_stage = finishState;
+			return (defaultStatus);
+		case finishState:
+			_stage = defaultState;
 			return (defaultStatus);
 	}
 }
@@ -102,7 +105,7 @@ int				Response::setMethod()
 		return (defaultStatus);
 	if (_request->getErrorCode())
 	{
-		_method = new MethodError;
+		_method = new MethodError(_config);
 		_stage = errorHeader;
 		return (defaultStatus);
 	}
@@ -110,20 +113,20 @@ int				Response::setMethod()
 	constMapIter	method = line.find("method");
 	if (method == line.cend())
 	{
-		_method = new MethodError;
+		_method = new MethodError(_config);
 		_stage = errorHeader;
 		return (defaultStatus);
 	}
 	if (method->second == "GET")
 		_method = new MethodGet(_config);
 	else if (method->second == "HEAD")
-		_method = new MethodHead;
+		_method = new MethodHead(_config);
 	else if (method->second == "OPTION")
-		_method = new MethodOption;
+		_method = new MethodOption(_config);
 	else if (method->second == "PUT")
-		_method = new MethodPut;
+		_method = new MethodPut(_config);
 	else if (method->second == "POST")
-		_method = new MethodPost;
+		_method = new MethodPost(_config);
 	else
 		return (invalidRequest);
 	return (defaultStatus);

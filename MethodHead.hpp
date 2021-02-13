@@ -12,10 +12,6 @@ public:
     ~MethodHead();
 };
 
-MethodHead::MethodHead(/* args */)
-{
-}
-
 MethodHead::~MethodHead()
 {
 }

@@ -10,10 +10,6 @@ public:
     ~MethodOption();
 };
 
-MethodOption::MethodOption(/* args */)
-{
-}
-
 MethodOption::~MethodOption()
 {
 }

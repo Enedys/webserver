@@ -26,8 +26,21 @@
 #include <exception>
 #include <ctime>
 
+/* Typedefs */
+typedef std::map<std::string, std::string>					stringMap;
+typedef std::map<std::string, std::string>::iterator		mapIter;
+typedef std::map<std::string, std::string>::const_iterator	constMapIter;
+
 /* Andrew */
 #include "Parser.hpp"
+typedef Parser::t_serv										serv_config;
+
+typedef	enum
+{
+	ok,
+	inprogress,
+	error
+}		MethodStatus;
 
 /* Methods */
 #include "Method.hpp"
@@ -37,18 +50,5 @@
 #include "MethodPost.hpp"
 #include "MethodOption.hpp"
 #include "MethodError.hpp"
-
-/* Typedefs */
-typedef std::map<std::string, std::string>					stringMap;
-typedef std::map<std::string, std::string>::iterator		mapIter;
-typedef std::map<std::string, std::string>::const_iterator	constMapIter;
-typedef Parser::t_serv										serv_config;
-
-typedef	enum
-{
-	ok,
-	inprogress,
-	error
-}		MethodStatus;
 
 #define CRLF	"\r\n"
