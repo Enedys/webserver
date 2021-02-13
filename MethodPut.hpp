@@ -4,8 +4,9 @@ class MethodPut: public AMethod
 {
 private:
     /* data */
-public:
     MethodPut(/* args */);
+public:
+	MethodPut(const serv_config *config) : AMethod(config) {};
     ~MethodPut();
 };
 

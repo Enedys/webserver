@@ -26,6 +26,9 @@
 #include <exception>
 #include <ctime>
 
+/* Andrew */
+#include "Parser.hpp"
+
 /* Methods */
 #include "Method.hpp"
 #include "MethodGet.hpp"
@@ -39,6 +42,7 @@
 typedef std::map<std::string, std::string>					stringMap;
 typedef std::map<std::string, std::string>::iterator		mapIter;
 typedef std::map<std::string, std::string>::const_iterator	constMapIter;
+typedef Parser::t_serv										serv_config;
 
 typedef	enum
 {

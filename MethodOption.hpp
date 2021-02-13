@@ -4,8 +4,9 @@ class MethodOption : public AMethod
 {
 private:
     /* data */
-public:
     MethodOption(/* args */);
+public:
+	MethodOption(const serv_config *config) : AMethod(config) {};
     ~MethodOption();
 };
 
