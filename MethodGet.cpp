@@ -47,10 +47,12 @@ long		GetFileSize(std::string filename)
 }
 
 void		mapToString(stringMap const &startLine, stringMap const &headersMap, std::string *output){
-	*output += startLine.find("method")->second + " " + startLine.find("uri")->second + " " + startLine.find("version")->second;
-
+	// *output += startLine.find("method")->second + " " + startLine.find("uri")->second + " " + startLine.find("version")->second + CRLF;
+	*output += startLine.find("version")->second + " " + "200 OK" + CRLF;
 	for (constMapIter it = headersMap.begin(); it != headersMap.end(); ++it)
-		*output += (it->first) + ":" + (it->second) + "\n";
+		*output += (it->first) + ": " + (it->second) + CRLF;
+	*output += CRLF;
+	std::cout << "READY_HEADER: " << *output << std::endl;
 }
 
 MethodStatus	MethodGet::createHeader() {
@@ -71,7 +73,7 @@ MethodStatus	MethodGet::createHeader() {
 	struct tm		*tm2;
 	std::string		_lastModified;
 
-	std::string path = "/Users/bshang/ololo/ws/act/source";//
+	std::string path = "/Users/kwillum/ft_webserver/files/test.file";//
 	if (stat(path.c_str(), &stats) == 0) {
 		tm2 = gmtime(&stats.st_mtime);
 		strftime(buf2, 100, "%a, %d %b %Y %H:%M:%S GMT", tm2);
@@ -98,19 +100,22 @@ MethodStatus	MethodGet::createHeader() {
 
 	// fields specific to method:
 	_headersMap.insert(std::pair<std::string, std::string>("Last-Modified", _lastModified));
-	_headersMap.insert(std::pair<std::string, std::string>("Accept-Charsets", "-"));
-	_headersMap.insert(std::pair<std::string, std::string>("Accept-Language", "-"));
-	_headersMap.insert(std::pair<std::string, std::string>("Allow", "-"));
-	_headersMap.insert(std::pair<std::string, std::string>("Authorization", "-"));
-	_headersMap.insert(std::pair<std::string, std::string>("Content-Language", "-"));
-	_headersMap.insert(std::pair<std::string, std::string>("Content-Location", "-"));
-	_headersMap.insert(std::pair<std::string, std::string>("Content-Type", "-"));
-	_headersMap.insert(std::pair<std::string, std::string>("Host", "-"));
-	_headersMap.insert(std::pair<std::string, std::string>("Location", "-"));
-	_headersMap.insert(std::pair<std::string, std::string>("Referer", "-"));
-	_headersMap.insert(std::pair<std::string, std::string>("Retry-After", "-"));
-	_headersMap.insert(std::pair<std::string, std::string>("Transfer-Encoding", "-"));
-	_headersMap.insert(std::pair<std::string, std::string>("WWW-Authenticate", "-"));
+	// _headersMap.insert(std::pair<std::string, std::string>("Accept-Charsets", "-"));
+	// _headersMap.insert(std::pair<std::string, std::string>("Accept-Language", "-"));
+	// _headersMap.insert(std::pair<std::string, std::string>("Allow", "-"));
+	// _headersMap.insert(std::pair<std::string, std::string>("Authorization", "-"));
+	// _headersMap.insert(std::pair<std::string, std::string>("Content-Language", "-"));
+	// _headersMap.insert(std::pair<std::string, std::string>("Content-Location", "-"));
+	// _headersMap.insert(std::pair<std::string, std::string>("Content-Type", "-"));
+	_headersMap.insert(std::pair<std::string, std::string>("Host", "127.0.0.1"));
+	// _headersMap.insert(std::pair<std::string, std::string>("Location", "-"));
+	// _headersMap.insert(std::pair<std::string, std::string>("Referer", "-"));
+	// _headersMap.insert(std::pair<std::string, std::string>("Retry-After", "-"));
+	// _headersMap.insert(std::pair<std::string, std::string>("Transfer-Encoding", "-"));
+	// _headersMap.insert(std::pair<std::string, std::string>("WWW-Authenticate", "-"));
+
+	for (constMapIter it = _headersMap.begin(); it != _headersMap.end(); ++it)
+		std::cout << (it->first) + ":" + (it->second) + "\n";
 
 	delete contentLength;//lol
 	return ok;

@@ -10,15 +10,7 @@
 #include "MethodPut.hpp"
 #include "MethodPost.hpp"
 #include "MethodOption.hpp"
-// #include "TestMethod.hpp"
-// class AMethod;
 
-// class MethodError;
-// class MethodGet;
-// class MethodHead;
-// class MethodOption;
-// class MethodPost;
-// class MethodPut;
 
 class Response
 {
@@ -46,16 +38,15 @@ class Response
 		finishState,
 		errorHeader,
 	}			stageStatus;
-
+	int					setMethod();
+	responseStatus		sendResponse();
+	int					setRequest(Request const *request);
+	std::string			getPath(std::string const &uri);
 private:
 	t_serv const		*_config;
 	int					_socket;
 	Request	const		*_request;
 	AMethod				*_method;
 	stageStatus			_stage;
-	int					setMethod();
-	responseStatus		sendResponse();
-	int					setRequest(Request const *request);
-	std::string			getPath(std::string const &uri);
 	Response();
 };

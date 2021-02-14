@@ -45,6 +45,8 @@ int				Request::readRequest(Logger *_webLogger)
 {
 	char	buffer[512];
 	int		read = 0;
+	if (_status == bodyProc)
+		return (0);
 	while ((read = recv(socket, buffer, 511, MSG_DONTWAIT)) > 0)
 	{
 		if (_webLogger)
@@ -71,6 +73,7 @@ int				Request::readRequest(Logger *_webLogger)
 		printRequest();
 		if (_status == bodyProc)
 		{
+			// return (0);
 			_status = responseReady;
 		}
 	}
@@ -178,7 +181,7 @@ int			Request::parseStartLine()
 	size_t	spacePos2 = _buffer.find(' ', spacePos1 + 1);
 	if (spacePos2 == std::string::npos || spacePos2 > crlfPos)
 		return ((_errorCode = 400));
-	startLine["uri"] = _buffer.substr(spacePos1 + 1, spacePos2);
+	startLine["uri"] = _buffer.substr(spacePos1 + 1, spacePos2 - spacePos1 - 1);
 	startLine["version"] = _buffer.substr(spacePos2 + 1, crlfPos - spacePos2 - 1);
 	_buffer = _buffer.substr(crlfPos + 2);
 	_status = firstLine;

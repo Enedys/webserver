@@ -2,7 +2,7 @@
 // class Logger;
 
 #include "Debugger.hpp"
-//#include "include_resources.hpp" 
+//#include "include_resources.hpp"
 
 #define MAX_URI_LENGTH		4096
 #define	MAX_REQUEST_SIZE	8192

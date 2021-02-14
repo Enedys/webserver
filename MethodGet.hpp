@@ -10,6 +10,7 @@
 
 # include "Method.hpp"
 
+class AMethod;
 # define BUFSIZE 1024
 
 

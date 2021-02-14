@@ -3,13 +3,6 @@
 #include "Parser.hpp"
 #include "Request.hpp"
 
-// class MethodError;
-// class MethodGet;
-// class MethodHead;
-// class MethodOption;
-// class MethodPost;
-// class MethodPut;
-
 class AMethod
 {
 protected:
