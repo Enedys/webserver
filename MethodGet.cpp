@@ -37,36 +37,6 @@ char		*ft_itoa(long int nbr)
 			break ;
 	}
 	return (str);
-char		*ft_itoa(long int nbr)
-{
-	int		len = 0;
-	int		sign = 1;
-	char	*str;
-	long int nbrcpy = nbr;
-
-	while (nbrcpy <= -10 || nbrcpy >= 10) {
-		nbrcpy /= 10;
-		len++;
-	}
-	if (nbrcpy < 0)
-		len++;
-	if (!(str = (char*)malloc(sizeof(*str) * (len + 2))))
-		return (NULL);
-	if (nbr < 0){
-		nbr *= -1;
-		sign *= (-1);
-	}
-	if (sign < 0)
-		str[0] = '-';
-	str[len + 1] = '\0';
-	while (len >= 0){
-		str[len] = nbr % 10 + '0';
-		nbr = nbr / 10;
-		len--;
-		if (len == 0 && sign < 0)
-			break ;
-	}
-	return (str);
 }
 
 long		GetFileSize(std::string filename)
@@ -82,11 +52,6 @@ void		mapToString(stringMap const &startLine, stringMap const &headersMap, std::
 	for (constMapIter it = headersMap.begin(); it != headersMap.end(); ++it)
 		*output += (it->first) + ":" + (it->second) + "\n";
 }
-void		mapToString(stringMap const &startLine, stringMap const &headersMap, std::string *output){
-	*output += startLine.find("method")->second + " " + startLine.find("uri")->second + " " + startLine.find("version")->second;
-
-	for (constMapIter it = headersMap.begin(); it != headersMap.end(); ++it)
-		*output += (it->first) + ":" + (it->second) + "\n";
 
 MethodStatus	MethodGet::createHeader() {
 
@@ -201,5 +166,5 @@ MethodStatus		MethodGet::sendBody(int socket) {
 	return ok;
 }
 
-MethodStatus	createErrorHeader() { return ok; };
-MethodStatus	readBody(int socket) { return (ok); };
+MethodStatus	MethodGet::createErrorHeader() { return ok; };
+MethodStatus	MethodGet::readBody(int socket) { return ok; };
