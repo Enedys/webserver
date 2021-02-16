@@ -8,7 +8,7 @@ class AMethod
 protected:
 	stringMap			_headersMap;
 	Request const		*_request;
-	int					_status;
+	int					_statusCode;
 	int					_fd;
 	const t_serv		*_config;
 	AMethod();

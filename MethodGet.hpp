@@ -3,34 +3,25 @@
 
 # include <iostream>
 # include <sys/stat.h>
-# include <fstream>
-# include <fcntl.h>//write nonblock
+# include <fcntl.h>
 # include <time.h>
 # include <sys/time.h>
 
 # include "Method.hpp"
 
 class AMethod;
+// class Header;
 # define BUFSIZE 1024
-
-
-// std::string		generateHeader(std::string content, std::string path, int code)
-// {
-// 	std::string	header;
-// 	header = "HTTP/1.1 " + code.toStr + " " + getStatusMessage(code) + "\r\n";
-// 	header += writeHeader();
-// 	return (header);
-// }
 
 //max body size
 
-
+// class MethodGet : public AMethod, public Header
 class MethodGet : public AMethod
 {
 private:
 	MethodGet(MethodGet const & src);
 	MethodGet & operator=(MethodGet const & src);
-	// MethodGet();
+	MethodGet();
 
 public:
 	MethodGet(t_serv const *config, Request	const *_request);
@@ -42,6 +33,8 @@ public:
 	MethodStatus	processRequest(std::string const &path);
 	MethodStatus	sendBody(int socket);
 	MethodStatus	readBody(int socket);
+
+	// std::string	*headerToString(OurHeader *buf);// const
 
 	typedef	enum
 	{
@@ -58,19 +51,7 @@ public:
 		okWaitingMoreChunks = 1,//222 wtf
 		okSuccess = 200
 	}		ErrorStatus;
-	// std::string	*headerToString(OurHeader *buf);// const
 
-	// int		getStatus() const { return this->_status; };//will be retrieved from Response
 };
-
-// int		readContent(void);
-
-// {
-// 	ResponseHeader	head;
-
-// 	_code = readContent();
-// 	_response = head.getHeader(_content, _path, _code) + _content;
-// }
-
 
 #endif

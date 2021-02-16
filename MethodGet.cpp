@@ -47,7 +47,6 @@ long		GetFileSize(std::string filename)
 }
 
 void		mapToString(stringMap const &startLine, stringMap const &headersMap, std::string *output){
-	// *output += startLine.find("method")->second + " " + startLine.find("uri")->second + " " + startLine.find("version")->second + CRLF;
 	*output += startLine.find("version")->second + " " + "200 OK" + CRLF;
 	for (constMapIter it = headersMap.begin(); it != headersMap.end(); ++it)
 		*output += (it->first) + ": " + (it->second) + CRLF;
@@ -57,6 +56,9 @@ void		mapToString(stringMap const &startLine, stringMap const &headersMap, std::
 
 MethodStatus	MethodGet::createHeader() {
 
+	// createGeneralHeaders();
+	// addLocationHeader();
+
 //"Date":
 	char			buf1[100];
 	struct timeval	tv;
@@ -65,7 +67,7 @@ MethodStatus	MethodGet::createHeader() {
 	gettimeofday(&tv, NULL);
 	tm1 = gmtime(&tv.tv_sec);
 	strftime(buf1, 100, "%a, %d %b %Y %H:%M:%S GMT", tm1);
-	std::string _date = std::string(buf1);
+	std::string date = std::string(buf1);
 
 //"Last-Modified":
 	char			buf2[100];
@@ -91,12 +93,12 @@ MethodStatus	MethodGet::createHeader() {
 
 	// _headersMap.insert(std::pair<std::string, std::string>("", f_line));
 
-	_request->getHeadersMap();
+	_request->getHeadersMap();//what for?
 	// default fields:
 	_headersMap.insert(std::pair<std::string, std::string>("Server", "nginx/1.2.1"));
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Length", contentLength));
-	_headersMap.insert(std::pair<std::string, std::string>("Date", _date));
+	_headersMap.insert(std::pair<std::string, std::string>("Date", date));
 
 	// fields specific to method:
 	_headersMap.insert(std::pair<std::string, std::string>("Last-Modified", _lastModified));
@@ -126,7 +128,7 @@ MethodStatus		MethodGet::sendHeader(int socket) {
 	mapToString(_request->getStartLine(), _headersMap, &headerStr);
 
 	if (send(socket, headerStr.c_str(), headerStr.length(), 0) < 0){
-		_status = errorSendHeader;
+		_statusCode = errorSendHeader;
 		return error;
 	}
 
@@ -136,12 +138,12 @@ MethodStatus		MethodGet::sendHeader(int socket) {
 MethodStatus		MethodGet::processRequest(std::string const &path) {
 	struct stat	st;
 	if (stat(path.c_str(), &st) == -1){//lstat?
-		_status = notFound;
+		_statusCode = notFound;
 		return error;
 	}
 
 	if ((_fd = open(path.c_str(), O_RDONLY | O_NONBLOCK)) <= 0){
-		_status = errorOpeningURL;
+		_statusCode = errorOpeningURL;
 		return error;
 	}
 
@@ -158,16 +160,16 @@ MethodStatus		MethodGet::sendBody(int socket) {
 		if (sent == 0)
 			break ;
 		if (sent < 0){
-			_status = errorSocket;
+			_statusCode = errorSocket;
 			return error;
 		}
 	}
 	if (ret == -1){
-		_status = errorReadingURL;
+		_statusCode = errorReadingURL;
 		return error;
 	}
 	close(_fd);
-	_status = okSuccess;
+	_statusCode = okSuccess;
 	return ok;
 }
 
