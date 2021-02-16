@@ -35,23 +35,29 @@ SRC				=	Client.cpp \
 					WebServer.cpp \
 					main.cpp
 
-OBJ = $(SRC:.cpp=.o)
-
-.PHONY: all clean fclean re run
+OBJ_DIR = ./bin/
+OBJ_LIST = $(patsubst %.cpp, %.o, $(SRC))
+OBJS = $(addprefix $(OBJ_DIR), $(OBJ_LIST))
 
 all: $(NAME)
 
-$(NAME): $(OBJ)
+$(NAME): $(OBJ_DIR) $(OBJS)
 	echo "Danone!"
-	clang++ $(FLAGS) -o $(NAME) $(OBJ)
+	clang++ $(FLAGS) $(OBJS) -o $(NAME)
 
-%.o:%.cpp
+$(OBJ_DIR):
+	mkdir $(OBJ_DIR)
+
+$(OBJ_DIR)%.o: %.cpp $(HEADERS)
 	clang++ -c -g $< -o $@
 
 clean:
-	rm -rf $(OBJ)
+	rm -f $(OBJS)
+	rm -rf $(OBJ_DIR)
 
-fclean:
-	rm -rf $(OBJ) $(NAME)
+fclean: clean
+	rm -f $(NAME)
 
 re: fclean all
+
+.PHONY: all clean fclean re run

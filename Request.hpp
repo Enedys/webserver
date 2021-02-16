@@ -1,6 +1,7 @@
 #pragma once
 // class Logger;
 
+#include <algorithm>//added because it did not compile
 #include "Debugger.hpp"
 //#include "include_resources.hpp"
 
