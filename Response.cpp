@@ -70,11 +70,11 @@ Response::responseStatus		Response::sendResponse()
 				_stage = processingResponse;
 			else if (res == error)
 				_stage = errorHeader;
-		case processingResponse:
+		case processingResponse://if allowed (+- Allow header)
 			std::cout << "ProcResp\n";
 			path = getPath(_request->getStartLine().find("uri")->second);
 			std::cout << "Path: " << path << std::endl;
-			res = _method->processRequest(path); ////
+			res = _method->processRequest(path); ////not only prepare sockets, but generate all headers. Can't send them all on the next step, because need to try to do job with body first
 			if (res == ok)
 				_stage = sendingHeader;
 			else if (res == error)
@@ -107,9 +107,31 @@ Response::responseStatus		Response::sendResponse()
 	return (defaultStatus);
 }
 
+// Response::responseStatus		Response::sendResponse()
+// {
+// 	if (!_request)
+// 		return (noRequest);
+// 	setMethod();
+// 	if (!_method || _socket == -1)
+// 		return (noMethod);
+// 	MethodStatus	res;
+
+// 	std::string path = getPath(_request->getStartLine().find("uri")->second);
+
+// // Check endpoints (if source/target exists). set STATUSCODE if error occured
+// 	_method->prepare(path);
+// // Create General, Entity (~Length), Specific or Error considering STATUSCODE.
+// // If ErrorHeader was created and was sent - error returned, function ends
+// 	res = _method->createAndSendHeaders();
+// 	if (res == ok)
+// 		res = _method->processAndSendBody();//updates STATUSCODE
+// 	if (res == error)//
+// 		_method->createAndSendHeaders();//close connection?
+// };
+
 int				Response::setMethod()
 {
-	std::cout << "Request ptr: " << _request << " Method ptr: " << _method << std::endl; 
+	std::cout << "Request ptr: " << _request << " Method ptr: " << _method << std::endl;
 	if (!_request)
 		return (noRequest);
 	if (_socket == -1)
@@ -167,7 +189,7 @@ Response::Response(const t_serv *conf, Request const *request) :
 	// // setMethod();
 };
 
-Response::~Response() 
+Response::~Response()
 {
 	delete _method;
 };

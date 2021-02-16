@@ -32,6 +32,17 @@ int		Header::addAllowHeader(){
 	return 0;
 };
 
+MethodStatus	createErrorHeader(){
+	return ok;
+};
+
+int		Header::createEntityHeaders(){//specific for statuses and methods
+	addContentLanguageHeader();//Entity
+	addContentLengthHeader();//Entity //+path
+	addContentLocationHeader();//Entity
+	addContentTypeHeader();//Entity //+path
+};
+
 int		Header::addContentLanguageHeader(){
 	// define language of the source or use our default?
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Language", "eng"));//can it be specified in request before?
@@ -159,14 +170,3 @@ int		Header::addAuthenticateHeader(){
 	_headersMap.insert(std::pair<std::string, std::string>("WWW-Authenticate", "Basic realm=\"Access to the staging site\", charset=\"UTF-8\""));
 	return 0;
 }
-
-MethodStatus	createErrorHeader(){
-	return ok;
-};
-
-// int		Header::createEntityHeaders(){//specific for statuses and methods
-// 	addContentLanguageHeader();//Entity
-// 	addContentLengthHeader();//Entity //+path
-// 	addContentLocationHeader();//Entity
-// 	addContentTypeHeader();//Entity //+path
-// };

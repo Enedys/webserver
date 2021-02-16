@@ -27,7 +27,7 @@ public:
 	~Header();
 
 	int		createGeneralHeaders();//common for all responses
-	// int		createEntityHeaders();
+	int		createEntityHeaders();
 	MethodStatus	createErrorHeader();//int
 	// int		createOptHeaders();//specific for statuses and methods
 

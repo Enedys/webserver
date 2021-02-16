@@ -57,6 +57,7 @@ void		mapToString(stringMap const &startLine, stringMap const &headersMap, std::
 MethodStatus	MethodGet::createHeader() {
 
 	// createGeneralHeaders();
+	// createEntityHeaders();
 	// addLocationHeader();
 
 //"Date":
@@ -147,6 +148,10 @@ MethodStatus		MethodGet::processRequest(std::string const &path) {
 		return error;
 	}
 
+	// createGeneralHeaders();
+	// createEntityHeaders();
+	// addLocationHeader();
+
 	return ok;
 };
 
@@ -165,7 +170,7 @@ MethodStatus		MethodGet::sendBody(int socket) {
 		}
 	}
 	if (ret == -1){
-		_statusCode = errorReadingURL;
+		_statusCode = errorReadingURL;//updates STATUSCODE or return error
 		return error;
 	}
 	close(_fd);
