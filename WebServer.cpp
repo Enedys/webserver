@@ -160,11 +160,14 @@ int						WebServer::sendActualResponses()
 	{
 		if (FD_ISSET((*cIt)->getClientSocket(), &_fdsToWrite))
 		{
+			std::cout << "WHYYYY???\n";
 			_webLogger << Message::verbose << "Send response to socket: "\
 				<< (*cIt)->getClientSocket() << Logger::endl;
 			/* cIt->sendResponse() must be here */
-			send((*cIt)->getClientSocket(), resp, sizeof(resp) - 1, MSG_DONTWAIT);
-			send((*cIt)->getClientSocket(), bodya, sizeof(bodya) - 1, MSG_DONTWAIT);
+			std::cout << "Set method status: " << (*cIt)->setMethod();
+			(*cIt)->sendResponse();
+			// send((*cIt)->getClientSocket(), resp, sizeof(resp) - 1, MSG_DONTWAIT);
+			// send((*cIt)->getClientSocket(), bodya, sizeof(bodya) - 1, MSG_DONTWAIT);
 			(*cIt)->setRequestStatus(Request::none); // setWaitRequestStatus();
 		}
 		cIt++;
