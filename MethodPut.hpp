@@ -1,19 +1,25 @@
+#ifndef MethodPut_HPP
+# define MethodPut_HPP
+
 #pragma once
-#include "include_resources.hpp"
 #include "Method.hpp"
 
-class MethodPut: public AMethod
+class MethodPut : public AMethod
 {
 private:
-    /* data */
-    MethodPut(/* args */);
+	MethodPut(MethodPut const & src);
+	MethodPut & operator=(MethodPut const & src);
+	MethodPut();
+
 public:
-	MethodPut(const t_serv *config, Request const *req) : AMethod(config, req) {};
-    ~MethodPut();
-    MethodStatus	createHeader();
-    MethodStatus	createErrorHeader();
-    MethodStatus	sendHeader(int socket);
-    MethodStatus	readBody(int socket);
-    MethodStatus	processRequest(std::string	const &location);
-    MethodStatus	sendBody(int socket);
+	MethodPut(t_serv const &config, int &code, stringMap const &headersMapRequest);
+	~MethodPut();
+
+	virtual MethodStatus	readRequestBody();
+	virtual MethodStatus	manageRequest(std::string const &path);
+	virtual MethodStatus	createHeader();
+	virtual MethodStatus	sendHeader(int socket);
+	virtual MethodStatus	sendBody(int socket);
 };
+
+#endif

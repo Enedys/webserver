@@ -4,7 +4,7 @@ Header::Header(){};
 
 Header::~Header(){};
 
-int Header::createGeneralHeaders(){//common for all methods and errors (Date, Host name(?))
+int Header::createGeneralHeaders(stringMap &_headersMap, int &_statusCode){//common for all methods and errors (Date, Host name(?))
 
 	char			buf1[100];
 	struct timeval	tv;
@@ -23,7 +23,7 @@ int Header::createGeneralHeaders(){//common for all methods and errors (Date, Ho
 // This header must be sent if the server responds with a 405 Method Not Allowed status code
 // to indicate which request methods can be used. An empty Allow header indicates that the
 // resource allows no request methods, which might occur temporarily for a given resource, for example.
-int		Header::addAllowHeader(){
+int		Header::addAllowHeader(stringMap &_headersMap, int &_statusCode){
 	if (_statusCode == 405) {
 		_headersMap.insert(std::pair<std::string, std::string>("Allow", ""));
 		return 0;
@@ -32,18 +32,18 @@ int		Header::addAllowHeader(){
 	return 0;
 };
 
-MethodStatus	createErrorHeader(){
+MethodStatus	createErrorHeader(stringMap &_headersMap, int &_statusCode){//not ready
 	return ok;
 };
 
-int		Header::createEntityHeaders(){//specific for statuses and methods
-	addContentLanguageHeader();//Entity
-	addContentLengthHeader();//Entity //+path
-	addContentLocationHeader();//Entity
-	addContentTypeHeader();//Entity //+path
+int		Header::createEntityHeaders(stringMap &_headersMap, int &_statusCode){//specific for statuses and methods
+	addContentLanguageHeader(_headersMap, _statusCode);//Entity
+	addContentLengthHeader(_headersMap, _statusCode);//Entity //+path
+	addContentLocationHeader(_headersMap, _statusCode);//Entity
+	addContentTypeHeader(_headersMap, _statusCode);//Entity //+path
 };
 
-int		Header::addContentLanguageHeader(){
+int		Header::addContentLanguageHeader(stringMap &_headersMap, int &_statusCode){
 	// define language of the source or use our default?
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Language", "eng"));//can it be specified in request before?
 	return 0;
@@ -81,7 +81,7 @@ char* ft_itoa(long num, char* str, int base)
 	return str;
 }
 
-int		Header::addContentLengthHeader(){
+int		Header::addContentLengthHeader(stringMap &_headersMap, int &_statusCode){
 	std::string path = "/Users/kwillum/ft_webserver/files/test.file";//
 
 	struct stat stat_buf;
@@ -97,18 +97,18 @@ int		Header::addContentLengthHeader(){
 	return 0;
 };
 
-int		Header::addContentLocationHeader(){//Entity
+int		Header::addContentLocationHeader(stringMap &_headersMap, int &_statusCode){//Entity
 //if moved
 	return 0;
 };
 
-int		Header::addContentTypeHeader(){//Entity
+int		Header::addContentTypeHeader(stringMap &_headersMap, int &_statusCode){//Entity
 //how to determine type?
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));
 	return 0;
 };
 
-int		Header::addLastModifiedHeader(){
+int		Header::addLastModifiedHeader(stringMap &_headersMap, int &_statusCode){
 	char			buf2[100];
 	struct stat		stats;
 	struct tm		*tm2;
@@ -127,14 +127,15 @@ int		Header::addLastModifiedHeader(){
 // в случае ошибки пользователь смог сам произвести переход.
 // The principal use is to indicate the URL of a resource transmitted
 // as the result of content negotiation.
-int		Header::addLocationHeader(){
+int		Header::addLocationHeader(stringMap &_headersMap, int &_statusCode){
 	std::string redirectPath = "/files/test.file";//
 
-	if (method != head && (_statusCode == 301 || _statusCode == 302 ||
-	_statusCode == 303 || _statusCode == 307 || _statusCode == 308 ||
-	_statusCode == 201)){
-		if (_statusCode != 201)
-			_body += redirectPath;//if 201 not
+	if (_statusCode == 301 || _statusCode == 302 || _statusCode == 303 || _statusCode == 307 || \
+	_statusCode == 308 || _statusCode == 201)
+	//(() && method != head )
+	{
+		// if (_statusCode != 201)
+			// _body += redirectPath;//if 201 not
 		_headersMap.insert(std::pair<std::string, std::string>("Location", redirectPath));
 	}
 	return 0;
@@ -145,7 +146,7 @@ int		Header::addLocationHeader(){
 // When sent with a 503 (Service Unavailable) response, this indicates how long the service is expected to be unavailable.
 // When sent with a 429 (Too Many Requests) response, this indicates how long to wait before making a new request.
 // When sent with a redirect response, such as 301 (Moved Permanently), this indicates the minimum time that the user agent is asked to wait before issuing the redirected request.
-int		Header::addRetryAfterHeader(){
+int		Header::addRetryAfterHeader(stringMap &_headersMap, int &_statusCode){
 
 	if (_statusCode == 503 || _statusCode == 429 || _statusCode == 301){
 		_headersMap.insert(std::pair<std::string, std::string>("Retry-After", "120"));
@@ -157,16 +158,16 @@ int		Header::addRetryAfterHeader(){
 // When present on a response to a HEAD request that has no body,
 // it indicates the value that would have applied to the corresponding GET message
 // Transfer-Encoding: gzip, chunked //compress/deflate/identity
-int		Header::addTransferEncodingHeader(){
+int		Header::addTransferEncodingHeader(stringMap &_headersMap, int &_statusCode){
 
 	_headersMap.insert(std::pair<std::string, std::string>("Transfer-Encoding", "-"));
 	return 0;
 }
 
 // The WWW-Authenticate header is sent along with a 401 Unauthorized response.
-int		Header::addAuthenticateHeader(){
+int		Header::addAuthenticateHeader(stringMap &_headersMap, int &_statusCode){
 
 	if (_statusCode == 401)
-	_headersMap.insert(std::pair<std::string, std::string>("WWW-Authenticate", "Basic realm=\"Access to the staging site\", charset=\"UTF-8\""));
+		_headersMap.insert(std::pair<std::string, std::string>("WWW-Authenticate", "Basic realm=\"Access to the staging site\", charset=\"UTF-8\""));
 	return 0;
 }

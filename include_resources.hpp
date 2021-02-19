@@ -35,6 +35,21 @@ typedef	enum
 	error
 }		MethodStatus;
 
+typedef enum
+{
+	errorReadingURL = 1,	//may be replaced
+	errorSocket = 1,		//may be replaced
+
+	errorSendHeader = 1,	//may be replaced
+	okWaitingMoreChunks = 1,//222 wtf
+	okSuccess = 200,
+	created = 201,
+	accepted = 202,
+	nocontent = 204,
+	notFound = 404,
+	errorOpeningURL = 403//
+}		statusCode;
+
 /* Typedefs */
 typedef std::map<std::string, std::string>					stringMap;
 typedef std::map<std::string, std::string>::iterator		mapIter;

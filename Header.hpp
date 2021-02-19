@@ -17,7 +17,8 @@
 
 // need to share response status of the exec processes to add some headers
 
-class Header : public AMethod
+// class Header : public AMethod
+class Header
 {
 // protected://
 // 	int		_status;//if header creation was ok
@@ -26,28 +27,27 @@ public:
 	Header();
 	~Header();
 
-	int		createGeneralHeaders();//common for all responses
-	int		createEntityHeaders();
-	MethodStatus	createErrorHeader();//int
-	// int		createOptHeaders();//specific for statuses and methods
+	int	createGeneralHeaders(stringMap &_headersMap, int &_statusCode);//common for all responses
+	int	createEntityHeaders(stringMap &_headersMap, int &_statusCode);
+	MethodStatus createErrorHeader(stringMap &_headersMap, int &_statusCode);//int
+	// int	createOptHeaders(stringMap &_headersMap, int &_statusCode);//specific for statuses and methods
 
-	int		addAllowHeader();//405 Method Not Allowed//no req methods if empty
-	int		addContentLanguageHeader();//Entity
-	int		addContentLengthHeader();//Entity //+path
-	int		addContentLocationHeader();//Entity
-	int		addContentTypeHeader();//Entity //+path
+	int	addAllowHeader(stringMap &_headersMap, int &_statusCode);//405 Method Not Allowed//no req methods if empty
+	int	addContentLanguageHeader(stringMap &_headersMap, int &_statusCode);//Entity
+	int	addContentLengthHeader(stringMap &_headersMap, int &_statusCode);//Entity //+path
+	int	addContentLocationHeader(stringMap &_headersMap, int &_statusCode);//Entity
+	int	addContentTypeHeader(stringMap &_headersMap, int &_statusCode);//Entity //+path
 
-	int		addLastModifiedHeader();//+path
-	int		addLocationHeader();//+path
+	int	addLastModifiedHeader(stringMap &_headersMap, int &_statusCode);//+path
+	int	addLocationHeader(stringMap &_headersMap, int &_statusCode);//+path
 
-	int		addRetryAfterHeader();//if status
-	int		addTransferEncodingHeader();
-	int		addAuthenticateHeader();
+	int	addRetryAfterHeader(stringMap &_headersMap, int &_statusCode);//if status
+	int	addTransferEncodingHeader(stringMap &_headersMap, int &_statusCode);
+	int	addAuthenticateHeader(stringMap &_headersMap, int &_statusCode);
 
 
-
-	MethodStatus	sendHeader(int socket);//
-	void	mapToString(stringMap const &startLine, stringMap const &headersMap, std::string *output);//
+	// MethodStatus	sendHeader(int socket);//
+	// void	mapToString(stringMap const &startLine, stringMap const &headersMap, std::string *output);//
 };
 
 #endif

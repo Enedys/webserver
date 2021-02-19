@@ -1,7 +1,6 @@
 #ifndef MethodGet_HPP
 # define MethodGet_HPP
 
-# include <iostream>
 # include <sys/stat.h>
 # include <fcntl.h>
 # include <time.h>
@@ -11,7 +10,7 @@
 
 class AMethod;
 // class Header;
-# define BUFSIZE 1024
+# define BUFSIZE 4096
 
 //max body size
 
@@ -24,34 +23,14 @@ private:
 	MethodGet();
 
 public:
-	MethodGet(t_serv const *config, Request	const *_request);
+	MethodGet(t_serv const &config, int &code, stringMap const &headersMapRequest);
 	~MethodGet();
 
-	MethodStatus	createHeader();
-	MethodStatus	createErrorHeader();
-	MethodStatus	sendHeader(int socket);
-	MethodStatus	processRequest(std::string const &path);
-	MethodStatus	sendBody(int socket);
-	MethodStatus	readBody(int socket);
-
-	// std::string	*headerToString(OurHeader *buf);// const
-
-	typedef	enum
-	{
-		// errorCreateHeader = 1,
-		// errorCreateErrorHeader = 1,
-		// errorReadBody = 1,
-		// errorProcessBody = 1,
-		notFound = 404,
-		errorOpeningURL = 403,//
-		errorReadingURL = 1,
-		errorSocket = 1,
-
-		errorSendHeader = 1,
-		okWaitingMoreChunks = 1,//222 wtf
-		okSuccess = 200
-	}		ErrorStatus;
-
+	virtual MethodStatus	readRequestBody();
+	virtual MethodStatus	manageRequest(std::string const &path);
+	virtual MethodStatus	createHeader();
+	virtual MethodStatus	sendHeader(int socket);
+	virtual MethodStatus	sendBody(int socket);
 };
 
 #endif

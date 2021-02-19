@@ -1,19 +1,25 @@
+#ifndef MethodOption_HPP
+# define MethodOption_HPP
+
 #pragma once
-#include "include_resources.hpp"
 #include "Method.hpp"
 
 class MethodOption : public AMethod
 {
 private:
-    /* data */
-    MethodOption(/* args */);
+	MethodOption(MethodOption const & src);
+	MethodOption & operator=(MethodOption const & src);
+	MethodOption();
+
 public:
-	MethodOption(const t_serv *config, Request const *req) : AMethod(config, req) {};
-    ~MethodOption();
-    MethodStatus	createHeader();
-    MethodStatus	createErrorHeader();
-    MethodStatus	sendHeader(int socket);
-    MethodStatus	readBody(int socket);
-    MethodStatus	processRequest(std::string	const &location);
-    MethodStatus	sendBody(int socket);
+	MethodOption(t_serv const &config, int &code, stringMap const &headersMapRequest);
+	~MethodOption();
+
+	virtual MethodStatus	readRequestBody();
+	virtual MethodStatus	manageRequest(std::string const &path);
+	virtual MethodStatus	createHeader();
+	virtual MethodStatus	sendHeader(int socket);
+	virtual MethodStatus	sendBody(int socket);
 };
+
+#endif

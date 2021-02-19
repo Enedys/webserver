@@ -1,15 +1,14 @@
 #include "MethodPost.hpp"
 
+MethodPost::MethodPost(MethodPost const & src) {};
+MethodPost & MethodPost::operator=(MethodPost const & src) {};
+MethodPost::MethodPost() {};
+
+MethodPost::MethodPost(t_serv const &config, int &code, stringMap const &headersMapRequest) {};
 MethodPost::~MethodPost() {};
+
+MethodStatus	MethodPost::readRequestBody() { return (ok); };
+MethodStatus	MethodPost::manageRequest(std::string const &path) { return (ok); };
 MethodStatus	MethodPost::createHeader() { return (ok); };
-MethodStatus	MethodPost::createErrorHeader() { return (ok); };
 MethodStatus	MethodPost::sendHeader(int socket) { return (ok); };
-MethodStatus	MethodPost::readBody(int socket) { return (ok); };
-MethodStatus	MethodPost::processRequest(std::string	const &location) {
-
-	// createGeneralHeaders();
-	// addContentLengthHeader();
-	// addLocationHeader();//check
-
-	return (ok); };
 MethodStatus	MethodPost::sendBody(int socket) { return (ok); };

@@ -1,19 +1,25 @@
+#ifndef MethodHead_HPP
+# define MethodHead_HPP
+
 #pragma once
-#include "include_resources.hpp"
 #include "Method.hpp"
 
-class MethodHead: public AMethod
+class MethodHead : public AMethod
 {
 private:
-    /* data */
-    MethodHead(/* args */);
+	MethodHead(MethodHead const & src);
+	MethodHead & operator=(MethodHead const & src);
+	MethodHead();
+
 public:
-	MethodHead(const t_serv *config, Request const *req) : AMethod(config, req) {};
-    ~MethodHead();
-    MethodStatus	createHeader();
-    MethodStatus	createErrorHeader();
-    MethodStatus	sendHeader(int socket);
-    MethodStatus	readBody(int socket);
-    MethodStatus	processRequest(std::string	const &location);
-    MethodStatus	sendBody(int socket);
+	MethodHead(t_serv const &config, int &code, stringMap const &headersMapRequest);
+	~MethodHead();
+
+	virtual MethodStatus	readRequestBody();
+	virtual MethodStatus	manageRequest(std::string const &path);
+	virtual MethodStatus	createHeader();
+	virtual MethodStatus	sendHeader(int socket);
+	virtual MethodStatus	sendBody(int socket);
 };
+
+#endif
