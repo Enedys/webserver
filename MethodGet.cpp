@@ -4,7 +4,7 @@
 MethodGet::MethodGet(t_serv const *config, Request const *request) : AMethod(config, request) {
 	// check_path_validity?//200
 };
-
+//old v
 MethodGet::~MethodGet(){};
 
 char		*ft_itoa(long int nbr)
