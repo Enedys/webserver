@@ -29,8 +29,9 @@ public:
 	virtual MethodStatus	readRequestBody();
 	virtual MethodStatus	manageRequest(std::string const &path);
 	virtual MethodStatus	createHeader();
-	virtual MethodStatus	sendHeader(int socket);
-	virtual MethodStatus	sendBody(int socket);
+	// virtual MethodStatus	sendHeader(int socket);
+	// virtual MethodStatus	sendBody(int socket);
+	virtual MethodStatus	sendResponse(int socket);
 };
 
 #endif

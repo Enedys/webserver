@@ -1,5 +1,5 @@
-# include "MethodGet.hpp"
-// # include "TestMethod.hpp"
+#include "MethodGet.hpp"
+#include "Header.hpp"
 
 MethodGet::MethodGet(t_serv const &config, int &code, stringMap const &headersMapRequest) \
 	: AMethod(config, code, headersMapRequest) {
@@ -42,25 +42,21 @@ MethodStatus	MethodGet::createHeader() {
 	return ok;
 };
 
-MethodStatus		MethodGet::sendHeader(int socket) {
-	std::string headerStr;
-	mapToString(_headersMap, &headerStr);//
+MethodStatus		MethodGet::sendResponse(int socket) {
+// check_socket here too?
+	size_t	ret;
+	char	buf[BUFSIZE];
 
+// addContentLengthHeader();//Entity //+path/
+	std::string headerStr;
+	Header	header;
+	header.headersToString(_headersMap, _statusCode, &headerStr);//// headersToString(_headersMap, &headerStr);//
 	if (send(socket, headerStr.c_str(), headerStr.length(), 0) < 0){
 		//if ret < length -> loop
 		_statusCode = errorSendHeader;
 		return error;
 	}
 
-	return ok;
-};
-
-MethodStatus		MethodGet::sendBody(int socket) {
-// check_socket here too?
-	size_t	ret;
-	char	buf[BUFSIZE];
-
-// addContentLengthHeader();//Entity //+path/
 	while ((ret = read(_fd, buf, BUFSIZE)) >= 0){
 		int sent = write(socket, buf, ret);
 		if (sent == 0)
@@ -78,3 +74,31 @@ MethodStatus		MethodGet::sendBody(int socket) {
 	_statusCode = okSuccess;
 	return ok;
 }
+
+	// char *rem = buf;
+	// while ((ret = read(_fd, buf, BUFSIZE)) >= 0){// >= 0 //if 0
+	// 	int sent = 0;
+	// 	int length = ret < BUFSIZE ? ret : BUFSIZE; // EMSGSIZE
+	// 	// while ((sent = send(socket, rem, length, 0)) >= 0){
+	// 	while ((sent = write(socket, rem, length)) >= 0){ //, O_NONBLOCK);))
+	// 		if (sent == length)
+	// 			break ;
+	// 		else {
+	// 			rem += sent;
+	// 			length -= sent;
+	// 		}
+	// 	}
+	// 	if (errno == ENOTSOCK)
+	// 		std::cout << "socket error\n" << std::endl;
+	// 	if (sent == 0)//
+	// 		break ;
+	// 	if (sent < 0){
+	// 		std::cout << "error\n" << std::endl;
+	// 		// _status = errorSocket;
+	// 		return error;
+	// 	}
+	// }
+	// if (ret == -1){
+	// 	// _status = errorReadingURL;
+	// 	return error;
+	// }

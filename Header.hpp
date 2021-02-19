@@ -47,7 +47,7 @@ public:
 
 
 	// MethodStatus	sendHeader(int socket);//
-	// void	mapToString(stringMap const &startLine, stringMap const &headersMap, std::string *output);//
+	void headersToString(stringMap const &headersMap, int const &_statusCode, std::string *output);
 };
 
 #endif

@@ -3,7 +3,7 @@ FLAGS			=	-Wall -Werror -Wextra -g
 
 HEADERS			=	Client.hpp \
 					Debugger.hpp \
-					Headers.hpp \
+					Header.hpp \
 					Method.hpp \
 					MethodError.hpp \
 					MethodGet.hpp \
@@ -21,6 +21,7 @@ HEADERS			=	Client.hpp \
 
 SRC				=	Client.cpp \
 					Debugger.cpp \
+					Header.cpp \
 					Method.cpp \
 					MethodError.cpp \
 					MethodGet.cpp \

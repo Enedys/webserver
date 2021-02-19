@@ -2,7 +2,7 @@
 #include "include_resources.hpp"
 #include "Parser.hpp"
 #include "Request.hpp"
-#include "Header.hpp"// may be Header class -> Header template with functions
+// #include "Header.hpp"// may be Header class -> Header template with functions
 
 class AMethod
 {
@@ -23,8 +23,8 @@ public:
 	virtual MethodStatus	readRequestBody() = 0;							//for PUT POST, maybe
 	virtual MethodStatus	manageRequest(std::string const &_path) = 0;	// path //check paths, fd open
 	virtual MethodStatus	createHeader() = 0;								// +path (if error was at Request analyze stage) //according to _statusCode create OK or Error headers
-	virtual MethodStatus	sendHeader(int socket) = 0;						// if error it was called from switch. if OK, just send. msg contains path
-	virtual MethodStatus	sendBody(int socket) = 0;						// first sendHeader, then manip with body
-
-	void					mapToString(stringMap const &headersMap, std::string *output);
+	// virtual MethodStatus	sendHeader(int socket) = 0;						// if error it was called from switch. if OK, just send. msg contains path
+	// virtual MethodStatus	sendBody(int socket) = 0;						// first sendHeader, then manip with body
+	virtual MethodStatus	sendResponse(int socket) = 0;
+	// void					headersToString(stringMap const &headersMap, std::string *output);
 };

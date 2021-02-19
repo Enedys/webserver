@@ -1,19 +1,25 @@
+#ifndef MethodError_HPP
+# define MethodError_HPP
+
 #pragma once
-#include "include_resources.hpp"
 #include "Method.hpp"
 
 class MethodError : public AMethod
 {
 private:
-    /* data */
-    MethodError(/* args */);
+	MethodError(MethodError const & src);
+	MethodError & operator=(MethodError const & src);
+	MethodError();
+
 public:
-	MethodError(const t_serv *config, Request const *req) : AMethod(config, req) {};
-    ~MethodError();
-    MethodStatus	createHeader();
-    MethodStatus	createErrorHeader();
-    MethodStatus	sendHeader(int socket);
-    MethodStatus	readBody(int socket);
-    MethodStatus	processRequest(std::string	const &location);
-    MethodStatus	sendBody(int socket);
+	MethodError(t_serv const &config, int &code, stringMap const &headersMapRequest);
+	~MethodError();
+
+	virtual MethodStatus	readRequestBody();
+	virtual MethodStatus	manageRequest(std::string const &path);
+	virtual MethodStatus	createHeader();
+	virtual MethodStatus	sendHeader(int socket);
+	virtual MethodStatus	sendBody(int socket);
 };
+
+#endif

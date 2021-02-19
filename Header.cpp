@@ -4,7 +4,16 @@ Header::Header(){};
 
 Header::~Header(){};
 
-int Header::createGeneralHeaders(stringMap &_headersMap, int &_statusCode){//common for all methods and errors (Date, Host name(?))
+void	Header::headersToString(stringMap const &headersMap, int const &statusCode, std::string *output){
+	char *str;//kostylek
+	*output += "HTTP/1.1 " + static_cast<std::string>(ft_itoa(statusCode, str, 10)) + " " + "error code explanation" + CRLF;
+	for (constMapIter it = headersMap.begin(); it != headersMap.end(); ++it)
+		*output += (it->first) + ": " + (it->second) + CRLF;
+	*output += CRLF;
+	std::cout << "READY_HEADER: " << *output << std::endl;
+}
+
+int		Header::createGeneralHeaders(stringMap &_headersMap, int &_statusCode){//common for all methods and errors (Date, Host name(?))
 
 	char			buf1[100];
 	struct timeval	tv;
@@ -17,6 +26,7 @@ int Header::createGeneralHeaders(stringMap &_headersMap, int &_statusCode){//com
 
 	_headersMap.insert(std::pair<std::string, std::string>("Server", "nginx/1.2.1"));
 	_headersMap.insert(std::pair<std::string, std::string>("Date", date));
+	return 0;
 };
 
 
@@ -28,11 +38,15 @@ int		Header::addAllowHeader(stringMap &_headersMap, int &_statusCode){
 		_headersMap.insert(std::pair<std::string, std::string>("Allow", ""));
 		return 0;
 	}
-	_headersMap.insert(std::pair<std::string, std::string>("Allow", "GET, HEAD"));
+	_headersMap.insert(std::pair<std::string, std::string>("Allow", "GET, HEAD, PUT, POST"));
 	return 0;
 };
 
 MethodStatus	createErrorHeader(stringMap &_headersMap, int &_statusCode){//not ready
+	if (!_headersMap.empty())
+		_headersMap.clear();
+	char *str;
+	_headersMap.insert(std::pair<std::string, std::string>(ft_itoa(_statusCode, str, 10), ""));
 	return ok;
 };
 
@@ -41,6 +55,7 @@ int		Header::createEntityHeaders(stringMap &_headersMap, int &_statusCode){//spe
 	addContentLengthHeader(_headersMap, _statusCode);//Entity //+path
 	addContentLocationHeader(_headersMap, _statusCode);//Entity
 	addContentTypeHeader(_headersMap, _statusCode);//Entity //+path
+	return 0;
 };
 
 int		Header::addContentLanguageHeader(stringMap &_headersMap, int &_statusCode){
@@ -49,7 +64,7 @@ int		Header::addContentLanguageHeader(stringMap &_headersMap, int &_statusCode){
 	return 0;
 };
 
-char* ft_itoa(long num, char* str, int base)
+static char* ft_itoa(long num, char* str, int base)
 {
 	int i = 0;
 	bool isNegative = false;
@@ -120,6 +135,7 @@ int		Header::addLastModifiedHeader(stringMap &_headersMap, int &_statusCode){
 		strftime(buf2, 100, "%a, %d %b %Y %H:%M:%S GMT", tm2);
 		_lastModified = std::string(buf2);
 	}
+	return 0;
 }
 
 // При всех перенаправлениях, если метод запроса был не HEAD, то в тело ответа

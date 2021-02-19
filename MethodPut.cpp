@@ -15,7 +15,7 @@ MethodStatus	MethodPut::manageRequest(std::string const &path){
 	// createGeneralHeaders();
 	// addLocationHeader();
 
-	// return (ok);
+	return (ok);
 };
 MethodStatus	MethodPut::createHeader() { return (ok); };
 MethodStatus	MethodPut::sendHeader(int socket) { return (ok); };
