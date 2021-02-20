@@ -9,6 +9,7 @@
 #include <map>
 #include <list>
 #include <vector>
+#include <algorithm>
 
 /* Client/Server includes */
 #include "sys/types.h"
