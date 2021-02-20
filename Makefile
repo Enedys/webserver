@@ -17,6 +17,7 @@ HEADERS			=	NewClient.hpp \
 					include_resources.hpp \
 
 SRC				=	Debugger.cpp \
+					Header.cpp \
 					Method.cpp \
 					MethodGet.cpp \
 					MethodHead.cpp \
