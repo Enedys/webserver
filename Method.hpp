@@ -20,7 +20,7 @@ public:
 	static bool					isValidMethod(std::string const &method);
 
 	virtual MethodStatus	createHeader(std::string const &_path) = 0;
-	virtual MethodStatus	readRequestBody(int socket) = 0;
+	virtual MethodStatus	processBody(const std::string &requestBody) = 0;
 	virtual MethodStatus	sendHeader(int socket) = 0;
 	virtual MethodStatus	manageRequest(std::string const &location) = 0;
 	virtual MethodStatus	sendBody(int socket) = 0;
