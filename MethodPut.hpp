@@ -6,14 +6,14 @@ class MethodPut: public AMethod
 {
 private:
     /* data */
-    MethodPut(/* args */);
+	MethodPut(/* args */);
 public:
-	MethodPut(const t_serv *config, Request const *req) : AMethod(config, req) {};
-    ~MethodPut();
-    MethodStatus	createHeader();
-    MethodStatus	createErrorHeader();
-    MethodStatus	sendHeader(int socket);
-    MethodStatus	readBody(int socket);
-    MethodStatus	processRequest(std::string	const &location);
-    MethodStatus	sendBody(int socket);
+	MethodPut(t_serv const &config, int &status, stringMap const &headers) : 
+		AMethod(config, status, headers) {};
+	~MethodPut();
+	MethodStatus	createHeader();
+	MethodStatus	readRequestBody(int socket);
+	MethodStatus	sendHeader(int socket);
+	MethodStatus	manageRequest(std::string const &location);
+	MethodStatus	sendBody(int socket);
 };

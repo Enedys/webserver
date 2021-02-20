@@ -8,12 +8,12 @@ private:
     /* data */
     MethodPost(/* args */);
 public:
-	MethodPost(const t_serv *config, Request const *req) : AMethod(config, req) {};
-    ~MethodPost();
-    MethodStatus	createHeader();
-    MethodStatus	createErrorHeader();
-    MethodStatus	sendHeader(int socket);
-    MethodStatus	readBody(int socket);
-    MethodStatus	processRequest(std::string	const &location);
-    MethodStatus	sendBody(int socket);
+	MethodPost(t_serv const &config, int &status, stringMap const &headers) : 
+		AMethod(config, status, headers) {};
+	~MethodPost();
+	MethodStatus	createHeader();
+	MethodStatus	readRequestBody(int socket);
+	MethodStatus	sendHeader(int socket);
+	MethodStatus	manageRequest(std::string const &location);
+	MethodStatus	sendBody(int socket);
 };

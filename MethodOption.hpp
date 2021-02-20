@@ -6,14 +6,14 @@ class MethodOption : public AMethod
 {
 private:
     /* data */
-    MethodOption(/* args */);
+	MethodOption(/* args */);
 public:
-	MethodOption(const t_serv *config, Request const *req) : AMethod(config, req) {};
-    ~MethodOption();
-    MethodStatus	createHeader();
-    MethodStatus	createErrorHeader();
-    MethodStatus	sendHeader(int socket);
-    MethodStatus	readBody(int socket);
-    MethodStatus	processRequest(std::string	const &location);
-    MethodStatus	sendBody(int socket);
+	MethodOption(t_serv const &config, int &status, stringMap const &headers) : 
+		AMethod(config, status, headers) {};
+	~MethodOption();
+	MethodStatus	createHeader();
+	MethodStatus	readRequestBody(int socket);
+	MethodStatus	sendHeader(int socket);
+	MethodStatus	manageRequest(std::string const &location);
+	MethodStatus	sendBody(int socket);
 };

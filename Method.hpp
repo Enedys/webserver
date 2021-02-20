@@ -1,24 +1,25 @@
 #pragma once
 #include "include_resources.hpp"
 #include "Parser.hpp"
-#include "Request.hpp"
 
 class AMethod
 {
 protected:
-	stringMap			_headersMap;
-	Request const		*_request;
-	int					_status;
-	int					_fd;
-	const t_serv		*_config;
+	stringMap const		&_headersMap;
+	t_serv const		&_config;
+	int					&_status;
 	AMethod();
+
 public:
-	AMethod(t_serv const *config, Request const *request) : _config(config), _request(request) {};
+	AMethod(t_serv const &config, int &status, stringMap const &headers);
+	static const int			methodNums = 6;
+	static const std::string	validMethods[6];
+	static bool					isValidMethod(std::string const &method);
+
 	virtual MethodStatus	createHeader() = 0;
-	virtual MethodStatus	createErrorHeader() = 0;
+	virtual MethodStatus	readRequestBody(int socket) = 0;
 	virtual MethodStatus	sendHeader(int socket) = 0;
-	virtual MethodStatus	readBody(int socket) = 0;
-	virtual MethodStatus	processRequest(std::string	const &location) = 0;
+	virtual MethodStatus	manageRequest(std::string const &location) = 0;
 	virtual MethodStatus	sendBody(int socket) = 0;
 	virtual ~AMethod();
 };
