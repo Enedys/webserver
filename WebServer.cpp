@@ -158,6 +158,6 @@ int						WebServer::runWebServer()
 		else
 			_webLogger << Message::error <<"Select error." << Logger::endl;
 		_webLogger << Message::fatal << "..." << Logger::endl;
-		usleep(1000000);
+		// usleep(1000000);
 	}
 }

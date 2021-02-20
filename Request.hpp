@@ -21,14 +21,14 @@ public:
 
 	/* Public member functions */
 
-	size_t				getBufferResidual();
 	MethodStatus		getRequestHead();
-	MethodStatus		cleanRequest();
-	MethodStatus		readRequestHead(Logger *_webLogger);
 	MethodStatus		readRequestBody(AMethod *method, Logger *_webLogger);
+	MethodStatus		cleanRequest();
+	size_t				getBufferResidual();
+	MethodStatus		getLastStatus() const;
 	const stringMap		getHeadersMap() const;
 	const stringMap		getStartLine() const;
-	std::string const	&getURI() const;
+	std::string const	&getURI();
 
 private:
 	Request();
@@ -45,6 +45,7 @@ private:
 	MethodStatus						_lastStatus;
 
 	/* Private member functions */
+	MethodStatus	readRequestHead(Logger *_webLogger);
 	MethodStatus	setErrorCode(int code);
 	MethodStatus	setLastReadStatus(MethodStatus status);
 	MethodStatus	parseStartLine(size_t posCRLF);

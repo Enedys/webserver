@@ -13,11 +13,22 @@ Client::~Client()
 	close(_socket);
 }
 
-int					Client::getClientSocket() const {return _socket; };
-void				Client::setMode(bool mode) {isReadMode = mode; };
+int					Client::getClientSocket() const
+{
+	return _socket;
+};
+
+void				Client::setMode(bool mode)
+{
+	isReadMode = mode;
+};
 
 bool				Client::isReading() const
 {
+	if (_request.getLastStatus() == inprogress)
+		return (true);
+	return (false);
+
 	if (_state == defaultState || _state == readingHeader || _state == readRequestBody)
 		return (true);
 	return (false);
@@ -49,6 +60,10 @@ Client::conditionCode	Client::getNextState(MethodStatus status)
 {
 	if (status == connectionClosed)
 		return (sendingErrorState);
+	
+	if (_state == sendResponseBody) // test shit	!!!!!!!!!!!!!!!!!!!!!!!!!!!! TODO
+		return (sendingErrorState);
+
 	if ((_state == sendResponseBody || _state == sendResponseHeader) && status == error)
 		return (sendingErrorState); // here must cut connection
 	if (status == error)

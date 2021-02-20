@@ -23,7 +23,7 @@ MethodStatus	AMethod::sendHeader(int socket)
 	"Server: nginx/1.2.1\r\n"
 	"Date: Sat, 08 Mar 2014 22:53:46 GMT\r\n"
 	"Content-Type: text/html\r\n"
-	"Content-Length: 58\r\n"
+	"Content-Length: 0\r\n"
 	"Last-Modified: Sat, 08 Mar 2014 22:53:30 GMT\r\n\r\n";
 	char bodya[] = "<html>"
 	"<head>"
@@ -33,7 +33,7 @@ MethodStatus	AMethod::sendHeader(int socket)
  	"</body>"
 	"</html>";
 	std::string	letter(resp);
-	letter = letter + bodya;
+	// letter = letter + bodya;
 	send(socket, letter.c_str(), letter.length(), MSG_DONTWAIT);
 	return (ok);
 }

@@ -3,7 +3,7 @@
 Request::Request(int fd, int &statusCode) : 
 _socket(fd), _errorCode(statusCode), _bodySize(0), readingStage(firstLine)
 {
-	_lastStatus = ok;
+	_lastStatus = inprogress;
 	createErrorCodesMap();
 };
 
@@ -12,24 +12,30 @@ size_t				Request::getBufferResidual()
 	return (_buffer.length());
 }
 
+MethodStatus		Request::getLastStatus() const
+{
+	return (_lastStatus);
+}
+
 MethodStatus		Request::cleanRequest()
 {
 	_bodySize = 0;
 	readingStage = firstLine;
 	startLine.clear();
 	headersMap.clear();
+	_lastStatus = inprogress;
 	return (ok);
 }
 
 const stringMap		Request::getStartLine() const {return (startLine); };
 const stringMap		Request::getHeadersMap() const { return (headersMap); };
 
-std::string const	&Request::getURI() const
+std::string const	&Request::getURI()
 {
 	constMapIter	uri = startLine.find("uri");
 	if (uri == startLine.end())
-		return ("");
-	return (uri->second);
+		startLine["uri"] = "";
+	return (startLine["uri"]);
 }
 
 
@@ -45,14 +51,13 @@ MethodStatus	Request::setLastReadStatus(MethodStatus status)
 	return (status);
 }
 
-
 MethodStatus		Request::getRequestHead()
 {
 	if (_lastStatus == inprogress)
 	{
 		MethodStatus	readStatus = readRequestHead(NULL);
 		if (readStatus == error || readStatus == connectionClosed)
-			return (readStatus);
+			return (connectionClosed);
 	}
 	size_t posCRLF = _buffer.find(CRLF);
 	if (posCRLF == std::string::npos)
