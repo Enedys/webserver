@@ -127,7 +127,7 @@ MethodStatus		Client::requestInterraction()
 		_state = readingHeader;
 	if (_state == readingHeader)
 	{
-		_state = getNextState(_request.readRequestHead(NULL));
+		_state = getNextState(_request.getRequestHead());
 		if (_state == readingHeader)
 			return (inprogress);
 	}

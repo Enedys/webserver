@@ -20,7 +20,9 @@ public:
 	virtual ~Request();
 
 	/* Public member functions */
+
 	size_t				getBufferResidual();
+	MethodStatus		getRequestHead();
 	MethodStatus		cleanRequest();
 	MethodStatus		readRequestHead(Logger *_webLogger);
 	MethodStatus		readRequestBody(AMethod *method, Logger *_webLogger);
@@ -40,9 +42,11 @@ private:
 	int									&_errorCode;
 	size_t								_bodySize;
 	std::map<int, std::string>			_errors;
+	MethodStatus						_lastStatus;
 
 	/* Private member functions */
 	MethodStatus	setErrorCode(int code);
+	MethodStatus	setLastReadStatus(MethodStatus status);
 	MethodStatus	parseStartLine(size_t posCRLF);
 	MethodStatus	parseHeaders();
 	MethodStatus	validateStartLine();

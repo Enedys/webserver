@@ -3,6 +3,7 @@
 Request::Request(int fd, int &statusCode) : 
 _socket(fd), _errorCode(statusCode), _bodySize(0), readingStage(firstLine)
 {
+	_lastStatus = ok;
 	createErrorCodesMap();
 };
 
@@ -38,10 +39,56 @@ MethodStatus		Request::setErrorCode(int code)
 	return (error);
 };
 
+MethodStatus	Request::setLastReadStatus(MethodStatus status)
+{
+	_lastStatus = status;
+	return (status);
+}
+
+
+MethodStatus		Request::getRequestHead()
+{
+	if (_lastStatus == inprogress)
+	{
+		MethodStatus	readStatus = readRequestHead(NULL);
+		if (readStatus == error || readStatus == connectionClosed)
+			return (readStatus);
+	}
+	size_t posCRLF = _buffer.find(CRLF);
+	if (posCRLF == std::string::npos)
+		return (setLastReadStatus(inprogress));
+	if (readingStage == firstLine)
+	{
+		readingStage = headers;
+		if (parseStartLine(posCRLF) == error)
+			return (setLastReadStatus(error));
+	}
+	if (readingStage == headers)
+	{
+		MethodStatus	headersStatus = parseHeaders();
+		if (headersStatus == error)
+			return (setLastReadStatus(error));
+		else if (headersStatus == ok)
+			readingStage = body;
+		else
+			return (setLastReadStatus(inprogress));
+	}
+	if (readingStage == body)
+	{
+		if (validateHeaders() == error)
+			return (setLastReadStatus(error));
+		printRequest(); // Same logging
+		return (setLastReadStatus(ok));
+	}
+	if (readingStage < body && _buffer.length() > MAX_REQUEST_SIZE)
+		return (setErrorCode(400));
+	return (setLastReadStatus(inprogress));
+}
+
 MethodStatus		Request::readRequestHead(Logger *_webLogger)
 {
 	char	buffer[_buffer_size];
-	int		readBytes = recv(_socket, buffer, _buffer_size - 1, MSG_DONTWAIT);
+	int		readBytes = recv(_socket, buffer, _buffer_size - 1, MSG_DONTWAIT); // | MSG_PEEK);
 	std::cout << "READ " << readBytes << " bytes\n";
 	if (readBytes < 0)
 		return (error);
@@ -52,35 +99,7 @@ MethodStatus		Request::readRequestHead(Logger *_webLogger)
 		buffer[readBytes] = '\0';
 		_buffer += buffer;
 	}
-	size_t posCRLF = _buffer.find(CRLF);
-	if (posCRLF == std::string::npos)
-		return (inprogress);
-	if (readingStage == firstLine)
-	{
-		readingStage = headers;
-		if (parseStartLine(posCRLF) == error)
-			return (error);
-	}
-	if (readingStage == headers)
-	{
-		MethodStatus	headersStatus = parseHeaders();
-		if (headersStatus == error)
-			return (error);
-		else if (headersStatus == ok)
-			readingStage = body;
-		else
-			return (inprogress);
-	}
-	if (readingStage == body)
-	{
-		if (validateHeaders() == error)
-			return (error);
-		printRequest(); // Same logging
-		return (ok);
-	}
-	if (readingStage < body && _buffer.length() > MAX_REQUEST_SIZE)
-		return (setErrorCode(400));
-	return (inprogress);
+	return (ok);
 }
 
 MethodStatus		Request::validateHeaders()
@@ -188,6 +207,7 @@ MethodStatus		Request::parseStartLine(size_t posCRLF)
 
 MethodStatus		Request::readRequestBody(AMethod *method, Logger *_webLogger)
 {
+	
 	return (ok);
 }
 
