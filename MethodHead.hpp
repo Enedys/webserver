@@ -9,7 +9,7 @@ private:
 	MethodHead(/* args */);
 public:
 	MethodHead(t_serv const &config, int &status, stringMap const &headers) :
-		AMethod(config, status, headers) {};
+		AMethod(config, status, headers) {_type = HEAD;};
 	~MethodHead();
 	MethodStatus	createHeader(std::string const &_path);
 	MethodStatus	processBody(const std::string &requestBody);

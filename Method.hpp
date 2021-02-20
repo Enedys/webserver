@@ -10,7 +10,8 @@ protected:
 	int					&_statusCode;
 
 	stringMap			_headersMap;
-	int					_fd;	
+	int					_fd;
+	methodType			_type;
 	AMethod();
 
 public:

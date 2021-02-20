@@ -9,7 +9,7 @@ private:
 	MethodOption(/* args */);
 public:
 	MethodOption(t_serv const &config, int &status, stringMap const &headers) : 
-		AMethod(config, status, headers) {};
+		AMethod(config, status, headers) {_type = OPTION;};
 	~MethodOption();
 	MethodStatus	createHeader(std::string const &_path);
 	MethodStatus	processBody(const std::string &requestBody);

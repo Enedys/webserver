@@ -9,7 +9,7 @@ private:
 	MethodPut(/* args */);
 public:
 	MethodPut(t_serv const &config, int &status, stringMap const &headers) : 
-		AMethod(config, status, headers) {};
+		AMethod(config, status, headers) {_type = PUT; };
 	~MethodPut();
 	MethodStatus	createHeader(std::string const &_path);
 	MethodStatus	processBody(const std::string &requestBody);
