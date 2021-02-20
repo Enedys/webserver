@@ -37,6 +37,7 @@ struct s_loc
 	std::string path; // rename to locPath?
 	std::string root;
 	std::string fileRequestIsDir;
+	std::map<std::string, std::string> cgi;
 	bool autoindex;
 	bool getAvailable;
 	bool postAvailable;
@@ -49,9 +50,9 @@ class Parser
 	public:
 		Parser();
 		~Parser();
+		Parser(const std::string &file);
 		void parse(const std::string& file);
 		std::vector<t_serv> servers;
-
 	private:
 		enum Token
 		{
@@ -95,14 +96,17 @@ class Parser
 		void 	getLocAutoindex();
 		void 	getLocFileIsDir();
 		void 	getLocDenyMethod();
+		void 	getLocCGI();
 		void 	initServ();
 		void 	initLoc();
 
 		void	error(const std::string& msg);
 
-		int 	validateErrorStr(const std::string &str);
+		void 	validateErrorStr(const std::vector<std::string> &v);
 		void 	fillRootLoc();
 		void 	splitHost(const std::string &val);
+		std::string getValue(const std::string &section);
+		std::vector<std::string> getVectorValues(const std::string &section);
 };
 
 
