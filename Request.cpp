@@ -45,6 +45,8 @@ MethodStatus		Request::readRequestHead(Logger *_webLogger)
 	std::cout << "READ " << readBytes << " bytes\n";
 	if (readBytes < 0)
 		return (error);
+	else if (readBytes == 0)
+		return (connectionClosed);
 	if (readBytes > 0)
 	{
 		buffer[readBytes] = '\0';
