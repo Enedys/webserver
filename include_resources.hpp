@@ -39,6 +39,15 @@ typedef	enum
 	logicError,
 }		MethodStatus;
 
+typedef enum
+{
+	GET,
+	HEAD,
+	POST,
+	PUT,
+	OPTION,
+}		methodType;
+
 /* Typedefs */
 typedef std::map<std::string, std::string>					stringMap;
 typedef std::map<std::string, std::string>::iterator		mapIter;

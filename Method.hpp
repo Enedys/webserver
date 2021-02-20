@@ -9,8 +9,8 @@ protected:
 	t_serv const		&_config;
 	int					&_statusCode;
 
-	stringMap			_headersMap;
 	int					_fd;
+	stringMap			_headersMap;
 	methodType			_type;
 	AMethod();
 
