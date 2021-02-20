@@ -143,7 +143,7 @@ MethodStatus		Client::requestInterraction()
 		_state = getNextState(_method->manageRequest(\
 					getRequestPath(_request.getURI())));
 	if (_state == createResponseHeader)
-		_state = getNextState(_method->manageRequest(\
+		_state = getNextState(_method->createHeader(\
 					getRequestPath(_request.getURI())));
 	return (ok);
 }

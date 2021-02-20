@@ -26,6 +26,6 @@ public:
 	virtual MethodStatus	createHeader(std::string const &_path) = 0;		// +path (if error was at Request analyze stage) //according to _statusCode create OK or Error headers
 	virtual MethodStatus	sendHeader(int socket) = 0;						// if error it was called from switch. if OK, just send. msg contains path
 	virtual MethodStatus	sendBody(int socket) = 0;						// first sendHeader, then manip with body
-	virtual MethodStatus	sendResponse(int socket) = 0;//
+	// virtual MethodStatus	sendResponse(int socket) = 0;//
 	// void					headersToString(stringMap const &headersMap, std::string *output);
 };
