@@ -44,7 +44,7 @@ $(NAME): $(OBJ_DIR) $(OBJS)
 $(OBJ_DIR):
 	mkdir $(OBJ_DIR)
 
-$(OBJ_DIR)%.o: %.cpp %.hpp
+$(OBJ_DIR)%.o: %.cpp
 	clang++ -c -g $< -o $@
 
 clean:

@@ -1,5 +1,4 @@
-#ifndef HEADER_HPP
-# define HEADER_HPP
+#pragma once
 
 # include <sys/stat.h>
 # include <fcntl.h>
@@ -37,7 +36,7 @@ public:
 	int		addContentLanguageHeader(stringMap &_headersMap, int &_statusCode);//Entity
 	int		addContentLengthHeader(stringMap &_headersMap, int &_statusCode);//Entity //+path
 	int		addContentLocationHeader(stringMap &_headersMap, int &_statusCode);//Entity
-	//added to GeneralHeaders // int		addContentTypeHeader(stringMap &_headersMap, int &_statusCode);//Entity //+path
+	int		addContentTypeHeader(stringMap &_headersMap, int &_statusCode);//Entity //+path
 
 	int		addLastModifiedHeader(stringMap &_headersMap, int &_statusCode);//+path
 	int		addLocationHeader(stringMap &_headersMap, int &_statusCode);//+path
@@ -52,5 +51,3 @@ public:
 
 	void	setPath(std::string const &_path);
 };
-
-#endif

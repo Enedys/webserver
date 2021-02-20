@@ -10,16 +10,9 @@ MethodGet::~MethodGet(){};
 
 // for PUT POST, maybe
 // updates _statusCode.
-MethodStatus	MethodGet::readRequestBody(std::string const &_path) {
-	size_t found;
-	if ((found = path.find_last_of('.')) != std::string::npos){
-		contentType = "text";//no extension
-		return ok;
-	}
-	contentType = str.substr(found + 1);
-	if (contentType == "")
+MethodStatus	MethodGet::readRequestBody(int socket) {
 	return ok;
-};//+cgi
+};
 
 MethodStatus	MethodGet::manageRequest(std::string const &path){
 	struct stat	st;
@@ -37,15 +30,15 @@ MethodStatus	MethodGet::manageRequest(std::string const &path){
 };
 
 MethodStatus	MethodGet::createHeader(std::string const &path) {
-	Header	header(path);
+	_header = new Header(path);
 	// header.setPath(path);
 	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206)){ // it was not updated before
-		header.createGeneralHeaders(_headersMap, _statusCode);
-		header.createEntityHeaders(_headersMap, _statusCode);
-		header.addLocationHeader(_headersMap, _statusCode);
+		_header->createGeneralHeaders(_headersMap, _statusCode);
+		_header->createEntityHeaders(_headersMap, _statusCode);
+		_header->addLocationHeader(_headersMap, _statusCode);
 	}
 	else { // what if status 2xx
-		header.createErrorHeader(_headersMap, _statusCode);	// with status explanation
+		// header.createErrorHeader(_headersMap, _statusCode);	// with status explanation
 		// sendHeader(_headersMap, _statusCode);
 		return error; // means should send header and leave (without sending body)
 	}
@@ -53,13 +46,15 @@ MethodStatus	MethodGet::createHeader(std::string const &path) {
 };
 
 MethodStatus		MethodGet::sendHeader(int socket) {
-	Header	header;
-	header.headersToString(_headersMap, _statusCode, &headerStr);//// headersToString(_headersMap, &headerStr);//
+	std::string headerStr;
+	_header->headersToString(_headersMap, _statusCode, &headerStr);//// headersToString(_headersMap, &headerStr);//
 	if (send(socket, headerStr.c_str(), headerStr.length(), 0) < 0){
 		//if ret < length -> loop
 		_statusCode = errorSendHeader;
 		return error;
 	}
+	std::cout << "header: \n" << headerStr <<std::endl;
+	return ok;
 }
 
 MethodStatus		MethodGet::sendBody(int socket) {

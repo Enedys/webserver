@@ -20,7 +20,7 @@ MethodHead::~MethodHead(){};
 
 // for PUT POST, maybe
 // updates _statusCode.
-MethodStatus	MethodHead::readRequestBody() { return ok; };
+MethodStatus	MethodHead::readRequestBody(int socket) { return ok; };
 
 MethodStatus	MethodHead::manageRequest(std::string const &path){
 	struct stat	st;
@@ -37,16 +37,16 @@ MethodStatus	MethodHead::manageRequest(std::string const &path){
 	return ok;
 };
 
-MethodStatus	MethodHead::createHeader() {
-	Header	header;
+MethodStatus	MethodHead::createHeader(std::string const &path) {
+	_header = new Header(path);
 
-	header.createGeneralHeaders(_headersMap, _statusCode);
+	_header->createGeneralHeaders(_headersMap, _statusCode);
 	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206)){ // it was not updated before
-		header.createEntityHeaders(_headersMap, _statusCode);
-		header.addLocationHeader(_headersMap, _statusCode);//add path, if redirects - default path
+		_header->createEntityHeaders(_headersMap, _statusCode);
+		_header->addLocationHeader(_headersMap, _statusCode);//add path, if redirects - default path
 	}
 	else { // what if status 2xx
-		header.createErrorHeader(_headersMap, _statusCode);	// with status explanation
+		// _header->createErrorHeader(_headersMap, _statusCode);	// with status explanation
 		// sendHeader(_headersMap, _statusCode);
 		return error; // means should send header and leave (without sending body)
 	}
@@ -90,3 +90,4 @@ MethodStatus		MethodHead::sendBody(int socket) {
 	_statusCode = okSuccess;
 	return ok;
 }
+

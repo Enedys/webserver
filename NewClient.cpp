@@ -138,7 +138,8 @@ MethodStatus		Client::requestInterraction()
 			return (inprogress);
 	}
 	if (_state == manageRequest)
-		_state = getNextState(_method->createHeader());
+		_state = getNextState(_method->manageRequest(\
+					getRequestPath(_request.getURI())));
 	if (_state == createResponseHeader)
 		_state = getNextState(_method->manageRequest(\
 					getRequestPath(_request.getURI())));

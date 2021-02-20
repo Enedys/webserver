@@ -2,13 +2,45 @@
 
 Header::~Header(){};
 
+static char* ft_itoa(long num, char* str, int base)
+{
+	int i = 0;
+	bool isNegative = false;
+
+	if (num == 0) {
+		str[i++] = '0';
+		str[i] = '\0';
+		return str;
+	}
+	if (num < 0 && base == 10) {
+		isNegative = true;
+		num = -num;
+	}
+	while (num != 0) {
+		int rem = num % base;
+		str[i++] = (rem > 9) ? (rem - 10) + 'a' : rem + '0';
+		num = num/base;
+	}
+	if (isNegative)
+		str[i++] = '-';
+	str[i] = '\0';
+	int start = 0;
+	int end = i - 1;
+	while (start < end)	{
+		std::swap(*(str + start), *(str + end));
+		start++;
+		end--;
+	}
+	return str;
+}
+
 void	Header::headersToString(stringMap const &headersMap, int const &statusCode, std::string *output){
 	char *str;//kostylek
 	*output += "HTTP/1.1 " + static_cast<std::string>(ft_itoa(statusCode, str, 10)) + " " + "error code explanation" + CRLF;
 	for (constMapIter it = headersMap.begin(); it != headersMap.end(); ++it)
 		*output += (it->first) + ": " + (it->second) + CRLF;
 	*output += CRLF;
-	std::cout << "READY_HEADER: " << *output << std::endl;
+	// std::cout << "READY_HEADER: " << *output << std::endl;
 }
 
 int		Header::createGeneralHeaders(stringMap &_headersMap, int &_statusCode){//common for all methods and errors (Date, Host name(?))
@@ -62,38 +94,6 @@ int		Header::addContentLanguageHeader(stringMap &_headersMap, int &_statusCode){
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Language", "en-US"));//can it be specified in request before?
 	return 0;
 };
-
-static char* ft_itoa(long num, char* str, int base)
-{
-	int i = 0;
-	bool isNegative = false;
-
-	if (num == 0) {
-		str[i++] = '0';
-		str[i] = '\0';
-		return str;
-	}
-	if (num < 0 && base == 10) {
-		isNegative = true;
-		num = -num;
-	}
-	while (num != 0) {
-		int rem = num % base;
-		str[i++] = (rem > 9) ? (rem - 10) + 'a' : rem + '0';
-		num = num/base;
-	}
-	if (isNegative)
-		str[i++] = '-';
-	str[i] = '\0';
-	int start = 0;
-	int end = i - 1;
-	while (start < end)	{
-		std::swap(*(str + start), *(str + end));
-		start++;
-		end--;
-	}
-	return str;
-}
 
 int		Header::addContentLengthHeader(stringMap &_headersMap, int &_statusCode){
 	// std::string path = "/Users/kwillum/ft_webserver/files/test.file";//
@@ -186,5 +186,3 @@ int		Header::addAuthenticateHeader(stringMap &_headersMap, int &_statusCode){
 		_headersMap.insert(std::pair<std::string, std::string>("WWW-Authenticate", "Basic realm=\"Access to the staging site\", charset=\"UTF-8\""));
 	return 0;
 }
-
-void	Header::setPath(std::string const &path){ this->_path = path; };

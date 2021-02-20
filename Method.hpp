@@ -1,8 +1,6 @@
 #pragma once
 #include "include_resources.hpp"
 #include "Parser.hpp"
-#include "Request.hpp"
-// #include "Header.hpp"// may be Header class -> Header template with functions
 
 class AMethod
 {
