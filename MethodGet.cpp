@@ -91,7 +91,13 @@ MethodStatus		MethodGet::sendBody(int socket) {
 }
 
 
-
+MethodStatus		MethodGet::sendResponse(int socket) {
+	size_t	ret;
+	char	buf[BUFSIZE];
+	std::string headerStr;
+	_header->headersToString(_headersMap, _statusCode, &headerStr);
+	ret = read(_fd, buf, BUFSIZE - headerStr.length());
+}
 // MethodStatus		MethodGet::sendResponse(int socket) {
 // // check_socket here too?
 // 	size_t	ret;
