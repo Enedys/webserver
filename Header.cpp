@@ -1,7 +1,5 @@
 #include "Header.hpp"
 
-// Header::Header(std::string const &path) : _path(path) {};
-
 Header::~Header(){};
 
 void	Header::headersToString(stringMap const &headersMap, int const &statusCode, std::string *output){
