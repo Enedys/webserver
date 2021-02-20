@@ -16,8 +16,7 @@ HEADERS			=	NewClient.hpp \
 					WebServer.hpp \
 					include_resources.hpp \
 
-SRC				=	NewClient.cpp \
-					Debugger.cpp \
+SRC				=	Debugger.cpp \
 					Method.cpp \
 					MethodGet.cpp \
 					MethodHead.cpp \
@@ -28,6 +27,7 @@ SRC				=	NewClient.cpp \
 					Request.cpp \
 					Server.cpp \
 					WebServer.cpp \
+					NewClient.cpp \
 					main.cpp
 
 OBJ_DIR = ./bin/
@@ -43,7 +43,7 @@ $(NAME): $(OBJ_DIR) $(OBJS)
 $(OBJ_DIR):
 	mkdir $(OBJ_DIR)
 
-$(OBJ_DIR)%.o: %.cpp $(HEADERS)
+$(OBJ_DIR)%.o: %.cpp %.hpp
 	clang++ -c -g $< -o $@
 
 clean:
