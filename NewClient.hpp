@@ -51,7 +51,7 @@ private:
 
 	conditionCode		getNextState(MethodStatus status);
 	MethodStatus		requestInterraction();
-	MethodStatus		responseInsterraction();
+	MethodStatus		responseInterraction();
 	MethodStatus		refreshClient();
 	MethodStatus		createNewMethod();
 	MethodStatus		analizeHeaders();

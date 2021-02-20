@@ -143,12 +143,12 @@ MethodStatus		Client::requestInterraction()
 		_state = getNextState(_method->manageRequest(\
 					getRequestPath(_request.getURI())));
 	if (_state == createResponseHeader)
-		_state = getNextState(_method->manageRequest(\
+		_state = getNextState(_method->createHeader(\
 					getRequestPath(_request.getURI())));
 	return (ok);
 }
 
-MethodStatus		Client::responseInsterraction()
+MethodStatus		Client::responseInterraction()
 {
 	if (_state == sendResponseHeader)
 	{
@@ -173,7 +173,7 @@ MethodStatus		Client::interract()
 	if (isReadMode)
 		returnStatus = requestInterraction();
 	else
-		returnStatus = responseInsterraction();
+		returnStatus = responseInterraction();
 	if (_state == sendingErrorState)
 		return (error);
 	return (returnStatus);
