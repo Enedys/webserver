@@ -135,16 +135,16 @@ MethodStatus		Client::requestInterraction()
 		_state = getNextState(analizeHeaders());
 	if (_state == readRequestBody)
 	{
-		_state = getNextState(_request.readRequestBody(_method, NULL));
+		_state = getNextState(_request.readRequestBody(_method, NULL)); // AMethod::processBody
 		if (_state == readRequestBody)
 			return (inprogress);
 	}
 	if (_state == manageRequest)
 		_state = getNextState(_method->manageRequest(\
-					getRequestPath(_request.getURI())));
+					getRequestPath(_request.getURI()))); // AMethod::manageRequest;
 	if (_state == createResponseHeader)
 		_state = getNextState(_method->createHeader(\
-					getRequestPath(_request.getURI())));
+					getRequestPath(_request.getURI()))); // AMethod::createHeader;
 	return (ok);
 }
 
@@ -152,13 +152,13 @@ MethodStatus		Client::responseInterraction()
 {
 	if (_state == sendResponseHeader)
 	{
-		_state = getNextState(_method->sendHeader(_socket));
+		_state = getNextState(_method->sendHeader(_socket)); // AMethod::sendHeader
 		if (_state == sendResponseHeader)
 			return (inprogress);
 	}
 	if (_state == sendResponseBody)
 	{
-		_state = getNextState(_method->sendBody(_socket));
+		_state = getNextState(_method->sendBody(_socket)); // AMethod::sendBody
 		if (_state == sendResponseBody)
 			return (inprogress);
 	}
