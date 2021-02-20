@@ -26,12 +26,12 @@ public:
 	MethodGet(t_serv const &config, int &code, stringMap const &headersMapRequest);
 	~MethodGet();
 
-	virtual MethodStatus	readRequestBody();
+	virtual MethodStatus	readRequestBody();	//+path for cgi
 	virtual MethodStatus	manageRequest(std::string const &path);
-	virtual MethodStatus	createHeader();
-	// virtual MethodStatus	sendHeader(int socket);
-	// virtual MethodStatus	sendBody(int socket);
-	virtual MethodStatus	sendResponse(int socket);
+	virtual MethodStatus	createHeader(std::string const &_path);
+	virtual MethodStatus	sendHeader(int socket);
+	virtual MethodStatus	sendBody(int socket);
+	// virtual MethodStatus	sendResponse(int socket);
 };
 
 #endif

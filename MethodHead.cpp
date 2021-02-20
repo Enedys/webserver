@@ -14,7 +14,7 @@ MethodStatus	MethodHead::readRequestBody() { return ok; };
 
 MethodStatus	MethodHead::manageRequest(std::string const &path){
 	struct stat	st;
-	if (stat(path.c_str(), &st) == -1){//lstat?//fstat IS_DIR
+	if (stat(path.c_str(), &st) == -1){// && errno == ENOENT){//lstat?//fstat IS_DIR
 		_statusCode = notFound;
 		return error;
 	}
@@ -33,7 +33,7 @@ MethodStatus	MethodHead::createHeader() {
 	header.createGeneralHeaders(_headersMap, _statusCode);
 	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206)){ // it was not updated before
 		header.createEntityHeaders(_headersMap, _statusCode);
-		header.addLocationHeader(_headersMap, _statusCode);
+		header.addLocationHeader(_headersMap, _statusCode);//add path, if redirects - default path
 	}
 	else { // what if status 2xx
 		header.createErrorHeader(_headersMap, _statusCode);	// with status explanation

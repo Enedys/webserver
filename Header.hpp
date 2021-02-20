@@ -22,32 +22,35 @@ class Header
 {
 // protected://
 // 	int		_status;//if header creation was ok
-
-public:
+	std::string const &_path;
 	Header();
+public:
+	Header(std::string const &path) : _path(path) { };
 	~Header();
 
-	int	createGeneralHeaders(stringMap &_headersMap, int &_statusCode);//common for all responses
-	int	createEntityHeaders(stringMap &_headersMap, int &_statusCode);
+	int		createGeneralHeaders(stringMap &_headersMap, int &_statusCode);//common for all responses
+	int		createEntityHeaders(stringMap &_headersMap, int &_statusCode);
 	MethodStatus createErrorHeader(stringMap &_headersMap, int &_statusCode);//int
-	// int	createOptHeaders(stringMap &_headersMap, int &_statusCode);//specific for statuses and methods
+	// int		createOptHeaders(stringMap &_headersMap, int &_statusCode);//specific for statuses and methods
 
-	int	addAllowHeader(stringMap &_headersMap, int &_statusCode);//405 Method Not Allowed//no req methods if empty
-	int	addContentLanguageHeader(stringMap &_headersMap, int &_statusCode);//Entity
-	int	addContentLengthHeader(stringMap &_headersMap, int &_statusCode);//Entity //+path
-	int	addContentLocationHeader(stringMap &_headersMap, int &_statusCode);//Entity
-	int	addContentTypeHeader(stringMap &_headersMap, int &_statusCode);//Entity //+path
+	int		addAllowHeader(stringMap &_headersMap, int &_statusCode);//405 Method Not Allowed//no req methods if empty
+	int		addContentLanguageHeader(stringMap &_headersMap, int &_statusCode);//Entity
+	int		addContentLengthHeader(stringMap &_headersMap, int &_statusCode);//Entity //+path
+	int		addContentLocationHeader(stringMap &_headersMap, int &_statusCode);//Entity
+	//added to GeneralHeaders // int		addContentTypeHeader(stringMap &_headersMap, int &_statusCode);//Entity //+path
 
-	int	addLastModifiedHeader(stringMap &_headersMap, int &_statusCode);//+path
-	int	addLocationHeader(stringMap &_headersMap, int &_statusCode);//+path
+	int		addLastModifiedHeader(stringMap &_headersMap, int &_statusCode);//+path
+	int		addLocationHeader(stringMap &_headersMap, int &_statusCode);//+path
 
-	int	addRetryAfterHeader(stringMap &_headersMap, int &_statusCode);//if status
-	int	addTransferEncodingHeader(stringMap &_headersMap, int &_statusCode);
-	int	addAuthenticateHeader(stringMap &_headersMap, int &_statusCode);
+	int		addRetryAfterHeader(stringMap &_headersMap, int &_statusCode);//if status
+	int		addTransferEncodingHeader(stringMap &_headersMap, int &_statusCode);
+	int		addAuthenticateHeader(stringMap &_headersMap, int &_statusCode);
 
 
 	// MethodStatus	sendHeader(int socket);//
-	void headersToString(stringMap const &headersMap, int const &_statusCode, std::string *output);
+	void	headersToString(stringMap const &headersMap, int const &_statusCode, std::string *output);
+
+	void	setPath(std::string const &_path);
 };
 
 #endif

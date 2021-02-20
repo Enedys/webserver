@@ -1,6 +1,6 @@
 #include "Header.hpp"
 
-Header::Header(){};
+// Header::Header(std::string const &path) : _path(path) {};
 
 Header::~Header(){};
 
@@ -26,6 +26,7 @@ int		Header::createGeneralHeaders(stringMap &_headersMap, int &_statusCode){//co
 
 	_headersMap.insert(std::pair<std::string, std::string>("Server", "nginx/1.2.1"));
 	_headersMap.insert(std::pair<std::string, std::string>("Date", date));
+	_headersMap.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));//_contentType
 	return 0;
 };
 
@@ -60,7 +61,7 @@ int		Header::createEntityHeaders(stringMap &_headersMap, int &_statusCode){//spe
 
 int		Header::addContentLanguageHeader(stringMap &_headersMap, int &_statusCode){
 	// define language of the source or use our default?
-	_headersMap.insert(std::pair<std::string, std::string>("Content-Language", "eng"));//can it be specified in request before?
+	_headersMap.insert(std::pair<std::string, std::string>("Content-Language", "en-US"));//can it be specified in request before?
 	return 0;
 };
 
@@ -97,10 +98,10 @@ static char* ft_itoa(long num, char* str, int base)
 }
 
 int		Header::addContentLengthHeader(stringMap &_headersMap, int &_statusCode){
-	std::string path = "/Users/kwillum/ft_webserver/files/test.file";//
+	// std::string path = "/Users/kwillum/ft_webserver/files/test.file";//
 
 	struct stat stat_buf;
-	int rc = stat(path.c_str(), &stat_buf);
+	int rc = stat(_path.c_str(), &stat_buf);
 	long fileSize = rc == 0 ? stat_buf.st_size : -1;
 	if (fileSize < 0)
 		return error;
@@ -129,8 +130,8 @@ int		Header::addLastModifiedHeader(stringMap &_headersMap, int &_statusCode){
 	struct tm		*tm2;
 	std::string		_lastModified;
 
-	std::string path = "/Users/kwillum/ft_webserver/files/test.file";//
-	if (stat(path.c_str(), &stats) == 0) {
+	// std::string path = "/Users/kwillum/ft_webserver/files/test.file";//
+	if (stat(_path.c_str(), &stats) == 0) {
 		tm2 = gmtime(&stats.st_mtime);
 		strftime(buf2, 100, "%a, %d %b %Y %H:%M:%S GMT", tm2);
 		_lastModified = std::string(buf2);
@@ -187,3 +188,5 @@ int		Header::addAuthenticateHeader(stringMap &_headersMap, int &_statusCode){
 		_headersMap.insert(std::pair<std::string, std::string>("WWW-Authenticate", "Basic realm=\"Access to the staging site\", charset=\"UTF-8\""));
 	return 0;
 }
+
+void	Header::setPath(std::string const &path){ this->_path = path; };
