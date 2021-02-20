@@ -1,11 +1,10 @@
 NAME			=	webserv
 FLAGS			=	-Wall -Werror -Wextra -g
 
-HEADERS			=	Client.hpp \
+HEADERS			=	NewClient.hpp \
 					Debugger.hpp \
 					Header.hpp \
 					Method.hpp \
-					MethodError.hpp \
 					MethodGet.hpp \
 					MethodHead.hpp \
 					MethodOption.hpp \
@@ -13,17 +12,12 @@ HEADERS			=	Client.hpp \
 					MethodPut.hpp \
 					Parser.hpp \
 					Request.hpp \
-					Response.hpp \
 					Server.hpp \
 					WebServer.hpp \
 					include_resources.hpp \
-					includes.hpp
 
-SRC				=	Client.cpp \
-					Debugger.cpp \
-					Header.cpp \
+SRC				=	Debugger.cpp \
 					Method.cpp \
-					MethodError.cpp \
 					MethodGet.cpp \
 					MethodHead.cpp \
 					MethodOption.cpp \
@@ -31,9 +25,9 @@ SRC				=	Client.cpp \
 					MethodPut.cpp \
 					Parser.cpp \
 					Request.cpp \
-					Response.cpp \
 					Server.cpp \
 					WebServer.cpp \
+					NewClient.cpp \
 					main.cpp
 
 OBJ_DIR = ./bin/
@@ -49,7 +43,7 @@ $(NAME): $(OBJ_DIR) $(OBJS)
 $(OBJ_DIR):
 	mkdir $(OBJ_DIR)
 
-$(OBJ_DIR)%.o: %.cpp $(HEADERS)
+$(OBJ_DIR)%.o: %.cpp %.hpp
 	clang++ -c -g $< -o $@
 
 clean:

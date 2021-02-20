@@ -106,3 +106,5 @@ public:
 		return (*this);
 	}
 };
+
+void				printLog(Logger *_webLogger, std::string msg, int addInfo, Message::LogLevel lvl);

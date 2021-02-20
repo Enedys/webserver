@@ -1,6 +1,16 @@
 #include "MethodHead.hpp"
 #include "Header.hpp"
 
+// MethodHead::~MethodHead() {};
+// MethodStatus	MethodHead::createHeader() { return (ok); };
+// MethodStatus	MethodHead::readRequestBody(int socket) { return (ok); };
+// MethodStatus	MethodHead::manageRequest(std::string const &path) { return (ok); };
+// MethodStatus	MethodHead::sendBody(int socket) { return (ok); };
+// MethodStatus	MethodHead::sendHeader(int socket)
+// {
+// 	return (AMethod::sendHeader(socket));
+// };
+
 MethodHead::MethodHead(t_serv const &config, int &code, stringMap const &headersMapRequest) \
 	: AMethod(config, code, headersMapRequest) {
 	// check_path_validity?//200

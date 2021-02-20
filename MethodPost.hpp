@@ -12,14 +12,14 @@ private:
 	MethodPost();
 
 public:
-	MethodPost(t_serv const &config, int &code, stringMap const &headersMapRequest);
+	MethodPost(t_serv const &config, int &status, stringMap const &headers) :
+		AMethod(config, status, headers) {};
 	~MethodPost();
-
-	virtual MethodStatus	readRequestBody();
-	virtual MethodStatus	manageRequest(std::string const &path);
-	virtual MethodStatus	createHeader();
-	virtual MethodStatus	sendHeader(int socket);
-	virtual MethodStatus	sendBody(int socket);
+	MethodStatus	createHeader();
+	MethodStatus	readRequestBody(int socket);
+	MethodStatus	sendHeader(int socket);
+	MethodStatus	manageRequest(std::string const &location);
+	MethodStatus	sendBody(int socket);
 };
 
 #endif

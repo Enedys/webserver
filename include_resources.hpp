@@ -9,6 +9,7 @@
 #include <map>
 #include <list>
 #include <vector>
+#include <algorithm>
 
 /* Client/Server includes */
 #include "sys/types.h"
@@ -32,7 +33,9 @@ typedef	enum
 {
 	ok,
 	inprogress,
-	error
+	error,
+	socketError,
+	logicError,
 }		MethodStatus;
 
 typedef enum

@@ -1,6 +1,14 @@
 // #include "Server.hpp"
 #include "WebServer.hpp"
 
+void				printLog(Logger *_webLogger, std::string msg, int addInfo, Message::LogLevel lvl)
+{
+	if (_webLogger && addInfo != -1)
+			*_webLogger << lvl << msg << addInfo << Logger::endl;
+	else if (_webLogger && addInfo == -1)
+		*_webLogger << lvl << msg << Logger::endl;
+}
+
 int main()
 {
 	try{
