@@ -3,7 +3,7 @@
 AMethod::~AMethod() {};
 
 AMethod::AMethod(t_serv const &config, int &status, stringMap const &headers) : 
-	_config(config), _status(status), _headersMap(headers) {};
+	_config(config), _statusCode(status), _headersMapRequest(headers) {};
 
 const std::string	AMethod::validMethods[AMethod::methodNums] = {
 "PUT", "POST", "DELETE", "OPTION", "GET", "HEAD"
