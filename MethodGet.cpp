@@ -32,10 +32,12 @@ MethodStatus	MethodGet::manageRequest(std::string const &path){
 MethodStatus	MethodGet::createHeader(std::string const &path) {
 	_header = new Header(path);
 	// header.setPath(path);
+	std::cout << "__________<< GET METHOD\n";
 	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206)){ // it was not updated before
 		_header->createGeneralHeaders(_headersMap, _statusCode);
-		_header->createEntityHeaders(_headersMap, _statusCode);
-		_header->addLocationHeader(_headersMap, _statusCode);
+		// _header->createEntityHeaders(_headersMap, _statusCode);
+		std::cout << "__________<< GET METHOD 2\n";
+		// _header->addLocationHeader(_headersMap, _statusCode);
 	}
 	else { // what if status 2xx
 		// header.createErrorHeader(_headersMap, _statusCode);	// with status explanation
@@ -53,7 +55,7 @@ MethodStatus		MethodGet::sendHeader(int socket) {
 		_statusCode = errorSendHeader;
 		return error;
 	}
-	std::cout << "header: \n" << headerStr <<std::endl;
+	// std::cout << "header: \n" << headerStr <<std::endl;
 	return ok;
 }
 
@@ -92,11 +94,16 @@ MethodStatus		MethodGet::sendBody(int socket) {
 
 
 // MethodStatus		MethodGet::sendResponse(int socket) {
-// 	size_t	ret;
-// 	char	buf[BUFSIZE];
-// 	std::string headerStr;
+// 	std::string	response;
+// 	size_t		readBytes;
+// 	char		buf[BUFSIZE];
+// 	std::string	headerStr;
+
 // 	_header->headersToString(_headersMap, _statusCode, &headerStr);
-// 	ret = read(_fd, buf, BUFSIZE - headerStr.length());
+// 	response += headerStr;
+// 	// readBytes = read(_fd, buf, BUFSIZE - headerStr.length());
+// 	readBytes = read(_fd, buf, BUFSIZE);
+// 	response +=
 // }
 // MethodStatus		MethodGet::sendResponse(int socket) {
 // // check_socket here too?

@@ -53,10 +53,12 @@ int		Header::createGeneralHeaders(stringMap &_headersMap, int &_statusCode){//co
 	tm1 = gmtime(&tv.tv_sec);
 	strftime(buf1, 100, "%a, %d %b %Y %H:%M:%S GMT", tm1);
 	std::string date = std::string(buf1);
-
 	_headersMap.insert(std::pair<std::string, std::string>("Server", "nginx/1.2.1"));
+
 	_headersMap.insert(std::pair<std::string, std::string>("Date", date));
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));//_contentType
+
+
 	return 0;
 };
 
@@ -82,7 +84,13 @@ MethodStatus	createErrorHeader(stringMap &_headersMap, int &_statusCode){//not r
 };
 
 int		Header::createEntityHeaders(stringMap &_headersMap, int &_statusCode){//specific for statuses and methods
+
 	addContentLanguageHeader(_headersMap, _statusCode);//Entity
+
+//   for (std::map<std::string,std::string>::iterator it=_headersMap.begin(); it!=_headersMap.end(); ++it)
+//     std::cout << "\t" << it->first << " => " << it->second << '\n';
+
+
 	addContentLengthHeader(_headersMap, _statusCode);//Entity //+path
 	addContentLocationHeader(_headersMap, _statusCode);//Entity
 	addContentTypeHeader(_headersMap, _statusCode);//Entity //+path
@@ -90,13 +98,15 @@ int		Header::createEntityHeaders(stringMap &_headersMap, int &_statusCode){//spe
 };
 
 int		Header::addContentLanguageHeader(stringMap &_headersMap, int &_statusCode){
-	// define language of the source or use our default?
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Language", "en-US"));//can it be specified in request before?
 	return 0;
 };
 
 int		Header::addContentLengthHeader(stringMap &_headersMap, int &_statusCode){
-	// std::string path = "/Users/kwillum/ft_webserver/files/test.file";//
+
+std::cout << "\naddContentLengthHeader:\n";
+  for (std::map<std::string,std::string>::iterator it1=_headersMap.begin(); it1!=_headersMap.end(); ++it1)
+    std::cout << "| " << it1->first << " => " << it1->second << std::endl;
 
 	struct stat stat_buf;
 	int rc = stat(_path.c_str(), &stat_buf);
@@ -105,9 +115,9 @@ int		Header::addContentLengthHeader(stringMap &_headersMap, int &_statusCode){
 		return error;
 	char *contentLength;
 	contentLength = ft_itoa(fileSize, contentLength, 10);//
-
+	std::cout << "| content langth: " << contentLength << std::endl;
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Length", contentLength));//can it be specified in request before?
-	delete contentLength;//lol
+	//////// delete contentLength;//lol
 	return 0;
 };
 
@@ -144,7 +154,7 @@ int		Header::addLastModifiedHeader(stringMap &_headersMap, int &_statusCode){
 // as the result of content negotiation.
 int		Header::addLocationHeader(stringMap &_headersMap, int &_statusCode){
 	std::string redirectPath = "/files/test.file";//
-
+std::cout << "__Location header\n";
 	if (_statusCode == 301 || _statusCode == 302 || _statusCode == 303 || _statusCode == 307 || \
 	_statusCode == 308 || _statusCode == 201)
 	//(() && method != head )
@@ -153,6 +163,11 @@ int		Header::addLocationHeader(stringMap &_headersMap, int &_statusCode){
 			// _body += redirectPath;//if 201 not
 		_headersMap.insert(std::pair<std::string, std::string>("Location", redirectPath));
 	}
+std::cout << "__Location header finished\n";
+  for (std::map<std::string,std::string>::iterator it=_headersMap.begin(); it!=_headersMap.end(); ++it)
+    std::cout << "| " << it->first << " => " << it->second << '\n';
+
+
 	return 0;
 }
 

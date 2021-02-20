@@ -40,11 +40,19 @@ MethodStatus	MethodHead::manageRequest(std::string const &path){
 MethodStatus	MethodHead::createHeader(std::string const &path) {
 	_header = new Header(path);
 
+	std::cout << "__<< HEAD METHOD\n";
 	_header->createGeneralHeaders(_headersMap, _statusCode);
 	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206)){ // it was not updated before
+	std::cout << "__<<2 HEAD METHOD\n";
 		_header->createEntityHeaders(_headersMap, _statusCode);
+	std::cout << "__<<3 HEAD METHOD\n";
 		_header->addLocationHeader(_headersMap, _statusCode);//add path, if redirects - default path
+	std::cout << "__<<4 HEAD METHOD\n";
+
+  for (std::map<std::string,std::string>::iterator it=_headersMap.begin(); it!=_headersMap.end(); ++it)
+    std::cout << it->first << " => " << it->second << '\n';
 	}
+
 	else { // what if status 2xx
 		// _header->createErrorHeader(_headersMap, _statusCode);	// with status explanation
 		// sendHeader(_headersMap, _statusCode);

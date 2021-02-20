@@ -10,6 +10,7 @@ protected:
 	int					&_statusCode;			//from client. Initially == 0 in client
 
 	stringMap			_headersMap;			//local
+	// stringMap			*_headersMap;			//local
 	int					_fd;					//local. may add more fds for local use
 	// std::string			_contentType;
 	AMethod();
