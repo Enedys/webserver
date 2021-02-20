@@ -32,7 +32,9 @@ typedef	enum
 {
 	ok,
 	inprogress,
-	error
+	error,
+	socketError,
+	logicError,
 }		MethodStatus;
 
 /* Typedefs */

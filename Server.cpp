@@ -5,6 +5,7 @@ Server::~Server() {};
 void				Server::closeSocket() {if (_socket != -1) close(_socket);};
 std::string const	&Server::getServerName() const {return (_serverName);}
 unsigned int		Server::getServePort() const {return (_port);};
+t_serv const		&Server::getConfig() const { return (_server);}
 int					Server::getServerSocket() const {return (_socket);};
 void				Server::setRoot(const std::string &root){_root = root;};
 void				Server::setServePort(unsigned int port) {_port = port;};
@@ -84,7 +85,6 @@ catch(char const *s)
 	std::cout << s << std::endl;
 };
 
-t_serv const	*Server::getConfigPtr() const { return (&_server);}
 int					Server::createSocketByStruct()
 {
 	int yes = 1;

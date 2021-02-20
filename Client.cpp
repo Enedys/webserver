@@ -4,10 +4,9 @@ Client::~Client() { closeSocket(); }
 
 Client::Client(int socket, const struct sockaddr_in &sockAddr, s_serv const *config) :
 Request(socket), Response(config, this), _socket(socket), _sockAddr(sockAddr)
-{
-}
+{}
 
-void				Client::closeSocket() {};
+
 int					Client::getClientSocket() const { return (_socket); };
 
 int					Client::setClientSocket(int socket)

@@ -2,20 +2,22 @@
 
 WebServer::WebServer()
 {
-	_webLogger << Message::sys <<"Create WebServer without servers." << Logger::endl;
+	isReadMod = true;
+	printLog(&_webLogger, "Create WebServer without servers.", -1, Message::sys);
 }
 
 WebServer::~WebServer()
 {
-	_webLogger << Message::sys << "WebServer off." << Logger::endl;
+	printLog(&_webLogger, "WebServer without servers.", -1, Message::sys);
 }
 
 WebServer::WebServer(std::list<Server *> serverList) : _serverList(serverList)
 {
-	_webLogger << Message::sys << "Create WebServer without servers." << Logger::endl;
+	isReadMod = true;
+	printLog(&_webLogger, "Create WebServer without servers.", -1, Message::sys);
 }
 
-void		WebServer::appendServer(Server *newServer)
+void				WebServer::appendServer(Server *newServer)
 {
 	try
 	{
@@ -39,11 +41,12 @@ void				WebServer::showServerList()
 	}
 }
 
-WebServer::client					&WebServer::detachConnection(client &cIt)
+WebServer::client	&WebServer::detachConnection(client &cIt)
 {
 	_webLogger << Message::warning << "Connection closed. socket: " << (*cIt)->getClientSocket() << Logger::endl;
 	close((*cIt)->getClientSocket());
 	FD_CLR((*cIt)->getClientSocket(), &_fdsToRead);
+	FD_CLR((*cIt)->getClientSocket(), &_fdsToWrite);
 	cIt = _clientList.erase(cIt);
 	return (cIt);
 }
@@ -62,18 +65,19 @@ int						WebServer::setActualConnections()
 	}
 	while (cIt != _clientList.end())
 	{
-		if ((*cIt)->getRequestStatus() == Request::responseReady)
+		if ((*cIt)->isSending()) //   (*cIt)->getRequestStatus() == Request::responseReady)
 		{
-			std::cout << "\033[32mwHERE!\033[0m\n";
+			isReadMod = false;
 			FD_SET((*cIt)->getClientSocket(), &_fdsToWrite);
-			_webLogger << Message::verbose << "Client socket to write: " << (*cIt)->getClientSocket() << Logger::endl;
+			_webLogger << Message::verbose << "WS_set:: Client socket to write: " << (*cIt)->getClientSocket() << Logger::endl;
 		}
-		if ((*cIt)->getRequestStatus() != Request::responseReady)
+		else if ((*cIt)->isReading())
 		{
-			std::cout << "\033[35mrHERE!\033[0m\n";
-			_webLogger << Message::verbose << "Listen client socket: " << (*cIt)->getClientSocket() << Logger::endl;
+			isReadMod = true;
+			_webLogger << Message::verbose << "WS_set:: Client socket to read: " << (*cIt)->getClientSocket() << Logger::endl;
 			FD_SET((*cIt)->getClientSocket(), &_fdsToRead);
 		}
+		(*cIt)->setMode(isReadMod);
 		cIt++;
 	}
 	return (0);
@@ -81,94 +85,55 @@ int						WebServer::setActualConnections()
 
 int						WebServer::checkActualConnections()
 {
-	if (select(FD_SETSIZE, &_fdsToRead, &_fdsToWrite, NULL, NULL) == -1)
+	int		newChanges = select(FD_SETSIZE, &_fdsToRead, &_fdsToWrite, NULL, NULL);
+	if (newChanges == -1)
 		return (-1);
 	return (0);
 }
 
 int						WebServer::acceptNewConnections()
 {
-	server	sIt = _serverList.begin();
-	sockaddr_in					clientName;
-	socklen_t					clientLen = sizeof(clientName);
-	int							newSocket;
+	int				newSocket;
+	sockaddr_in		clientName;
+	socklen_t		clientLen = sizeof(clientName);
+	server			sIt = _serverList.begin();
 	while (sIt != _serverList.end())
 	{
 		memset(&clientName, 0, clientLen);
 		if (FD_ISSET((*sIt)->getServerSocket(), &_fdsToRead))
 		{
-			_webLogger << Message::request << "New connection request to "<< (*sIt)->getServerSocket() << Logger::endl;
+			_webLogger << Message::request << "WS_accept:: New client request to server "<< (*sIt)->getServerSocket() << Logger::endl;
 			int	newSocket = accept((*sIt)->getServerSocket(),\
 			reinterpret_cast<sockaddr *>(&clientName), &clientLen);
 			if (newSocket == -1)
 			{
-				_webLogger << Message::warning << "Connection refused."<< (*sIt)->getServerSocket() << Logger::endl;
+				_webLogger << Message::warning << "WS_accept:: Connection refused."<< (*sIt)->getServerSocket() << Logger::endl;
 				return (1);
 			}
 			fcntl(newSocket, F_SETFL, O_NONBLOCK);
-			_clientList.push_back(new Client(newSocket, clientName, (*sIt)->getConfigPtr()));
+			_clientList.push_back(new Client(newSocket, (*sIt)->getConfig()));
 		}
 		sIt++;
 	}
 	return (0);
 }
 
-int						WebServer::readActualRequests()
+int						WebServer::communicate()
 {
 	client	cIt = _clientList.begin();
-	int		resReq = 0;
 	while (_clientList.end() != cIt)
 	{
-		if (FD_ISSET((*cIt)->getClientSocket(), &_fdsToRead))
+		if (FD_ISSET((*cIt)->getClientSocket(), &_fdsToRead) || \
+			FD_ISSET((*cIt)->getClientSocket(), &_fdsToWrite))
 		{
-			_webLogger << Message::verbose << "Read request from: "\
+			std::cout << "?: " << FD_ISSET((*cIt)->getClientSocket(), &_fdsToRead) << FD_ISSET((*cIt)->getClientSocket(), &_fdsToWrite) << std::endl;
+			_webLogger << Message::verbose << "Communicate:: client socket: "\
 				<< (*cIt)->getClientSocket() << Logger::endl;
-			if ((resReq = (*cIt)->readRequest(&_webLogger)))
+			if ((*cIt)->interract() == error)
 			{
 				cIt = detachConnection(cIt);
 				continue ;
 			}
-		}
-		cIt++;
-	}
-	return (0);
-}
-
-
-int						WebServer::sendActualResponses()
-{
-
-	char resp[] = "HTTP/1.1 200 OK\r\n"
-	"Server: nginx/1.2.1\r\n"
-	"Date: Sat, 08 Mar 2014 22:53:46 GMT\r\n"
-	"Content-Type: text/html\r\n"
-	"Content-Length: 58\r\n"
-	"Last-Modified: Sat, 08 Mar 2014 22:53:30 GMT\r\n\r\n";
-	char bodya[] = "<html>"
-	"<head>"
-	"</head>"
- 	"<body>"
-   	"<h1>Hello World<h1>"
- 	"</body>"
-	"</html>";
-
-
-
-	client	cIt = _clientList.begin();
-	int		resReq = 0;
-	while (_clientList.end() != cIt)
-	{
-		if (FD_ISSET((*cIt)->getClientSocket(), &_fdsToWrite))
-		{
-			std::cout << "WHYYYY???\n";
-			_webLogger << Message::verbose << "Send response to socket: "\
-				<< (*cIt)->getClientSocket() << Logger::endl;
-			/* cIt->sendResponse() must be here */
-			std::cout << "Set method status: " << (*cIt)->setMethod();
-			(*cIt)->sendResponse();
-			// send((*cIt)->getClientSocket(), resp, sizeof(resp) - 1, MSG_DONTWAIT);
-			// send((*cIt)->getClientSocket(), bodya, sizeof(bodya) - 1, MSG_DONTWAIT);
-			(*cIt)->setRequestStatus(Request::none); // setWaitRequestStatus();
 		}
 		cIt++;
 	}
@@ -185,8 +150,9 @@ int						WebServer::runWebServer()
 		setActualConnections();
 		if (checkActualConnections() != -1)
 		{
-			sendActualResponses();
-			readActualRequests();
+			communicate();
+			// sendActualResponses();
+			// readActualRequests();
 			acceptNewConnections();
 		}
 		else
