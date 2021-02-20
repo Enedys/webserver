@@ -34,6 +34,7 @@ typedef	enum
 	ok,
 	inprogress,
 	error,
+	connectionClosed,
 	socketError,
 	logicError,
 }		MethodStatus;

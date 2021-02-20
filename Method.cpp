@@ -37,4 +37,3 @@ MethodStatus	AMethod::sendHeader(int socket)
 	send(socket, letter.c_str(), letter.length(), MSG_DONTWAIT);
 	return (ok);
 }
-

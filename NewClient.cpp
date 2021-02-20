@@ -47,6 +47,8 @@ MethodStatus		Client::refreshClient()
 
 Client::conditionCode	Client::getNextState(MethodStatus status)
 {
+	if (status == connectionClosed)
+		return (sendingErrorState);
 	if ((_state == sendResponseBody || _state == sendResponseHeader) && status == error)
 		return (sendingErrorState); // here must cut connection
 	if (status == error)
@@ -162,8 +164,6 @@ MethodStatus		Client::responseInsterraction()
 	}
 	if (_state == finalState)
 		refreshClient();
-	if (_state == sendingErrorState)
-		return (error);
 	return (ok);
 }
 
@@ -174,5 +174,7 @@ MethodStatus		Client::interract()
 		returnStatus = requestInterraction();
 	else
 		returnStatus = responseInsterraction();
+	if (_state == sendingErrorState)
+		return (error);
 	return (returnStatus);
 }
