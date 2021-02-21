@@ -12,7 +12,7 @@ size_t				Request::getBufferResidual()
 	return (_buffer.length());
 }
 
-MethodStatus		Request::getLastStatus() const
+MethodStatus		Request::getLastReadStatus() const
 {
 	return (_lastStatus);
 }
@@ -23,7 +23,7 @@ MethodStatus		Request::cleanRequest()
 	readingStage = firstLine;
 	startLine.clear();
 	headersMap.clear();
-	_lastStatus = inprogress;
+	_lastStatus = ok;
 	return (ok);
 }
 
@@ -53,6 +53,7 @@ MethodStatus	Request::setLastReadStatus(MethodStatus status)
 
 MethodStatus		Request::getRequestHead()
 {
+	std::cout << "Into ReadHead: " << _lastStatus << std::endl;
 	if (_lastStatus == inprogress)
 	{
 		MethodStatus	readStatus = readRequestHead(NULL);

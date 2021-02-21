@@ -29,11 +29,11 @@ class Client
 	
 public:
 	int					getClientSocket() const;
-	void				setMode(bool mode);
 	bool				isReading() const;
 	bool				isSending() const;
+	bool				needToRead() const;
 	MethodStatus		interract();
-	int					_requestCounter;
+
 
 	Client(int socket, s_serv const &config);
 	~Client();
@@ -44,7 +44,6 @@ private:
 	Request				_request;
 	AMethod				*_method;
 	int					_statusCode;
-	bool				isReadMode;
 
 	t_serv const		&_config;
 	int					_socket;
@@ -56,11 +55,4 @@ private:
 	MethodStatus		createNewMethod();
 	MethodStatus		analizeHeaders();
 	std::string			getRequestPath(std::string const &uri);
-
-	// MethodStatus		readRequestHeades();
-	// MethodStatus		readBodyRequest();
-	// MethodStatus		manageRequest();
-	// MethodStatus		createHeaders();
-	// MethodStatus		sendHeaders();
-	// MethodStatus		sendBody();
 };

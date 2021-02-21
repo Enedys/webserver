@@ -25,7 +25,7 @@ public:
 	MethodStatus		readRequestBody(AMethod *method, Logger *_webLogger);
 	MethodStatus		cleanRequest();
 	size_t				getBufferResidual();
-	MethodStatus		getLastStatus() const;
+	MethodStatus		getLastReadStatus() const;
 	const stringMap		getHeadersMap() const;
 	const stringMap		getStartLine() const;
 	std::string const	&getURI();

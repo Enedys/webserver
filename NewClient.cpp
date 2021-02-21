@@ -3,8 +3,6 @@
 Client::Client(int socket, t_serv const &config) :
 	_socket(socket), _config(config), _statusCode(0), _request(socket, _statusCode), _method(NULL), _state(defaultState)
 {
-	_requestCounter = 0;
-	isReadMode = true;
 }
 
 Client::~Client()
@@ -18,17 +16,15 @@ int					Client::getClientSocket() const
 	return _socket;
 };
 
-void				Client::setMode(bool mode)
+bool				Client::needToRead() const
 {
-	isReadMode = mode;
-};
+	if (_request.getLastReadStatus() == inprogress)
+		return (true);
+	return (false);
+}
 
 bool				Client::isReading() const
 {
-	if (_request.getLastStatus() == inprogress)
-		return (true);
-	return (false);
-
 	if (_state == defaultState || _state == readingHeader || _state == readRequestBody)
 		return (true);
 	return (false);
@@ -51,19 +47,16 @@ MethodStatus		Client::refreshClient()
 		_state = readingHeader;
 	else
 		_state = defaultState;
-
-	_requestCounter = _requestCounter - 1;
 	return (ok);
 }
 
 Client::conditionCode	Client::getNextState(MethodStatus status)
 {
+	// if (_state == sendResponseBody) // test shit	!!!!!!!!!!!!!!!!!!!!!!!!!!!! TODO
+	// 	return (sendingErrorState);
+
 	if (status == connectionClosed)
 		return (sendingErrorState);
-	
-	if (_state == sendResponseBody) // test shit	!!!!!!!!!!!!!!!!!!!!!!!!!!!! TODO
-		return (sendingErrorState);
-
 	if ((_state == sendResponseBody || _state == sendResponseHeader) && status == error)
 		return (sendingErrorState); // here must cut connection
 	if (status == error)
@@ -79,8 +72,9 @@ Client::conditionCode	Client::getNextState(MethodStatus status)
 
 MethodStatus		Client::analizeHeaders()
 {
-	if (createNewMethod() != ok)
-		return (error);
+	MethodStatus	methodStatus = createNewMethod();
+	if (methodStatus != ok)
+		return (methodStatus);
 	return (ok);
 }
 
@@ -112,7 +106,7 @@ std::string			Client::getRequestPath(std::string const &uri)
 MethodStatus		Client::createNewMethod()
 {
 	if (_socket == -1)
-		return (socketError); // и что туту делать?
+		return (connectionClosed);
 	if (_statusCode)
 	{
 		_method = new MethodGet(_config, _statusCode, _request.getHeadersMap());
@@ -185,9 +179,9 @@ MethodStatus		Client::responseInterraction()
 MethodStatus		Client::interract()
 {
 	MethodStatus	returnStatus;
-	if (isReadMode)
+	if (isReading())
 		returnStatus = requestInterraction();
-	else
+	else	//else if (isSending())
 		returnStatus = responseInterraction();
 	if (_state == sendingErrorState)
 		return (error);

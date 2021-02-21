@@ -2,7 +2,6 @@
 
 WebServer::WebServer()
 {
-	isReadMod = true;
 	printLog(&_webLogger, "Create WebServer without servers.", -1, Message::sys);
 }
 
@@ -13,7 +12,6 @@ WebServer::~WebServer()
 
 WebServer::WebServer(std::list<Server *> serverList) : _serverList(serverList)
 {
-	isReadMod = true;
 	printLog(&_webLogger, "Create WebServer without servers.", -1, Message::sys);
 }
 
@@ -65,19 +63,16 @@ int						WebServer::setActualConnections()
 	}
 	while (cIt != _clientList.end())
 	{
-		if ((*cIt)->isSending()) //   (*cIt)->getRequestStatus() == Request::responseReady)
+		if ((*cIt)->isSending())
 		{
-			isReadMod = false;
 			FD_SET((*cIt)->getClientSocket(), &_fdsToWrite);
 			_webLogger << Message::verbose << "WS_set:: Client socket to write: " << (*cIt)->getClientSocket() << Logger::endl;
 		}
-		else if ((*cIt)->isReading())
+		else if ((*cIt)->isReading() && (*cIt)->needToRead())
 		{
-			isReadMod = true;
 			_webLogger << Message::verbose << "WS_set:: Client socket to read: " << (*cIt)->getClientSocket() << Logger::endl;
 			FD_SET((*cIt)->getClientSocket(), &_fdsToRead);
 		}
-		(*cIt)->setMode(isReadMod);
 		cIt++;
 	}
 	return (0);
@@ -118,15 +113,46 @@ int						WebServer::acceptNewConnections()
 	return (0);
 }
 
+bool						WebServer::clientIsReady(Client const &cli)
+{
+	/* Reading cases */
+	if (FD_ISSET(cli.getClientSocket(), &_fdsToRead))
+		return (true);
+
+	/* Response case */
+	if (FD_ISSET(cli.getClientSocket(), &_fdsToWrite))
+		return (true);
+	return (false);
+}
+
+int						WebServer::checkOldConnections()
+{
+	client	cIt = _clientList.begin();
+	while (_clientList.end() != cIt)
+	{
+		if (*cIt && (*cIt)->isReading() && !((*cIt)->needToRead()))
+		{
+			_webLogger << Message::verbose << "CheckOld::Communicate:: client socket: "\
+				<< (*cIt)->getClientSocket() << Logger::endl;
+			if ((*cIt)->interract() == error)
+			{
+				cIt = detachConnection(cIt);
+				continue ;
+			}
+		}
+		cIt++;
+	}
+	return (0);
+}
+
 int						WebServer::communicate()
 {
 	client	cIt = _clientList.begin();
 	while (_clientList.end() != cIt)
 	{
-		if (FD_ISSET((*cIt)->getClientSocket(), &_fdsToRead) || \
-			FD_ISSET((*cIt)->getClientSocket(), &_fdsToWrite))
+		if (*cIt && clientIsReady(**cIt))
 		{
-			std::cout << "?: " << FD_ISSET((*cIt)->getClientSocket(), &_fdsToRead) << FD_ISSET((*cIt)->getClientSocket(), &_fdsToWrite) << std::endl;
+			std::cout << "r?: " << FD_ISSET((*cIt)->getClientSocket(), &_fdsToRead) << ", w?: " << FD_ISSET((*cIt)->getClientSocket(), &_fdsToWrite) << std::endl;
 			_webLogger << Message::verbose << "Communicate:: client socket: "\
 				<< (*cIt)->getClientSocket() << Logger::endl;
 			if ((*cIt)->interract() == error)
@@ -147,17 +173,16 @@ int						WebServer::runWebServer()
 
 	while (1)
 	{
+		// checkOldConnections();
 		setActualConnections();
 		if (checkActualConnections() != -1)
 		{
 			communicate();
-			// sendActualResponses();
-			// readActualRequests();
 			acceptNewConnections();
 		}
 		else
 			_webLogger << Message::error <<"Select error." << Logger::endl;
 		_webLogger << Message::fatal << "..." << Logger::endl;
-		// usleep(1000000);
+		usleep(1000000);
 	}
 }
