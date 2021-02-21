@@ -7,47 +7,31 @@
 
 #include "Method.hpp"
 
-// * class Header is used to form response headers.
-// * Inherits _headersMap field from AMethod to store needed
-// for a specific method headers.
-// * each function responsible for creating a specific field in _headersMap
-// returns 0 upon success and 1 on failure. If 1 function ErrorHeader should be called
-// * ErrorHeader deletes all not default fields in _headersMap and adds a field with error info
-
-// need to share response status of the exec processes to add some headers
-
-// class Header : public AMethod
 class Header
 {
-// protected://
-// 	int		_status;//if header creation was ok
+private:
 	std::string const &_path;
 	Header();
 public:
-	Header(std::string const &path) : _path(path) { };
+	Header(std::string const &path);
 	~Header();
 
-	int		createGeneralHeaders(stringMap &_headersMap, int &_statusCode);//common for all responses
-	int		createEntityHeaders(stringMap &_headersMap, int &_statusCode);
-	MethodStatus createErrorHeader(stringMap &_headersMap, int &_statusCode);//int
-	// int		createOptHeaders(stringMap &_headersMap, int &_statusCode);//specific for statuses and methods
+	void	createGeneralHeaders(stringMap &_headersMap, int &_statusCode);
+	void	createEntityHeaders(stringMap &_headersMap, int &_statusCode);
+	void	createOptHeaders(stringMap &_headersMap, int &_statusCode);
 
-	int		addAllowHeader(stringMap &_headersMap, int &_statusCode);//405 Method Not Allowed//no req methods if empty
-	int		addContentLanguageHeader(stringMap &_headersMap, int &_statusCode);//Entity
-	int		addContentLengthHeader(stringMap &_headersMap, int &_statusCode);//Entity //+path
-	int		addContentLocationHeader(stringMap &_headersMap, int &_statusCode);//Entity
-	int		addContentTypeHeader(stringMap &_headersMap, int &_statusCode);//Entity //+path
+	void	addAllowHeader(stringMap &_headersMap, int &_statusCode, const t_serv &_config);
+	void	addContentLanguageHeader(stringMap &_headersMap, int &_statusCode);
+	void	addContentLengthHeader(stringMap &_headersMap, int &_statusCode);
+	void	addContentLocationHeader(stringMap &_headersMap, int &_statusCode);
+	void	addContentTypeHeader(stringMap &_headersMap, int &_statusCode);
 
-	int		addLastModifiedHeader(stringMap &_headersMap, int &_statusCode);//+path
-	int		addLocationHeader(stringMap &_headersMap, int &_statusCode);//+path
+	void	addLastModifiedHeader(stringMap &_headersMap, int &_statusCode);
+	void	addLocationHeader(stringMap &_headersMap, int &_statusCode);
 
-	int		addRetryAfterHeader(stringMap &_headersMap, int &_statusCode);//if status
-	int		addTransferEncodingHeader(stringMap &_headersMap, int &_statusCode);
-	int		addAuthenticateHeader(stringMap &_headersMap, int &_statusCode);
+	void	addRetryAfterHeader(stringMap &_headersMap, int &_statusCode);
+	void	addTransferEncodingHeader(stringMap &_headersMap, int &_statusCode);
+	void	addAuthenticateHeader(stringMap &_headersMap, int &_statusCode);
 
-
-	// MethodStatus	sendHeader(int socket);//
 	void	headersToString(stringMap const &headersMap, int const &_statusCode, std::string *output);
-
-	void	setPath(std::string const &_path);
 };

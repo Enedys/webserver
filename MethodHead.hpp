@@ -1,6 +1,3 @@
-#ifndef MethodHead_HPP
-# define MethodHead_HPP
-
 #pragma once
 #include "Method.hpp"
 #include "Header.hpp"
@@ -24,5 +21,3 @@ public:
 	MethodStatus	manageRequest(std::string const &location);
 	MethodStatus	sendBody(int socket);
 };
-
-#endif

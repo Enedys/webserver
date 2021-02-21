@@ -2,48 +2,43 @@
 #include "Header.hpp"
 
 MethodGet::MethodGet(t_serv const &config, int &code, stringMap const &headers) \
-	: AMethod(config, code, headers) {
-	// check_path_validity?//200
-};
+	: AMethod(config, code, headers) {};
 
 MethodGet::~MethodGet(){};
 
-// for PUT POST, maybe
-// updates _statusCode.
-MethodStatus	MethodGet::readRequestBody(int socket) {
-	return ok;
-};
+MethodStatus	MethodGet::readRequestBody(int socket) { return ok; };
 
-MethodStatus	MethodGet::manageRequest(std::string const &path){
+MethodStatus	MethodGet::manageRequest(std::string const &path)
+{
 	struct stat	st;
 	if (stat(path.c_str(), &st) == -1){// && errno == ENOENT)//lstat?//fstat IS_DIR
 		_statusCode = notFound;
 		return error;
 	}
-
 	if ((_fd = open(path.c_str(), O_RDONLY | O_NONBLOCK)) <= 0){
 		_statusCode = errorOpeningURL;
 		return error;
 	}
-
+	_statusCode = okSuccess;
 	return ok;
 };
 
-MethodStatus	MethodGet::createHeader(std::string const &path) {
+MethodStatus	MethodGet::createHeader(std::string const &path)
+{
 	_header = new Header(path);
-	// header.setPath(path);
-	std::cout << "__________<< GET METHOD\n";
-	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206)){ // it was not updated before
-		_header->createGeneralHeaders(_headersMap, _statusCode);
-		// _header->createEntityHeaders(_headersMap, _statusCode);
-		std::cout << "__________<< GET METHOD 2\n";
-		// _header->addLocationHeader(_headersMap, _statusCode);
+
+	std::cout << "////\tGET METHOD, statusCode: " << _statusCode << std::endl;
+
+	_header->createGeneralHeaders(_headersMap, _statusCode);
+	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206)){
+		_header->createEntityHeaders(_headersMap, _statusCode);
 	}
-	else { // what if status 2xx
-		// header.createErrorHeader(_headersMap, _statusCode);	// with status explanation
-		// sendHeader(_headersMap, _statusCode);
-		return error; // means should send header and leave (without sending body)
-	}
+	_header->addAllowHeader(_headersMap, _statusCode, _config);
+	_header->addLocationHeader(_headersMap, _statusCode);
+	_header->addRetryAfterHeader(_headersMap, _statusCode);
+	_header->addTransferEncodingHeader(_headersMap, _statusCode);
+	_header->addAuthenticateHeader(_headersMap, _statusCode);
+
 	return ok;
 };
 
@@ -55,7 +50,7 @@ MethodStatus		MethodGet::sendHeader(int socket) {
 		_statusCode = errorSendHeader;
 		return error;
 	}
-	// std::cout << "header: \n" << headerStr <<std::endl;
+	std::cout << "Response header string: \n" << headerStr <<std::endl;
 	return ok;
 }
 

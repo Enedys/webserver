@@ -1,50 +1,71 @@
 #include "Header.hpp"
 
-Header::~Header(){};
+Header::Header(std::string const &path) : _path(path) {};
 
-static char* ft_itoa(long num, char* str, int base)
+Header::~Header(){ delete this; };
+
+static char		*ft_ltoa(long int nbr)
 {
-	int i = 0;
-	bool isNegative = false;
+	int		len = 0;
+	int		sign = 1;
+	char	*str;
+	long int nbrcpy = nbr;
 
-	if (num == 0) {
-		str[i++] = '0';
-		str[i] = '\0';
-		return str;
+	while (nbrcpy <= -10 || nbrcpy >= 10) {
+		nbrcpy /= 10;
+		len++;
 	}
-	if (num < 0 && base == 10) {
-		isNegative = true;
-		num = -num;
+	if (nbrcpy < 0)
+		len++;
+	if (!(str = (char*)malloc(sizeof(*str) * (len + 2))))
+		return (NULL);
+	if (nbr < 0){
+		nbr *= -1;
+		sign *= (-1);
 	}
-	while (num != 0) {
-		int rem = num % base;
-		str[i++] = (rem > 9) ? (rem - 10) + 'a' : rem + '0';
-		num = num/base;
+	if (sign < 0)
+		str[0] = '-';
+	str[len + 1] = '\0';
+	while (len >= 0){
+		str[len] = nbr % 10 + '0';
+		nbr = nbr / 10;
+		len--;
+		if (len == 0 && sign < 0)
+			break ;
 	}
-	if (isNegative)
-		str[i++] = '-';
-	str[i] = '\0';
-	int start = 0;
-	int end = i - 1;
-	while (start < end)	{
-		std::swap(*(str + start), *(str + end));
-		start++;
-		end--;
-	}
-	return str;
+	return (str);
 }
 
-void	Header::headersToString(stringMap const &headersMap, int const &statusCode, std::string *output){
-	char *str;//kostylek
-	*output += "HTTP/1.1 " + static_cast<std::string>(ft_itoa(statusCode, str, 10)) + " " + "error code explanation" + CRLF;
+std::map<int, std::string> respStatusCodes;
+struct respStatusCodesInit
+{
+	respStatusCodesInit()
+	{
+		respStatusCodes[200] = "OK";
+		respStatusCodes[201] = "Created";
+		respStatusCodes[202] = "Accepted";
+		respStatusCodes[400] = "Bad Request";
+		respStatusCodes[401] = "Unauthorized";
+		respStatusCodes[403] = "Forbidden";
+		respStatusCodes[404] = "Not Found";
+		respStatusCodes[405] = "Method Not Allowed";
+		respStatusCodes[414] = "URI Too Long";
+		respStatusCodes[429] = "Too Many Requests";
+		respStatusCodes[503] = "Service Unavailable";//перегрузка сервера
+		respStatusCodes[505] = "HTTP Version Not Supported";
+	}
+} respStatusCodesInit;
+
+void	Header::headersToString(stringMap const &headersMap, int const &statusCode, std::string *output)
+{
+	*output += "HTTP/1.1 " + static_cast<std::string>(ft_ltoa(statusCode)) + " " + respStatusCodes[statusCode] + CRLF;
 	for (constMapIter it = headersMap.begin(); it != headersMap.end(); ++it)
 		*output += (it->first) + ": " + (it->second) + CRLF;
 	*output += CRLF;
-	// std::cout << "READY_HEADER: " << *output << std::endl;
 }
 
-int		Header::createGeneralHeaders(stringMap &_headersMap, int &_statusCode){//common for all methods and errors (Date, Host name(?))
-
+void	Header::createGeneralHeaders(stringMap &_headersMap, int &_statusCode)
+{
 	char			buf1[100];
 	struct timeval	tv;
 	struct tm		*tm1;
@@ -54,107 +75,92 @@ int		Header::createGeneralHeaders(stringMap &_headersMap, int &_statusCode){//co
 	strftime(buf1, 100, "%a, %d %b %Y %H:%M:%S GMT", tm1);
 	std::string date = std::string(buf1);
 	_headersMap.insert(std::pair<std::string, std::string>("Server", "nginx/1.2.1"));
-
 	_headersMap.insert(std::pair<std::string, std::string>("Date", date));
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));//_contentType
-
-
-	return 0;
 };
 
-
-// This header must be sent if the server responds with a 405 Method Not Allowed status code
-// to indicate which request methods can be used. An empty Allow header indicates that the
-// resource allows no request methods, which might occur temporarily for a given resource, for example.
-int		Header::addAllowHeader(stringMap &_headersMap, int &_statusCode){
-	if (_statusCode == 405) {
-		_headersMap.insert(std::pair<std::string, std::string>("Allow", ""));
-		return 0;
-	}
-	_headersMap.insert(std::pair<std::string, std::string>("Allow", "GET, HEAD, PUT, POST"));
-	return 0;
+void	Header::createEntityHeaders(stringMap &_headersMap, int &_statusCode)
+{//specific for statuses and methods
+	addContentLanguageHeader(_headersMap, _statusCode);
+	addContentLengthHeader(_headersMap, _statusCode);
+	addContentLocationHeader(_headersMap, _statusCode);
+	addContentTypeHeader(_headersMap, _statusCode);
+	addLastModifiedHeader(_headersMap, _statusCode);//if modified
 };
 
-MethodStatus	createErrorHeader(stringMap &_headersMap, int &_statusCode){//not ready
-	if (!_headersMap.empty())
-		_headersMap.clear();
-	char *str;
-	_headersMap.insert(std::pair<std::string, std::string>(ft_itoa(_statusCode, str, 10), ""));
-	return ok;
-};
-
-int		Header::createEntityHeaders(stringMap &_headersMap, int &_statusCode){//specific for statuses and methods
-
-	addContentLanguageHeader(_headersMap, _statusCode);//Entity
-
-//   for (std::map<std::string,std::string>::iterator it=_headersMap.begin(); it!=_headersMap.end(); ++it)
-//     std::cout << "\t" << it->first << " => " << it->second << '\n';
-
-
-	addContentLengthHeader(_headersMap, _statusCode);//Entity //+path
-	addContentLocationHeader(_headersMap, _statusCode);//Entity
-	addContentTypeHeader(_headersMap, _statusCode);//Entity //+path
-	return 0;
-};
-
-int		Header::addContentLanguageHeader(stringMap &_headersMap, int &_statusCode){
+void	Header::addContentLanguageHeader(stringMap &_headersMap, int &_statusCode){
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Language", "en-US"));//can it be specified in request before?
-	return 0;
 };
 
-int		Header::addContentLengthHeader(stringMap &_headersMap, int &_statusCode){
-
-std::cout << "\naddContentLengthHeader:\n";
-  for (std::map<std::string,std::string>::iterator it1=_headersMap.begin(); it1!=_headersMap.end(); ++it1)
-    std::cout << "| " << it1->first << " => " << it1->second << std::endl;
-
+void	Header::addContentLengthHeader(stringMap &_headersMap, int &_statusCode)
+{
 	struct stat stat_buf;
 	int rc = stat(_path.c_str(), &stat_buf);
 	long fileSize = rc == 0 ? stat_buf.st_size : -1;
 	if (fileSize < 0)
-		return error;
+		return ;
 	char *contentLength;
-	contentLength = ft_itoa(fileSize, contentLength, 10);//
-	std::cout << "| content langth: " << contentLength << std::endl;
-	_headersMap.insert(std::pair<std::string, std::string>("Content-Length", contentLength));//can it be specified in request before?
-	//////// delete contentLength;//lol
-	return 0;
+	contentLength = ft_ltoa(fileSize);//
+	std::string contentLengthStr(contentLength);
+	delete contentLength;
+	_headersMap.insert(std::pair<std::string, std::string>("Content-Length", contentLengthStr));//can it be specified in request before?
 };
 
-int		Header::addContentLocationHeader(stringMap &_headersMap, int &_statusCode){//Entity
-//if moved
-	return 0;
+void	Header::addContentLocationHeader(stringMap &_headersMap, int &_statusCode)
+{//if moved
+// Content-Location indicates the direct URL to use to access the resource, without further
+// content negotiation in the future. Location is a header associated with the response,
+//  while Content-Location is associated with the data returned
 };
 
-int		Header::addContentTypeHeader(stringMap &_headersMap, int &_statusCode){//Entity
-//how to determine type?
+void	Header::addContentTypeHeader(stringMap &_headersMap, int &_statusCode)
+{//how to determine type?
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));
-	return 0;
 };
 
-int		Header::addLastModifiedHeader(stringMap &_headersMap, int &_statusCode){
+void	Header::addLastModifiedHeader(stringMap &_headersMap, int &_statusCode)
+{
 	char			buf2[100];
 	struct stat		stats;
 	struct tm		*tm2;
 	std::string		_lastModified;
 
-	// std::string path = "/Users/kwillum/ft_webserver/files/test.file";//
 	if (stat(_path.c_str(), &stats) == 0) {
 		tm2 = gmtime(&stats.st_mtime);
 		strftime(buf2, 100, "%a, %d %b %Y %H:%M:%S GMT", tm2);
 		_lastModified = std::string(buf2);
 	}
-	return 0;
+	_headersMap.insert(std::pair<std::string, std::string>("Last-Modified", _lastModified));
 }
+
+// This header must be sent if the server responds with a 405 Method Not Allowed status code
+// to indicate which request methods can be used. An empty Allow header indicates that the
+// resource allows no request methods, which might occur temporarily for a given resource, for example.
+void	Header::addAllowHeader(stringMap &_headersMap, int &_statusCode, const t_serv &_config)
+{
+	// int statusCode1 = const_cast<int&>(_statusCode) = 405;
+	if (_statusCode != 405)
+		return ;
+	std::string allowedMethods = "";
+	if (_config.locs[0].getAvailable)
+		allowedMethods += "GET, ";
+	if (_config.locs[0].postAvailable)
+		allowedMethods += "POST, ";
+	if (_config.locs[0].headAvailable)
+		allowedMethods += "HEAD, ";
+	if (_config.locs[0].putAvailable)
+		allowedMethods += "PUT";
+	_headersMap.insert(std::pair<std::string, std::string>("Allow", allowedMethods));
+};
 
 // При всех перенаправлениях, если метод запроса был не HEAD, то в тело ответа
 // следует включить короткое гипертекстовое сообщение с целевым адресом, чтобы
 // в случае ошибки пользователь смог сам произвести переход.
 // The principal use is to indicate the URL of a resource transmitted
 // as the result of content negotiation.
-int		Header::addLocationHeader(stringMap &_headersMap, int &_statusCode){
+void	Header::addLocationHeader(stringMap &_headersMap, int &_statusCode)
+{
 	std::string redirectPath = "/files/test.file";//
-std::cout << "__Location header\n";
 	if (_statusCode == 301 || _statusCode == 302 || _statusCode == 303 || _statusCode == 307 || \
 	_statusCode == 308 || _statusCode == 201)
 	//(() && method != head )
@@ -163,12 +169,6 @@ std::cout << "__Location header\n";
 			// _body += redirectPath;//if 201 not
 		_headersMap.insert(std::pair<std::string, std::string>("Location", redirectPath));
 	}
-std::cout << "__Location header finished\n";
-  for (std::map<std::string,std::string>::iterator it=_headersMap.begin(); it!=_headersMap.end(); ++it)
-    std::cout << "| " << it->first << " => " << it->second << '\n';
-
-
-	return 0;
 }
 
 // Retry-After: <http-date>
@@ -176,28 +176,24 @@ std::cout << "__Location header finished\n";
 // When sent with a 503 (Service Unavailable) response, this indicates how long the service is expected to be unavailable.
 // When sent with a 429 (Too Many Requests) response, this indicates how long to wait before making a new request.
 // When sent with a redirect response, such as 301 (Moved Permanently), this indicates the minimum time that the user agent is asked to wait before issuing the redirected request.
-int		Header::addRetryAfterHeader(stringMap &_headersMap, int &_statusCode){
-
-	if (_statusCode == 503 || _statusCode == 429 || _statusCode == 301){
+void	Header::addRetryAfterHeader(stringMap &_headersMap, int &_statusCode)
+{
+	if (_statusCode == 503 || _statusCode == 429)// || _statusCode == 301){
 		_headersMap.insert(std::pair<std::string, std::string>("Retry-After", "120"));
-	}
-	return 0;
 }
 
 // specifies the form of encoding used to safely transfer the payload body to the user
 // When present on a response to a HEAD request that has no body,
 // it indicates the value that would have applied to the corresponding GET message
 // Transfer-Encoding: gzip, chunked //compress/deflate/identity
-int		Header::addTransferEncodingHeader(stringMap &_headersMap, int &_statusCode){
-
-	_headersMap.insert(std::pair<std::string, std::string>("Transfer-Encoding", "-"));
-	return 0;
+void	Header::addTransferEncodingHeader(stringMap &_headersMap, int &_statusCode)
+{
+	// from Method->_headersMapRequest
+	// _headersMap.insert(std::pair<std::string, std::string>("Transfer-Encoding", "-"));
 }
 
-// The WWW-Authenticate header is sent along with a 401 Unauthorized response.
-int		Header::addAuthenticateHeader(stringMap &_headersMap, int &_statusCode){
-
+void	Header::addAuthenticateHeader(stringMap &_headersMap, int &_statusCode)
+{
 	if (_statusCode == 401)
 		_headersMap.insert(std::pair<std::string, std::string>("WWW-Authenticate", "Basic realm=\"Access to the staging site\", charset=\"UTF-8\""));
-	return 0;
 }
