@@ -36,7 +36,7 @@ MethodStatus	MethodGet::createHeader(std::string const &path)
 	_header->addAllowHeader(_headersMap, _statusCode, _config);
 	_header->addLocationHeader(_headersMap, _statusCode);
 	_header->addRetryAfterHeader(_headersMap, _statusCode);
-	_header->addTransferEncodingHeader(_headersMap, _statusCode);
+	// _header->addTransferEncodingHeader(_headersMap, _statusCode, _headersMapRequest);
 	_header->addAuthenticateHeader(_headersMap, _statusCode);
 
 	return ok;

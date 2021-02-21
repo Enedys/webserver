@@ -186,10 +186,23 @@ void	Header::addRetryAfterHeader(stringMap &_headersMap, int &_statusCode)
 // When present on a response to a HEAD request that has no body,
 // it indicates the value that would have applied to the corresponding GET message
 // Transfer-Encoding: gzip, chunked //compress/deflate/identity
-void	Header::addTransferEncodingHeader(stringMap &_headersMap, int &_statusCode)
+void	Header::addTransferEncodingHeader(stringMap &_headersMap, int &_statusCode, stringMap const &_headersMapRequest)
 {
-	// from Method->_headersMapRequest
-	// _headersMap.insert(std::pair<std::string, std::string>("Transfer-Encoding", "-"));
+	constMapIter	itc = _headersMapRequest.begin();
+	while (itc != _headersMapRequest.end())
+	{
+		std::cout << "Header: " << itc->first << ", Value: " << itc->second << std::endl;
+		itc++;
+	}
+
+	constMapIter it = _headersMapRequest.find("transfer-encoding");
+	std::cout << "addTransferEncodingHeader" << std::endl;
+	if (it != _headersMapRequest.end())
+	{
+		std::cout << "inside" << std::endl;
+		_headersMap.insert(std::pair<std::string, std::string>("transfer-encoding", it->second));
+		std::cout << it->second << std::endl;
+	}
 }
 
 void	Header::addAuthenticateHeader(stringMap &_headersMap, int &_statusCode)
