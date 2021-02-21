@@ -20,4 +20,5 @@ public:
 	MethodStatus	sendHeader(int socket);
 	MethodStatus	manageRequest(std::string const &location);
 	MethodStatus	sendBody(int socket);
+	virtual MethodStatus	sendResponse(int socket);
 };

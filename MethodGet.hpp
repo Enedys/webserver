@@ -23,5 +23,5 @@ public:
 	virtual MethodStatus	createHeader(std::string const &_path);
 	virtual MethodStatus	sendHeader(int socket);
 	virtual MethodStatus	sendBody(int socket);
-	// virtual MethodStatus	sendResponse(int socket);
+	virtual MethodStatus	sendResponse(int socket);
 };
