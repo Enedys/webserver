@@ -9,9 +9,11 @@
 // ** autoindex
 // ** default file to answer if the request is a directory
 // ** execute CGI based on certain file extension (for example .php)
+// TODO: ** make the route able to accept uploaded files and configure where it should be saved
 // tokens: server_name, listen, location, root, autoindex, error_page [NUM], {, }
 // listen -> HOST:IP
 // server_name -> STRING
+
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
