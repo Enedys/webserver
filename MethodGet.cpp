@@ -47,7 +47,7 @@ MethodStatus		MethodGet::sendHeader(int socket) {
 	_header->headersToString(_headersMap, _statusCode, &headerStr);//// headersToString(_headersMap, &headerStr);//
 	if (send(socket, headerStr.c_str(), headerStr.length(), 0) < 0){
 		//if ret < length -> loop
-		_statusCode = errorSendHeader;
+		_statusCode = errorSendingResponse;
 		return error;
 	}
 	std::cout << "Response header string: \n" << headerStr <<std::endl;
@@ -102,8 +102,11 @@ MethodStatus		MethodGet::sendResponse(int socket) {
 	response += bufStr;
 
 	sentBytes = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
-	if (sentBytes < 0 || sentBytes == EMSGSIZE)
+	std::cout << "sentBytes: " << sentBytes << "response.length(): " << response.length() << std::endl;
+	if (sentBytes < 0 || sentBytes == EMSGSIZE){
+		_statusCode = errorSendingResponse;
 		return error;
+	}
 	if (sentBytes < response.length())
 	{
 		_statusCode = okSendingInProgress;//okSuccess;

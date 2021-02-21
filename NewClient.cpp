@@ -139,12 +139,17 @@ MethodStatus		Client::requestInterraction()
 		if (_state == readRequestBody)
 			return (inprogress);
 	}
-	if (_state == manageRequest)
+	if (_state == manageRequest){
 		_state = getNextState(_method->manageRequest(\
 					getRequestPath(_request.getURI())));
+
+		std::cout << "////\tMethod's status code: "<< _method->getStatusCode()  << std::endl;//
+	}
 	if (_state == createResponseHeader)
 		_state = getNextState(_method->createHeader(\
 					getRequestPath(_request.getURI())));
+	std::cout << "////\theader created" << std::endl;//
+
 	return (ok);
 }
 
@@ -152,16 +157,26 @@ MethodStatus		Client::responseInsterraction()
 {
 	if (_state == sendResponseHeader)
 	{
-		_state = getNextState(_method->sendHeader(_socket));
+		_state = getNextState(_method->sendResponse(_socket));
 		if (_state == sendResponseHeader)
 			return (inprogress);
 	}
-	if (_state == sendResponseBody)
-	{
-		_state = getNextState(_method->sendBody(_socket));
-		if (_state == sendResponseBody)
-			return (inprogress);
+	if (_state == sendResponseBody){
+		_state = finalState;
 	}
+
+	// if (_state == sendResponseHeader)
+	// {
+	// 	_state = getNextState(_method->sendHeader(_socket));
+	// 	if (_state == sendResponseHeader)
+	// 		return (inprogress);
+	// }
+	// if (_state == sendResponseBody)
+	// {
+	// 	_state = getNextState(_method->sendBody(_socket));
+	// 	if (_state == sendResponseBody)
+	// 		return (inprogress);
+	// }
 	if (_state == finalState)
 		refreshClient();
 	return (ok);
