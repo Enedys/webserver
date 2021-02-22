@@ -38,7 +38,7 @@ private:
 	Request();
 	/* Fiels */
 	static const size_t					_headBufsize = 1024;
-	static const size_t					_bodyBufsize = 8 * 16384;
+	static const size_t					_bodyBufsize = 304;
 	std::map<std::string, std::string>	startLine;
 	std::map<std::string, std::string>	headersMap;
 	requestStatus						requestStage;

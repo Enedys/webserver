@@ -16,7 +16,6 @@ Request::requestStatus		Request::getRequestState() const
 	return (requestStage);
 }
 
-
 MethodStatus		Request::cleanRequest()
 {
 	_bodySize = 0;
@@ -61,7 +60,7 @@ MethodStatus		Request::readFromSocket()
 {
 	size_t const	bufsize = requestStage < body ? _headBufsize : _bodyBufsize;
 	char	buffer[bufsize + 1];
-	int		readBytes = recv(_socket, buffer, bufsize - 1, MSG_DONTWAIT);	
+	int		readBytes = recv(_socket, buffer, bufsize, MSG_DONTWAIT);
 	std::cout << "READ " << readBytes << " bytes fromsocket: " << _socket << "\n";
 	if (readBytes < 0)
 		return (connectionClosed);
@@ -138,7 +137,7 @@ MethodStatus		Request::parseHeaders()
 		if (posCRLF == 0)
 		{
 			_buffer = _buffer.substr(posCRLF + 2);
-			return (ok) ; // end of headers
+			return (ok); // end of headers
 		}
 		headerLine = _buffer.substr(0, posCRLF);
 		sepPos = headerLine.find(':');

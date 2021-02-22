@@ -28,6 +28,7 @@ SRC				=	Debugger.cpp \
 					Server.cpp \
 					WebServer.cpp \
 					NewClient.cpp \
+					base_utils.cpp \
 					main.cpp
 
 OBJ_DIR = ./bin/
