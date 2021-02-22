@@ -18,11 +18,11 @@ class Client
 		defaultState,
 		readingHeader,
 		analizeHeader,
-		readRequestBody,
+		readingBody,
 		manageRequest,
-		createResponseHeader,
-		sendResponseHeader,
-		sendResponseBody,
+		createHeaders,
+		sendindHeader,
+		sendingBody,
 		finalState,
 		sendingErrorState,
 	}			conditionCode;
@@ -30,9 +30,8 @@ class Client
 public:
 	int					getClientSocket() const;
 	bool				isReading() const;
-	bool				isSending() const;
-	bool				needToRead() const;
-	MethodStatus		interract(bool readIsNecessary);
+	bool				readyToSend() const;
+	MethodStatus		interract(int newData, int allow2Write);
 
 
 	Client(int socket, s_serv const &config);

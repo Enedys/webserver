@@ -12,7 +12,7 @@ public:
 		AMethod(config, status, headers) {_type = POST;};
 	virtual ~MethodPost();
 	virtual MethodStatus	createHeader(std::string const &_path);
-	virtual MethodStatus	processBody(const std::string &requestBody);
+	virtual MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus);
 	virtual MethodStatus	sendHeader(int socket);
 	virtual MethodStatus	manageRequest(std::string const &location);
 	virtual MethodStatus	sendBody(int socket);

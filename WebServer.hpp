@@ -30,7 +30,7 @@ private:
 	int						checkActualConnections();
 	int						acceptNewConnections();
 	int						setActualConnections();
-	bool					clientIsReady(Client const &cli);
+	int						clientIsReady(client cli);
 	int						communicate();
 	client					&detachConnection(client &cIt);
 };

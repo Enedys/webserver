@@ -10,9 +10,15 @@ MethodStatus	MethodPost::createHeader(std::string const &_path)
 	return (ok);
 };
 
-MethodStatus MethodPost::processBody(const std::string &requestBody)
+MethodStatus MethodPost::processBody(const std::string &requestBody, MethodStatus bodyStatus)
 {
 //	static std::string body;
+	static int  var = 0;
+	// std::cout << "BOOOODY: " << requestBody << std::endl;
+	var += requestBody.length();
+	if (bodyStatus == inprogress)
+		return (inprogress);
+	std::cout << "size: " << var;
 	return (ok);
 };
 

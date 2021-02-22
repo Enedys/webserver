@@ -12,7 +12,7 @@ public:
 		AMethod(config, status, headers) {_type = GET; };
 	~MethodGet();
 	MethodStatus	createHeader(std::string const &_path);
-	MethodStatus	processBody(const std::string &requestBody);
+	MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus);
 	MethodStatus	sendHeader(int socket);
 	MethodStatus	manageRequest(std::string const &location);
 	MethodStatus	sendBody(int socket);

@@ -63,15 +63,14 @@ int						WebServer::setActualConnections()
 	}
 	while (cIt != _clientList.end())
 	{
-		if ((*cIt)->isSending())
+		// set all clients to read
+		_webLogger << Message::verbose << "WS_set:: Client socket to read: " << (*cIt)->getClientSocket() << Logger::endl;
+		FD_SET((*cIt)->getClientSocket(), &_fdsToRead);
+
+		if ((*cIt)->readyToSend())
 		{
 			FD_SET((*cIt)->getClientSocket(), &_fdsToWrite);
 			_webLogger << Message::verbose << "WS_set:: Client socket to write: " << (*cIt)->getClientSocket() << Logger::endl;
-		}
-		else if (true) //(*cIt)->isReading() && (*cIt)->needToRead())
-		{
-			_webLogger << Message::verbose << "WS_set:: Client socket to read: " << (*cIt)->getClientSocket() << Logger::endl;
-			FD_SET((*cIt)->getClientSocket(), &_fdsToRead);
 		}
 		cIt++;
 	}
@@ -113,28 +112,31 @@ int						WebServer::acceptNewConnections()
 	return (0);
 }
 
-bool						WebServer::clientIsReady(Client const &cli)
+int						WebServer::clientIsReady(client cli)
 {
-	/* Reading cases */
-	if (FD_ISSET(cli.getClientSocket(), &_fdsToRead))
-		return (true);
-
-	/* Response case */
-	if (FD_ISSET(cli.getClientSocket(), &_fdsToWrite))
-		return (true);
-	return (false);
+	if (!(*cli))
+		return (0);
+	int	mask = 0;
+	int	sock = (*cli)->getClientSocket();
+	if (FD_ISSET(sock, &_fdsToRead))
+		mask |= 1;
+	if (FD_ISSET(sock, &_fdsToWrite))
+		mask |= 2;
+	return (mask);
 }
 
 int						WebServer::checkOldConnections()
 {
 	client	cIt = _clientList.begin();
+	int	flag = 0;
 	while (_clientList.end() != cIt)
 	{
-		if (*cIt && (*cIt)->isReading() && !((*cIt)->needToRead()))
+		flag = clientIsReady(cIt);
+		if (flag)
 		{
 			_webLogger << Message::verbose << "CheckOld::Communicate:: client socket: "\
 				<< (*cIt)->getClientSocket() << Logger::endl;
-			if ((*cIt)->interract() == error)
+			if ((*cIt)->interract(flag & 1, flag & 2) == error)
 			{
 				cIt = detachConnection(cIt);
 				continue ;
@@ -148,14 +150,16 @@ int						WebServer::checkOldConnections()
 int						WebServer::communicate()
 {
 	client	cIt = _clientList.begin();
+	int	flag = 0;
 	while (_clientList.end() != cIt)
 	{
-		if (*cIt && clientIsReady(**cIt))
+		flag = clientIsReady(cIt);
+		if (flag)
 		{
-			std::cout << "r?: " << FD_ISSET((*cIt)->getClientSocket(), &_fdsToRead) << ", w?: " << FD_ISSET((*cIt)->getClientSocket(), &_fdsToWrite) << std::endl;
+			std::cout << "r?: " << (flag & 1) << ", w?: " << (flag & 2) << std::endl;
 			_webLogger << Message::verbose << "Communicate:: client socket: "\
 				<< (*cIt)->getClientSocket() << Logger::endl;
-			if ((*cIt)->interract() == error)
+			if ((*cIt)->interract(flag & 1, flag & 2) == error)
 			{
 				cIt = detachConnection(cIt);
 				continue ;
@@ -173,16 +177,13 @@ int						WebServer::runWebServer()
 
 	while (1)
 	{
-		// checkOldConnections();
+		communicate();
 		setActualConnections();
 		if (checkActualConnections() != -1)
-		{
-			communicate();
 			acceptNewConnections();
-		}
 		else
 			_webLogger << Message::error <<"Select error." << Logger::endl;
 		_webLogger << Message::fatal << "..." << Logger::endl;
-		usleep(1000000);
+		// usleep(1000000);
 	}
 }

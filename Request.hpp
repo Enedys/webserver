@@ -10,6 +10,7 @@
 
 class Request
 {
+public:
 	typedef enum
 	{
 		init,
@@ -17,7 +18,7 @@ class Request
 		headers,
 		body,
 	}	requestStatus;
-public:
+
 	Request(int fd, int &code);
 	virtual ~Request();
 
@@ -28,7 +29,7 @@ public:
 	MethodStatus		getRequestBody(AMethod *method);
 	MethodStatus		cleanRequest();
 	size_t				getBufferResidual();
-	MethodStatus		getLastReadStatus() const;
+	requestStatus		getRequestState() const;
 	const stringMap		getHeadersMap() const;
 	const stringMap		getStartLine() const;
 	std::string const	&getURI();
@@ -37,7 +38,7 @@ private:
 	Request();
 	/* Fiels */
 	static const size_t					_headBufsize = 1024;
-	static const size_t					_bodyBufsize = 16384;
+	static const size_t					_bodyBufsize = 8 * 16384;
 	std::map<std::string, std::string>	startLine;
 	std::map<std::string, std::string>	headersMap;
 	requestStatus						requestStage;
@@ -45,7 +46,6 @@ private:
 	int									_socket;
 	size_t								_bodySize;
 	int									&_errorCode;
-	MethodStatus						_lastReadStatus;
 	
 	std::map<int, std::string>			_errors;
 
@@ -55,11 +55,9 @@ private:
 	MethodStatus	parseHeaders();
 	MethodStatus	validateStartLine();
 	MethodStatus	validateHeaders();
-	MethodStatus	readEncodedBody(std::string &dest);
-	MethodStatus	readOrdinaryBody(std::string &dest);
-	
+	MethodStatus	getTrEncodedMsg(std::string &dest);
+
 	MethodStatus	setErrorCode(int code);
-	MethodStatus	setLastReadStatus(MethodStatus status);
 
 	/* Debugging */
 	void			printRequest();

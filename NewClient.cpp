@@ -1,7 +1,8 @@
 #include "NewClient.hpp"
 
 Client::Client(int socket, t_serv const &config) :
-	_socket(socket), _config(config), _statusCode(0), _request(socket, _statusCode), _method(NULL), _state(defaultState)
+	_socket(socket), _statusCode(0), _request(socket, _statusCode),\
+	_config(config), _method(NULL), _state(defaultState)
 {
 }
 
@@ -16,23 +17,18 @@ int					Client::getClientSocket() const
 	return _socket;
 };
 
-bool				Client::needToRead() const
-{
-	if (_request.getLastReadStatus() == inprogress)
-		return (true);
-	return (false);
-}
-
 bool				Client::isReading() const
 {
-	if (_state == defaultState || _state == readingHeader || _state == readRequestBody)
+	if (_state == defaultState || _state == readingHeader || _state == readingBody)
+		return (true);
+	if (_request.getRequestState() == Request::body)
 		return (true);
 	return (false);
 }
 
-bool				Client::isSending() const
+bool				Client::readyToSend() const
 {
-	if (_state == sendResponseBody || _state == sendResponseHeader)
+	if (_state == sendingBody || _state == sendindHeader)
 		return (true);
 	return (false);
 }
@@ -43,8 +39,9 @@ MethodStatus		Client::refreshClient()
 	_method = NULL;
 	_statusCode = 0;
 	_request.cleanRequest();
-	if (_request.getBufferResidual() > 0)
-		_state = readingHeader;
+	if ((_request.getRequestState() == Request::firstLine) &&\
+		_request.getBufferResidual() > 0)
+		return (requestInterraction());
 	else
 		_state = defaultState;
 	return (ok);
@@ -54,16 +51,18 @@ Client::conditionCode	Client::getNextState(MethodStatus status)
 {
 	if (status == connectionClosed)
 		return (sendingErrorState);
-	if ((_state == sendResponseBody || _state == sendResponseHeader) && status == error)
-		return (sendingErrorState); // here must cut connection
+	if (status == error &&\
+		(_state == sendingBody || _state == sendindHeader))
+		return (sendingErrorState);
 	if (status == error)
 	{
 		if (_state <= analizeHeader)
 			createNewMethod();
-		return (createResponseHeader);
+		return (createHeaders);
 	}
 	else if (status == ok)
-		return (static_cast<Client::conditionCode>(static_cast<int>(_state) + 1));
+		return (static_cast<Client::conditionCode>\
+				(static_cast<int>(_state) + 1));
 	return (_state);
 }
 
@@ -107,7 +106,7 @@ MethodStatus		Client::createNewMethod()
 	if (_statusCode)
 	{
 		_method = new MethodGet(_config, _statusCode, _request.getHeadersMap());
-		_state = createResponseHeader;
+		_state = createHeaders;
 		return (ok);
 	}
 	if (_state != analizeHeader)
@@ -128,58 +127,62 @@ MethodStatus		Client::createNewMethod()
 
 MethodStatus		Client::requestInterraction()
 {
+	conditionCode	stateBefore = _state;
 	if (_state == defaultState)
 		_state = readingHeader;
+
 	if (_state == readingHeader)
-	{
 		_state = getNextState(_request.getRequestHead());
-		if (_state == readingHeader)
-			return (inprogress);
-	}
+
 	if (_state == analizeHeader)
 		_state = getNextState(analizeHeaders());
-	if (_state == readRequestBody)
-	{
+
+	if (_state == readingBody)
 		_state = getNextState(_request.getRequestBody(_method));
-		if (_state == readRequestBody)
-			return (inprogress);
-	}
+	else if (_request.getRequestState() == Request::body)	// cgi case, when we send answer,
+		if (_request.getRequestBody(_method) == error)		// before read all request bodey
+			_state = sendingErrorState;
+
 	if (_state == manageRequest)
 		_state = getNextState(_method->manageRequest(\
 					getRequestPath(_request.getURI())));
-	if (_state == createResponseHeader)
+
+	if (_state == createHeaders)
 		_state = getNextState(_method->createHeader(\
 					getRequestPath(_request.getURI())));
+
+	if (stateBefore == _state)
+		return (inprogress);
 	return (ok);
 }
 
 MethodStatus		Client::responseInterraction()
-{		
-	if (_state == sendResponseHeader)
-	{
+{
+	conditionCode	stateBefore = _state;
+	if (_state == sendindHeader)
 		_state = getNextState(_method->sendHeader(_socket));
-		if (_state == sendResponseHeader)
-			return (inprogress);
-	}
-	if (_state == sendResponseBody)
-	{
+
+	if (_state == sendingBody)
 		_state = getNextState(_method->sendBody(_socket));
-		if (_state == sendResponseBody)
-			return (inprogress);
-	}
+
 	if (_state == finalState)
-		refreshClient();
+		if (refreshClient() == connectionClosed)
+			return (connectionClosed);
+
+	if (stateBefore == _state)
+		return (inprogress);
 	return (ok);
 }
 
-MethodStatus		Client::interract(bool readIsNecessary)
+MethodStatus		Client::interract(int newData, int allow2Write)
 {
 	MethodStatus	returnStatus;
-	if (readIsNecessary)
+	bool			ready2Send = readyToSend();
+	if (newData)
 		_state = getNextState(_request.readFromSocket());
 	if (isReading())
 		returnStatus = requestInterraction();
-	else
+	if (ready2Send)
 		returnStatus = responseInterraction();
 	if (_state == sendingErrorState)
 		return (error);

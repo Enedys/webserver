@@ -33,7 +33,7 @@ public:
 			break;
 		case fatal:
 			_msgColor = "\033[31;1m";
-			_msgPrefix = "#[Fatal]#\t";
+			_msgPrefix = "#[Delim]#\t";
 			break;
 		case error:
 			_msgColor = "\033[35;1m";

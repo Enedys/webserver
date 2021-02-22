@@ -3,7 +3,6 @@
 Request::Request(int fd, int &statusCode) : 
 _socket(fd), _errorCode(statusCode), _bodySize(0), requestStage(firstLine)
 {
-	_lastReadStatus = inprogress;
 	createErrorCodesMap();
 };
 
@@ -12,10 +11,11 @@ size_t				Request::getBufferResidual()
 	return (_buffer.length());
 }
 
-MethodStatus		Request::getLastReadStatus() const
+Request::requestStatus		Request::getRequestState() const
 {
-	return (_lastReadStatus);
+	return (requestStage);
 }
+
 
 MethodStatus		Request::cleanRequest()
 {
@@ -23,7 +23,6 @@ MethodStatus		Request::cleanRequest()
 	requestStage = firstLine;
 	startLine.clear();
 	headersMap.clear();
-	_lastReadStatus = ok;
 	return (ok);
 }
 
@@ -44,29 +43,18 @@ MethodStatus		Request::setErrorCode(int code)
 	return (error);
 };
 
-MethodStatus		Request::setLastReadStatus(MethodStatus status)
+MethodStatus		Request::getRequestHead()
 {
-	_lastReadStatus = status;
-	return (status);
-}
-
-	MethodStatus	Request::getRequestHead()
-{
-	std::cout << "Into ReadHead: " << _lastReadStatus << std::endl;
-	if (_lastReadStatus == inprogress)
-	{
-		MethodStatus	readStatus = readFromSocket();
-		if (readStatus == error || readStatus == connectionClosed)
-			return (connectionClosed);
-	}
-	size_t posCRLF = _buffer.find(CRLF);
-	if (posCRLF == std::string::npos)
-		return (setLastReadStatus(inprogress));
-	if (parseRequestHead(posCRLF) == error)
-		return (error);
+	std::cout << "\033[32m Into getRequestHead: " << requestStage << " IN BUFFER: " << getBufferResidual() << "\033[0m "<< std::endl;
 	if (requestStage < body && _buffer.length() > MAX_REQUEST_SIZE)
 		return (setErrorCode(400));
-	return (_lastReadStatus);
+	size_t posCRLF = _buffer.find(CRLF);
+	if (posCRLF == std::string::npos)
+		return (inprogress);
+	MethodStatus	headStatus = parseRequestHead(posCRLF);
+	if (headStatus == error)
+		return (error);
+	return (headStatus);
 }
 
 MethodStatus		Request::readFromSocket()
@@ -74,7 +62,7 @@ MethodStatus		Request::readFromSocket()
 	size_t const	bufsize = requestStage < body ? _headBufsize : _bodyBufsize;
 	char	buffer[bufsize + 1];
 	int		readBytes = recv(_socket, buffer, bufsize - 1, MSG_DONTWAIT);	
-	std::cout << "READ " << readBytes << " bytes\n";
+	std::cout << "READ " << readBytes << " bytes fromsocket: " << _socket << "\n";
 	if (readBytes < 0)
 		return (connectionClosed);
 	else if (readBytes == 0)
@@ -100,13 +88,12 @@ MethodStatus		Request::parseRequestHead(size_t posCRLF)
 		else if (headersStatus == ok)
 			requestStage = body;
 		else
-			return (setLastReadStatus(inprogress));
+			return (inprogress);
 	}
 	if (requestStage == body)
 	{
 		if (validateHeaders() == error)
 			return (error);
-		setLastReadStatus(ok);
 		printRequest();
 	}
 	return (ok);
@@ -222,26 +209,56 @@ MethodStatus		Request::getRequestBody(AMethod *method)
 	std::string		reqBody;
 	if (requestStage != body)
 		return (logicError);
+	if (residBodysize == 0)
+		residBodysize = _bodySize;
 	if (_bodySize > 0)
 	{
-		if (_buffer.length() < residBodysize)
-			reqBody = _buffer;
-		else
-			reqBody = _buffer.substr(0, residBodysize);
-		_buffer = _buffer.erase(0, reqBody.length());
+		reqBody = _buffer.substr(0, residBodysize);
 		residBodysize -= reqBody.length();
+		_buffer = _buffer.erase(0, reqBody.length());
+		rbodyStatus = residBodysize == 0 ? ok : inprogress;
 	}
 	else if (_bodySize < 0)
-		rbodyStatus = readEncodedBody(reqBody);
+		rbodyStatus = getTrEncodedMsg(reqBody);
 	if (rbodyStatus == error)
 		return (error);
-	rbodyStatus = method->processBody(reqBody);
+	rbodyStatus = method->processBody(reqBody, rbodyStatus);
+	if (rbodyStatus == ok)
+		requestStage = init;
 	return (rbodyStatus);
 }
 
-MethodStatus	Request::readEncodedBody(std::string &dest)
+MethodStatus	Request::getTrEncodedMsg(std::string &dest)
 {
 	dest = "";
+	static size_t	chunkSize = 0;
+	size_t			pullBytes = 0;
+	size_t			posCRLF;
+	while (true)
+	{
+		posCRLF = _buffer.find(CRLF, pullBytes);
+		if (chunkSize)
+		{
+			dest += _buffer.substr(pullBytes, chunkSize - 2);
+			chunkSize -= dest.length();
+			pullBytes += dest.length();
+			if (posCRLF != std::string::npos && chunkSize != 2)
+				return (error);
+			else if (posCRLF != std::string::npos)
+				pullBytes += 2;
+			else
+				return (inprogress);
+			continue ;
+		}
+		if (posCRLF == std::string::npos)
+			return (inprogress);
+		chunkSize = string2Size(_buffer.substr(pullBytes, posCRLF - pullBytes)) + 2;
+		if (chunkSize < 2)
+			return (error);
+		pullBytes += (posCRLF - pullBytes + 2);
+	}
+	_buffer.erase(0, pullBytes);
+	chunkSize = 0;
 	return (ok);
 }
 
