@@ -52,9 +52,6 @@ MethodStatus		Client::refreshClient()
 
 Client::conditionCode	Client::getNextState(MethodStatus status)
 {
-	// if (_state == sendResponseBody) // test shit	!!!!!!!!!!!!!!!!!!!!!!!!!!!! TODO
-	// 	return (sendingErrorState);
-
 	if (status == connectionClosed)
 		return (sendingErrorState);
 	if ((_state == sendResponseBody || _state == sendResponseHeader) && status == error)
@@ -129,7 +126,6 @@ MethodStatus		Client::createNewMethod()
 	return (ok);
 }
 
-
 MethodStatus		Client::requestInterraction()
 {
 	if (_state == defaultState)
@@ -144,7 +140,7 @@ MethodStatus		Client::requestInterraction()
 		_state = getNextState(analizeHeaders());
 	if (_state == readRequestBody)
 	{
-		_state = getNextState(_request.readRequestBody(_method, NULL));
+		_state = getNextState(_request.getRequestBody(_method));
 		if (_state == readRequestBody)
 			return (inprogress);
 	}
@@ -158,7 +154,7 @@ MethodStatus		Client::requestInterraction()
 }
 
 MethodStatus		Client::responseInterraction()
-{
+{		
 	if (_state == sendResponseHeader)
 	{
 		_state = getNextState(_method->sendHeader(_socket));
@@ -176,12 +172,14 @@ MethodStatus		Client::responseInterraction()
 	return (ok);
 }
 
-MethodStatus		Client::interract()
+MethodStatus		Client::interract(bool readIsNecessary)
 {
 	MethodStatus	returnStatus;
+	if (readIsNecessary)
+		_state = getNextState(_request.readFromSocket());
 	if (isReading())
 		returnStatus = requestInterraction();
-	else	//else if (isSending())
+	else
 		returnStatus = responseInterraction();
 	if (_state == sendingErrorState)
 		return (error);

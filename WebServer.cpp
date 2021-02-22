@@ -68,7 +68,7 @@ int						WebServer::setActualConnections()
 			FD_SET((*cIt)->getClientSocket(), &_fdsToWrite);
 			_webLogger << Message::verbose << "WS_set:: Client socket to write: " << (*cIt)->getClientSocket() << Logger::endl;
 		}
-		else if ((*cIt)->isReading() && (*cIt)->needToRead())
+		else if (true) //(*cIt)->isReading() && (*cIt)->needToRead())
 		{
 			_webLogger << Message::verbose << "WS_set:: Client socket to read: " << (*cIt)->getClientSocket() << Logger::endl;
 			FD_SET((*cIt)->getClientSocket(), &_fdsToRead);

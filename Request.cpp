@@ -1,9 +1,9 @@
 #include "Request.hpp"
 
 Request::Request(int fd, int &statusCode) : 
-_socket(fd), _errorCode(statusCode), _bodySize(0), readingStage(firstLine)
+_socket(fd), _errorCode(statusCode), _bodySize(0), requestStage(firstLine)
 {
-	_lastStatus = inprogress;
+	_lastReadStatus = inprogress;
 	createErrorCodesMap();
 };
 
@@ -14,16 +14,16 @@ size_t				Request::getBufferResidual()
 
 MethodStatus		Request::getLastReadStatus() const
 {
-	return (_lastStatus);
+	return (_lastReadStatus);
 }
 
 MethodStatus		Request::cleanRequest()
 {
 	_bodySize = 0;
-	readingStage = firstLine;
+	requestStage = firstLine;
 	startLine.clear();
 	headersMap.clear();
-	_lastStatus = ok;
+	_lastReadStatus = ok;
 	return (ok);
 }
 
@@ -38,72 +38,76 @@ std::string const	&Request::getURI()
 	return (startLine["uri"]);
 }
 
-
 MethodStatus		Request::setErrorCode(int code)
 {
 	_errorCode = code;
 	return (error);
 };
 
-MethodStatus	Request::setLastReadStatus(MethodStatus status)
+MethodStatus		Request::setLastReadStatus(MethodStatus status)
 {
-	_lastStatus = status;
+	_lastReadStatus = status;
 	return (status);
 }
 
-MethodStatus		Request::getRequestHead()
+	MethodStatus	Request::getRequestHead()
 {
-	std::cout << "Into ReadHead: " << _lastStatus << std::endl;
-	if (_lastStatus == inprogress)
+	std::cout << "Into ReadHead: " << _lastReadStatus << std::endl;
+	if (_lastReadStatus == inprogress)
 	{
-		MethodStatus	readStatus = readRequestHead(NULL);
+		MethodStatus	readStatus = readFromSocket();
 		if (readStatus == error || readStatus == connectionClosed)
 			return (connectionClosed);
 	}
 	size_t posCRLF = _buffer.find(CRLF);
 	if (posCRLF == std::string::npos)
 		return (setLastReadStatus(inprogress));
-	if (readingStage == firstLine)
+	if (parseRequestHead(posCRLF) == error)
+		return (error);
+	if (requestStage < body && _buffer.length() > MAX_REQUEST_SIZE)
+		return (setErrorCode(400));
+	return (_lastReadStatus);
+}
+
+MethodStatus		Request::readFromSocket()
+{
+	size_t const	bufsize = requestStage < body ? _headBufsize : _bodyBufsize;
+	char	buffer[bufsize + 1];
+	int		readBytes = recv(_socket, buffer, bufsize - 1, MSG_DONTWAIT);	
+	std::cout << "READ " << readBytes << " bytes\n";
+	if (readBytes < 0)
+		return (connectionClosed);
+	else if (readBytes == 0)
+		return (connectionClosed);
+	buffer[readBytes] = '\0';
+	_buffer += buffer;
+	return (inprogress);
+}
+
+MethodStatus		Request::parseRequestHead(size_t posCRLF)
+{
+	if (requestStage == firstLine)
 	{
-		readingStage = headers;
+		requestStage = headers;
 		if (parseStartLine(posCRLF) == error)
-			return (setLastReadStatus(error));
+			return (error);
 	}
-	if (readingStage == headers)
+	if (requestStage == headers)
 	{
 		MethodStatus	headersStatus = parseHeaders();
 		if (headersStatus == error)
-			return (setLastReadStatus(error));
+			return (error);
 		else if (headersStatus == ok)
-			readingStage = body;
+			requestStage = body;
 		else
 			return (setLastReadStatus(inprogress));
 	}
-	if (readingStage == body)
+	if (requestStage == body)
 	{
 		if (validateHeaders() == error)
-			return (setLastReadStatus(error));
-		printRequest(); // Same logging
-		return (setLastReadStatus(ok));
-	}
-	if (readingStage < body && _buffer.length() > MAX_REQUEST_SIZE)
-		return (setErrorCode(400));
-	return (setLastReadStatus(inprogress));
-}
-
-MethodStatus		Request::readRequestHead(Logger *_webLogger)
-{
-	char	buffer[_buffer_size];
-	int		readBytes = recv(_socket, buffer, _buffer_size - 1, MSG_DONTWAIT); // | MSG_PEEK);
-	std::cout << "READ " << readBytes << " bytes\n";
-	if (readBytes < 0)
-		return (error);
-	else if (readBytes == 0)
-		return (connectionClosed);
-	if (readBytes > 0)
-	{
-		buffer[readBytes] = '\0';
-		_buffer += buffer;
+			return (error);
+		setLastReadStatus(ok);
+		printRequest();
 	}
 	return (ok);
 }
@@ -211,13 +215,39 @@ MethodStatus		Request::parseStartLine(size_t posCRLF)
 	return (ok);
 }
 
-MethodStatus		Request::readRequestBody(AMethod *method, Logger *_webLogger)
+MethodStatus		Request::getRequestBody(AMethod *method)
 {
-	
+	static	size_t	residBodysize = _bodySize;
+	MethodStatus	rbodyStatus = ok;
+	std::string		reqBody;
+	if (requestStage != body)
+		return (logicError);
+	if (_bodySize > 0)
+	{
+		if (_buffer.length() < residBodysize)
+			reqBody = _buffer;
+		else
+			reqBody = _buffer.substr(0, residBodysize);
+		_buffer = _buffer.erase(0, reqBody.length());
+		residBodysize -= reqBody.length();
+	}
+	else if (_bodySize < 0)
+		rbodyStatus = readEncodedBody(reqBody);
+	if (rbodyStatus == error)
+		return (error);
+	rbodyStatus = method->processBody(reqBody);
+	return (rbodyStatus);
+}
+
+MethodStatus	Request::readEncodedBody(std::string &dest)
+{
+	dest = "";
 	return (ok);
 }
 
-Request::~Request() {}
+Request::~Request()
+{
+}
 
 /* Extra functions */
 void				Request::createErrorCodesMap()
@@ -225,8 +255,10 @@ void				Request::createErrorCodesMap()
 	_errors[400] = "Bad Request";
 	_errors[404] = "Not Found";
 	_errors[414] = "URI Too Long";
+	_errors[500] = "Internal Server Error";
 	_errors[501] = "Not Implemented";
 	_errors[505] = "HTTP Version Not Supported";
+	_errors[507] = "Insufficient Storage";
 }
 
 /* Functions for debugging */

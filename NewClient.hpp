@@ -32,7 +32,7 @@ public:
 	bool				isReading() const;
 	bool				isSending() const;
 	bool				needToRead() const;
-	MethodStatus		interract();
+	MethodStatus		interract(bool readIsNecessary);
 
 
 	Client(int socket, s_serv const &config);

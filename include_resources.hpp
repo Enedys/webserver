@@ -37,6 +37,7 @@ typedef	enum
 	connectionClosed,
 	socketError,
 	logicError,
+	allocationError,
 }		MethodStatus;
 
 typedef enum
