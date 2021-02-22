@@ -1,5 +1,7 @@
-//
-// Created by abibi on 22.02.2021.
-//
-
 #include "CGI.hpp"
+
+CGI::CGI(char **env)
+{
+	int pipein[2], pipeout[2];
+
+}
