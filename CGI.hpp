@@ -20,12 +20,16 @@ class CGI
 		int pipein[2], pipeout[2]; // 2 pipes
 		int pid; // fork id
 		int status;
+		bool headersDone;
 		stringMap _headersMap;
+		static std::string inputBuf;
+		static std::string outputBuf; // Smaller string, just to get data to send;
 		void parseHeaders(std::string str);
+		void inputFromBuf();
 	public:
 		CGI(char *execpath, char **args, char **env); // prepare cgi process, prepare forks, etc
 		void cgiInput(const std::string &str); // ready to input;
-		std::string &cgiOut(); // ready to output
+		int cgiOut(std::string &str); // ready to output
 		~CGI();
 };
 

@@ -3,8 +3,13 @@
 CGI::CGI(char *execpath, char **args, char **env)
 {
 	// initialasing the pipe
-	pipe(pipein); // TODO: error handle
+	pipe(pipein); // TODO: error handle, nonblocking fd, to check pipe is not overflowed!
 	pipe(pipeout); // TODO: error handle
+	/*
+	 * next we need to set fd as unblockable, so we won't hang at write function. Write will return -1 if pipe is full;
+ 	 */
+	fcntl(pipein[0], F_SETFL, O_NONBLOCK);
+	fcntl(pipeout[1], F_SETFL, O_NONBLOCK); // TODO: can return error;
 	pid = fork(); // TODO: if pid < 0 error;
 	if (pid == 0)
 	{
@@ -13,32 +18,62 @@ CGI::CGI(char *execpath, char **args, char **env)
 		dup2(pipeout[0], 1);
 		close(pipeout[0]);
 		execve(execpath, args, env);
+		std::cout << "ALARM! EXECVE FAILED!\n"; // what to do?
+		exit(2);
 	}
-//	waitpid(pid, &status, WUNTRACED);
+	//check errno of execve;
+	headersDone = false;
+//	waitpid(pid, &status, WUNTRACED); TODO: check execve failed use waitpid() WHOHANG or SIGCHLD
 }
 
-void CGI::cgiInput(const std::string &str)
+void CGI::cgiInput(const std::string &str) // inputting body
 {
 	int r;
-	r = write(pipein[0], str.c_str(), str.length());
+	if (inputBuf.empty())
+	{
+		r = write(pipein[0], str.c_str(), str.length());
+		if (r == -1) // pipe is absolutely full
+			inputBuf += str;
+		else if (r < str.size()) // pipe is full;
+			inputBuf += str.substr(r, str.size());
+	}
+	else
+	{
+		r = write(pipein[0], inputBuf.c_str(), 8192); // TODO: set bufsize
+		if (r > 0 && r < inputBuf.size())
+			inputBuf = inputBuf.substr(r, inputBuf.size());
+		inputBuf += str;
+	}
 }
 
-std::string &CGI::cgiOut()
+void CGI::inputFromBuf()
+{
+	if (!inputBuf.empty())
+	{
+		int r;
+		r = write(pipein[0], inputBuf.c_str(), 8192); // TODO: set bufsize
+		if (r > 0 && r < inputBuf.size())
+			inputBuf = inputBuf.substr(r, inputBuf.size());
+	}
+}
+
+int CGI::cgiOut(std::string &str) // mb gonna change it later. Read and write into pipes and outputting. Less memory usage
 {
 	char buf[BUFSIZ];
-	std::string str;
 	size_t find;
 	int r;
-	r = read(pipeout[1], buf, BUFSIZ); // TODO: read > 0
+	r = read(pipeout[1], buf, BUFSIZ); // read < 0 = pipe is empty..
+	if (r < -1)
+		return (0);
 	str = buf;
-	if ((find = str.find("\n\n")) != std::string::npos) // headers ready for parser
+	if (!headersDone && (find = str.find("\n\n")) != std::string::npos) // headers ready for parser
 	{
 		parseHeaders(str.substr(0, find)); // todo: test how it works
 		str = str.substr(find + 2, str.size()); //
-		if (!str.empty())
-			std::cout << "body is ready!";
-		std::cout << "body is missing!";
+		headersDone = true;
 	}
+	inputFromBuf();
+	return (1);
 }
 
 CGI::~CGI()
@@ -62,3 +97,5 @@ void CGI::parseHeaders(std::string str)
 		_headersMap.insert(std::pair<std::string, std::string>(key, value));
 	}
 }
+
+
