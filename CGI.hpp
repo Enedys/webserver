@@ -23,13 +23,13 @@ class CGI
 		bool headersDone;
 		stringMap _headersMap;
 		static std::string inputBuf;
-		static std::string outputBuf; // Smaller string, just to get data to send;
+	//	static std::string outputBuf; // Smaller string, just to get data to send;
 		void parseHeaders(std::string str);
 		void inputFromBuf();
 	public:
 		CGI(char *execpath, char **args, char **env); // prepare cgi process, prepare forks, etc
 		void cgiInput(const std::string &str); // ready to input;
-		int cgiOut(std::string &str); // ready to output
+		MethodStatus cgiOut(std::string &str); // ready to output
 		~CGI();
 };
 

@@ -3,8 +3,9 @@
 CGI::CGI(char *execpath, char **args, char **env)
 {
 	// initialasing the pipe
-	pipe(pipein); // TODO: error handle, nonblocking fd, to check pipe is not overflowed!
+	pipe(pipein);
 	pipe(pipeout); // TODO: error handle
+	status = 0;
 	/*
 	 * next we need to set fd as unblockable, so we won't hang at write function. Write will return -1 if pipe is full;
  	 */
@@ -19,11 +20,9 @@ CGI::CGI(char *execpath, char **args, char **env)
 		close(pipeout[0]);
 		execve(execpath, args, env);
 		std::cout << "ALARM! EXECVE FAILED!\n"; // what to do?
-		exit(2);
+		exit(4);
 	}
-	//check errno of execve;
 	headersDone = false;
-//	waitpid(pid, &status, WUNTRACED); TODO: check execve failed use waitpid() WHOHANG or SIGCHLD
 }
 
 void CGI::cgiInput(const std::string &str) // inputting body
@@ -57,14 +56,29 @@ void CGI::inputFromBuf()
 	}
 }
 
-int CGI::cgiOut(std::string &str) // mb gonna change it later. Read and write into pipes and outputting. Less memory usage
+MethodStatus CGI::cgiOut(std::string &str) // mb gonna change it later. Read and write into pipes and outputting. Less memory usage
 {
 	char buf[BUFSIZ];
 	size_t find;
 	int r;
 	r = read(pipeout[1], buf, BUFSIZ); // read < 0 = pipe is empty..
 	if (r < -1)
-		return (0);
+	{
+		int wp = waitpid(pid, &status, WNOHANG); // returns > 0 if process stopped;
+		if (status == 1024)
+			return (error); // execve failed;
+		if (wp > 0)
+		{
+			close(pipein[0]);
+			close(pipeout[1]);
+			// next code: ?
+			close(pipein[1]);
+			close(pipeout[0]);
+			return (ok);
+		}
+		else
+			return (inprogress);
+	}
 	str = buf;
 	if (!headersDone && (find = str.find("\n\n")) != std::string::npos) // headers ready for parser
 	{
@@ -73,7 +87,7 @@ int CGI::cgiOut(std::string &str) // mb gonna change it later. Read and write in
 		headersDone = true;
 	}
 	inputFromBuf();
-	return (1);
+	return (inprogress);
 }
 
 CGI::~CGI()
@@ -97,5 +111,3 @@ void CGI::parseHeaders(std::string str)
 		_headersMap.insert(std::pair<std::string, std::string>(key, value));
 	}
 }
-
-
