@@ -173,6 +173,7 @@ void Parser::parse(const std::string& fin)
 	}
 	dup2(tmpin, 0);
 	close(tmpin);
+	makeServExt();
 }
 
 std::string Parser::getValue(const std::string &section)
@@ -498,4 +499,29 @@ void Parser::splitHost(const std::string &val)
 	port = val.substr(pos + 1, val.size());
 	serv.host = host;
 	serv.port = std::atoi(port.c_str());
+}
+
+
+void Parser::makeServExt()
+{
+	s_comparator			comp;
+	std::sort(servers.begin(), servers.end(), comp);
+
+	t_ext_serv	newStruct;
+	newStruct.servs.push_back(servers.front());
+	newStruct.port = servers.front().port;
+	newStruct.host = servers.front().host;
+	for (int i = 1; i < servers.size(); i++)
+	{
+		if (servers[i - 1].host == servers[i].host && servers[i-1].port == servers[i].port)
+			newStruct.servs.push_back(servers[i]);
+		else
+		{
+			servers_ext.push_back(newStruct);
+			newStruct.servs.erase(newStruct.servs.begin(), newStruct.servs.end());
+			newStruct.port = servers[i].port;
+			newStruct.host = servers[i].host;
+			newStruct.servs.push_back(servers[i]);
+		}
+	}
 }
