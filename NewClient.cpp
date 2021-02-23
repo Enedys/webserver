@@ -1,6 +1,6 @@
 #include "NewClient.hpp"
 
-Client::Client(int socket, t_serv const &config) :
+Client::Client(int socket, t_ext_serv const &config) :
 	_socket(socket), _statusCode(0), _request(socket, _statusCode),\
 	_config(config), _method(NULL), _state(defaultState)
 {
@@ -69,6 +69,10 @@ Client::conditionCode	Client::getNextState(MethodStatus status)
 MethodStatus		Client::analizeHeaders()
 {
 	MethodStatus	methodStatus = createNewMethod();
+	determineServer();
+	
+
+
 	if (methodStatus != ok)
 		return (methodStatus);
 	return (ok);

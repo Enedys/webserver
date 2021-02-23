@@ -34,7 +34,7 @@ public:
 	MethodStatus		interract(int newData, int allow2Write);
 
 
-	Client(int socket, s_serv const &config);
+	Client(int socket, t_ext_serv const &config);
 	~Client();
 
 private:
@@ -43,9 +43,8 @@ private:
 	Request				_request;
 	AMethod				*_method;
 	int					_statusCode;
-
-	t_serv const		&_config;
 	int					_socket;
+	t_ext_serv const	&_config;
 
 	conditionCode		getNextState(MethodStatus status);
 	MethodStatus		requestInterraction();
