@@ -2,8 +2,6 @@
 #include "Method.hpp"
 #include "Header.hpp"
 
-# define BUFSIZE 4096
-
 //max body size
 
 class MethodGet : public AMethod
@@ -13,6 +11,8 @@ private:
 	MethodGet & operator=(MethodGet const & src);
 	MethodGet();
 	Header		*_header;
+	size_t		_sentBytesTotal;
+	size_t		_bytesToSend;
 
 public:
 	MethodGet(t_serv const &config, int &code, stringMap const &headersMapRequest);

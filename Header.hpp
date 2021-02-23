@@ -33,5 +33,5 @@ public:
 	void	addTransferEncodingHeader(stringMap &_headersMap, int &_statusCode, stringMap const &_headersMapRequest);
 	void	addAuthenticateHeader(stringMap &_headersMap, int &_statusCode);
 
-	void	headersToString(stringMap const &headersMap, int const &_statusCode, std::string *output);
+	void	headersToString(stringMap const &headersMap, int const &_statusCode, std::string &output);
 };

@@ -4,7 +4,7 @@ Header::Header(std::string const &path) : _path(path) {};
 
 Header::~Header(){ delete this; };
 
-static char		*ft_ltoa(long int nbr)
+static void	ft_ltoa(long int nbr, std::string &res)
 {
 	int		len = 0;
 	int		sign = 1;
@@ -17,8 +17,7 @@ static char		*ft_ltoa(long int nbr)
 	}
 	if (nbrcpy < 0)
 		len++;
-	if (!(str = (char*)malloc(sizeof(*str) * (len + 2))))
-		return (NULL);
+	str = (char*)malloc(sizeof(*str) * (len + 2));
 	if (nbr < 0){
 		nbr *= -1;
 		sign *= (-1);
@@ -33,11 +32,12 @@ static char		*ft_ltoa(long int nbr)
 		if (len == 0 && sign < 0)
 			break ;
 	}
-	return (str);
+	res.assign(str);//res = std::string(str);
+	free(str);
 }
 
 std::map<int, std::string> respStatusCodes;
-struct respStatusCodesInit
+static struct respStatusCodesInit
 {
 	respStatusCodesInit()
 	{
@@ -56,12 +56,14 @@ struct respStatusCodesInit
 	}
 } respStatusCodesInit;
 
-void	Header::headersToString(stringMap const &headersMap, int const &statusCode, std::string *output)
+void	Header::headersToString(stringMap const &headersMap, int const &statusCode, std::string &output)
 {
-	*output += "HTTP/1.1 " + static_cast<std::string>(ft_ltoa(statusCode)) + " " + respStatusCodes[statusCode] + CRLF;
+	std::string codeStr;
+	ft_ltoa(statusCode, codeStr);
+	output += "HTTP/1.1 " + codeStr + " " + respStatusCodes[statusCode] + CRLF;
 	for (constMapIter it = headersMap.begin(); it != headersMap.end(); ++it)
-		*output += (it->first) + ": " + (it->second) + CRLF;
-	*output += CRLF;
+		output += (it->first) + ": " + (it->second) + CRLF;
+	output += CRLF;
 }
 
 void	Header::createGeneralHeaders(stringMap &_headersMap, int &_statusCode)
@@ -99,11 +101,9 @@ void	Header::addContentLengthHeader(stringMap &_headersMap, int &_statusCode)
 	long fileSize = rc == 0 ? stat_buf.st_size : -1;
 	if (fileSize < 0)
 		return ;
-	char *contentLength;
-	contentLength = ft_ltoa(fileSize);//
-	std::string contentLengthStr(contentLength);
-	delete contentLength;
-	_headersMap.insert(std::pair<std::string, std::string>("Content-Length", contentLengthStr));//can it be specified in request before?
+	std::string contentLength;
+	ft_ltoa(fileSize, contentLength);
+	_headersMap.insert(std::pair<std::string, std::string>("Content-Length", contentLength));//can it be specified in request before?
 };
 
 void	Header::addContentLocationHeader(stringMap &_headersMap, int &_statusCode)
@@ -114,7 +114,7 @@ void	Header::addContentLocationHeader(stringMap &_headersMap, int &_statusCode)
 };
 
 void	Header::addContentTypeHeader(stringMap &_headersMap, int &_statusCode)
-{//how to determine type?
+{//type from cgi ot rhm/conf
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));
 };
 

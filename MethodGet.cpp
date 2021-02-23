@@ -1,10 +1,12 @@
 #include "MethodGet.hpp"
 #include "Header.hpp"
 
-MethodGet::MethodGet(t_serv const &config, int &code, stringMap const &headers) \
-	: AMethod(config, code, headers) {};
+# define BUFSIZE 4096
 
-MethodGet::~MethodGet(){};
+MethodGet::MethodGet(t_serv const &config, int &code, stringMap const &headers) \
+	: AMethod(config, code, headers) { _sentBytesTotal = 0; };
+
+MethodGet::~MethodGet(){ };
 
 MethodStatus	MethodGet::readRequestBody(int socket) { return ok; };
 
@@ -44,7 +46,7 @@ MethodStatus	MethodGet::createHeader(std::string const &path)
 
 MethodStatus		MethodGet::sendHeader(int socket) {
 	std::string headerStr;
-	_header->headersToString(_headersMap, _statusCode, &headerStr);//// headersToString(_headersMap, &headerStr);//
+	_header->headersToString(_headersMap, _statusCode, headerStr);//// headersToString(_headersMap, &headerStr);//
 	if (send(socket, headerStr.c_str(), headerStr.length(), 0) < 0){
 		//if ret < length -> loop
 		_statusCode = errorSendingResponse;
@@ -54,20 +56,10 @@ MethodStatus		MethodGet::sendHeader(int socket) {
 	return ok;
 }
 
-MethodStatus		MethodGet::sendBody(int socket) {
-// check_socket here too?
+MethodStatus		MethodGet::sendBody(int socket)
+{
 	size_t	ret;
 	char	buf[BUFSIZE];
-
-// // addContentLengthHeader();//Entity //+path/
-// 	std::string headerStr;
-// 	Header	header;
-// 	header.headersToString(_headersMap, _statusCode, &headerStr);//// headersToString(_headersMap, &headerStr);//
-// 	if (send(socket, headerStr.c_str(), headerStr.length(), 0) < 0){
-// 		//if ret < length -> loop
-// 		_statusCode = errorSendHeader;
-// 		return error;
-// 	}
 
 	while ((ret = read(_fd, buf, BUFSIZE)) >= 0){
 		size_t sent = write(socket, buf, ret);
@@ -87,29 +79,66 @@ MethodStatus		MethodGet::sendBody(int socket) {
 	return ok;
 }
 
-
-MethodStatus		MethodGet::sendResponse(int socket) {
+MethodStatus		MethodGet::sendResponse(int socket)
+{
 	std::string	response;
-	size_t		readBytes;
+	size_t		readBytes = 0;
 	size_t		sentBytes;
-	char		buf[BUFSIZE];
+	char		buf[BUFSIZE + 1];
+	size_t		headersize = 0;
 
-	_header->headersToString(_headersMap, _statusCode, &response);
-	std::cout << "Response header string: \n" << response <<std::endl;
-	readBytes = read(_fd, buf, BUFSIZE);
-	close(_fd);
-	std::string bufStr(buf);
-	response += bufStr;
+	struct stat sbuf;
+	int res = fstat(_fd, &sbuf);
+	size_t filesize = sbuf.st_size;
+	std::cout << "file size:\t" << filesize << std::endl;
 
-	sentBytes = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
-	std::cout << "sentBytes: " << sentBytes << "response.length(): " << response.length() << std::endl;
-	if (sentBytes < 0 || sentBytes == EMSGSIZE){
+	memset(buf, 0, BUFSIZE);
+	if (_statusCode == okSendingInProgress){
+		readBytes = read(_fd, buf, BUFSIZE);
+		buf[BUFSIZE] = '\0';
+		std::string bufStr(buf);
+		response += bufStr;
+
+		std::cout << "readBytes:\t" << readBytes << "\tresponse l:\t" << response.length() << std::endl;
+	}
+	else {
+		_header->headersToString(_headersMap, _statusCode, response);
+		headersize = response.length();
+		std::cout << "header size:\t" << headersize << "\tresp length:\t" << response.length() << std::endl;
+
+		readBytes = read(_fd, buf, BUFSIZE - headersize);//buf > hlength//-1
+		buf[BUFSIZE - headersize] = '\0';
+		std::string bufStr(buf);
+		response += bufStr;
+		std::cout << "readBytes:\t" << readBytes << "\nh + b length:\t" << response.length() << std::endl;
+	}
+	if (readBytes < 0){
+		std::cout << "readBytes < 0" << std::endl;
 		_statusCode = errorSendingResponse;
+		close(_fd);
 		return error;
 	}
-	if (sentBytes < response.length())
-	{
-		_statusCode = okSendingInProgress;//okSuccess;
+	else if (readBytes == 0){// && _sentBytesTotal >= filesize){// && response.find(EOF)){//&& sentTotal == filesize + headersize
+		std::cout << "finished reading" << std::endl;
+		close(_fd);
+		return ok;
+	}
+
+
+	sentBytes = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
+	if (sentBytes < 0 || errno == EMSGSIZE){
+		std::cout << "error sending" << std::endl;
+		_statusCode = errorSendingResponse;
+		close(_fd);
+		return error;
+	}
+	// if (sentBytes < response.length()){
+		// remainder =
+	// };
+	_sentBytesTotal += sentBytes;
+	if (_sentBytesTotal < filesize + headersize){//&& is not the end of file
+		std::cout << "sending in progress" << std::endl;
+		_statusCode = okSendingInProgress;
 		return inprogress;
 	}
 	return ok;

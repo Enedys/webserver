@@ -1,6 +1,8 @@
 #include "MethodHead.hpp"
 #include "Header.hpp"
 
+# define BUFSIZE 4096
+
 MethodHead::MethodHead(t_serv const &config, int &code, stringMap const &headers) \
 	: AMethod(config, code, headers) {};
 
@@ -43,7 +45,7 @@ MethodStatus	MethodHead::createHeader(std::string const &path)
 
 MethodStatus		MethodHead::sendHeader(int socket) {
 	std::string headerStr;
-	_header->headersToString(_headersMap, _statusCode, &headerStr);//// headersToString(_headersMap, &headerStr);//
+	_header->headersToString(_headersMap, _statusCode, headerStr);//// headersToString(_headersMap, &headerStr);//
 	if (send(socket, headerStr.c_str(), headerStr.length(), 0) < 0){
 		//if ret < length -> loop
 		_statusCode = errorSendingResponse;
@@ -64,7 +66,7 @@ MethodStatus		MethodHead::sendResponse(int socket) {
 	std::string	response;
 	size_t		sentBytes;
 
-	_header->headersToString(_headersMap, _statusCode, &response);
+	_header->headersToString(_headersMap, _statusCode, response);
 	close(_fd);
 	std::cout << "Response header string: \n" << response <<std::endl;
 

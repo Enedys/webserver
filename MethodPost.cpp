@@ -10,3 +10,7 @@ MethodStatus	MethodPost::sendHeader(int socket)
 {
 	return (AMethod::sendHeader(socket));
 };
+
+MethodStatus		MethodPost::sendResponse(int socket) {
+	return ok;
+}

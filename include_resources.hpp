@@ -44,8 +44,9 @@ typedef enum
 	errorReadingURL = 1,	//may be replaced
 	errorSocket = 1,		//may be replaced
 
-	errorSendHeader = 1,	//may be replaced
+	errorSendingResponse = 1,	//may be replaced
 	okWaitingMoreChunks = 1,//222 wtf
+	okSendingInProgress = 999,
 	okSuccess = 200,
 	created = 201,
 	accepted = 202,

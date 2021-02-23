@@ -148,7 +148,7 @@ MethodStatus		Client::requestInterraction()
 	if (_state == createResponseHeader)
 		_state = getNextState(_method->createHeader(\
 					getRequestPath(_request.getURI())));
-	std::cout << "////\theader created" << std::endl;//
+	std::cout << "////\theader sent" << std::endl;//
 
 	return (ok);
 }

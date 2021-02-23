@@ -2,8 +2,6 @@
 #include "Method.hpp"
 #include "Header.hpp"
 
-# define BUFSIZE 4096
-
 class MethodHead : public AMethod
 {
 private:
