@@ -21,6 +21,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <map>
+#include <algorithm>
 
 typedef struct s_serv
 {
@@ -45,6 +46,13 @@ struct s_loc
 	bool putAvailable;
 };
 
+typedef	struct s_ext_serv
+{
+	int						port;
+	std::string				host;
+	std::vector<t_serv>		servs;
+}	t_ext_serv;
+
 class Parser
 {
 	public:
@@ -53,7 +61,18 @@ class Parser
 		Parser(const std::string &file);
 		void parse(const std::string& file);
 		std::vector<t_serv> servers;
+		std::vector<t_ext_serv> servers_ext;
 	private:
+		class	s_comparator
+		{
+			public:
+				bool	operator()(t_serv &a, t_serv &b) const
+				{
+					if (a.host != b.host)
+						return (a.host < b.host);
+					return (a.port < b.port);
+				}
+		};
 		enum Token
 		{
 			NO_TOKEN,
@@ -107,7 +126,8 @@ class Parser
 		void 	splitHost(const std::string &val);
 		std::string getValue(const std::string &section);
 		std::vector<std::string> getVectorValues(const std::string &section);
-};
 
+		void makeServExt();
+};
 
 #endif
