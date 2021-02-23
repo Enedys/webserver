@@ -2,17 +2,21 @@
 #include "Method.hpp"
 #include "Header.hpp"
 
+#include <dirent.h>
 //max body size
 
 class MethodGet : public AMethod
 {
 private:
+	MethodGet();
 	MethodGet(MethodGet const & src);
 	MethodGet & operator=(MethodGet const & src);
-	MethodGet();
-	Header		*_header;
-	size_t		_sentBytesTotal;
-	size_t		_bytesToSend;
+	Header				*_header;
+	size_t				_sentBytesTotal;
+	size_t				_bytesToSend;
+	static const size_t	_bs = 4096;
+	std::string			_remainder;
+	std::string			_body;
 
 public:
 	MethodGet(t_serv const &config, int &code, stringMap const &headersMapRequest);
@@ -24,4 +28,6 @@ public:
 	virtual MethodStatus	sendHeader(int socket);
 	virtual MethodStatus	sendBody(int socket);
 	virtual MethodStatus	sendResponse(int socket);
+
+	int						generateIdxPage(std::string const &_path);
 };

@@ -5,18 +5,19 @@
 class MethodHead : public AMethod
 {
 private:
-    /* data */
-	MethodHead(/* args */);
+	MethodHead();
 	MethodHead(MethodHead const & src);
 	MethodHead & operator=(MethodHead const & src);
-	Header		*_header;
+	Header				*_header;
+	static const size_t	_bs = 4096;
+	std::string			_remainder;
 public:
 	MethodHead(t_serv const &config, int &code, stringMap const &headersMapRequest);
 	~MethodHead();
-	MethodStatus	createHeader(std::string const &_path);
-	MethodStatus	readRequestBody(int socket);
-	MethodStatus	sendHeader(int socket);
-	MethodStatus	manageRequest(std::string const &location);
-	MethodStatus	sendBody(int socket);
+	virtual MethodStatus	createHeader(std::string const &_path);
+	virtual MethodStatus	readRequestBody(int socket);
+	virtual MethodStatus	sendHeader(int socket);
+	virtual MethodStatus	manageRequest(std::string const &location);
+	virtual MethodStatus	sendBody(int socket);
 	virtual MethodStatus	sendResponse(int socket);
 };

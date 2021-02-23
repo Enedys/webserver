@@ -10,7 +10,8 @@ MethodHead::~MethodHead(){};
 
 MethodStatus	MethodHead::readRequestBody(int socket) { return ok; };
 
-MethodStatus	MethodHead::manageRequest(std::string const &path){
+MethodStatus	MethodHead::manageRequest(std::string const &path)
+{
 	struct stat	st;
 	if (stat(path.c_str(), &st) == -1){// && errno == ENOENT)//lstat?//fstat IS_DIR
 		_statusCode = notFound;
@@ -43,7 +44,8 @@ MethodStatus	MethodHead::createHeader(std::string const &path)
 	return ok;
 };
 
-MethodStatus		MethodHead::sendHeader(int socket) {
+MethodStatus		MethodHead::sendHeader(int socket)
+{
 	std::string headerStr;
 	_header->headersToString(_headersMap, _statusCode, headerStr);//// headersToString(_headersMap, &headerStr);//
 	if (send(socket, headerStr.c_str(), headerStr.length(), 0) < 0){
@@ -62,24 +64,28 @@ MethodStatus		MethodHead::sendBody(int socket)
 	return ok;
 }
 
-MethodStatus		MethodHead::sendResponse(int socket) {
+MethodStatus		MethodHead::sendResponse(int socket)
+{
 	std::string	response;
 	size_t		sentBytes;
 
-	_header->headersToString(_headersMap, _statusCode, response);
-	close(_fd);
-	std::cout << "Response header string: \n" << response <<std::endl;
+	if (_remainder.length())
+		response = _remainder;
+	if (_statusCode != okSendingInProgress)
+		_header->headersToString(_headersMap, _statusCode, response);
 
 	sentBytes = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
-	std::cout << "sentBytes: " << sentBytes <<std::endl;
-	if (sentBytes < 0 || sentBytes == EMSGSIZE){
+	if (sentBytes < 0 || errno == EMSGSIZE){
 		_statusCode = errorSendingResponse;
+		close(_fd);
 		return error;
 	}
-	if (sentBytes < response.length())
-	{
-		_statusCode = okSendingInProgress;//okSuccess;
+	if (sentBytes < response.length()){
+		_remainder.assign(response.c_str(), sentBytes, response.length() - sentBytes);
+		_statusCode = okSendingInProgress;
 		return inprogress;
-	}
+	};
+	_remainder.clear();
+	close(_fd);
 	return ok;
 }

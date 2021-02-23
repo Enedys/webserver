@@ -1,14 +1,40 @@
 #include "MethodGet.hpp"
 #include "Header.hpp"
 
-# define BUFSIZE 4096
-
 MethodGet::MethodGet(t_serv const &config, int &code, stringMap const &headers) \
 	: AMethod(config, code, headers) { _sentBytesTotal = 0; };
 
 MethodGet::~MethodGet(){ };
 
 MethodStatus	MethodGet::readRequestBody(int socket) { return ok; };
+
+int			MethodGet::generateIdxPage(std::string const &path){
+	DIR				*dir;
+	struct dirent	*cur;
+
+	dir = opendir(path.c_str());//if -1
+	if (!dir){
+		_statusCode = errorOpeningURL;
+		return -1;//
+	}
+	_body = "<html>\n<body>\n"
+			"<h1>Directory listing</h1>\n";
+	errno = 0;
+	while ((cur = readdir(dir)) != NULL && errno == 0){
+		if (cur->d_name[0] == '.')
+			continue ;//
+		_body += "<a href=\"" + path;
+		if (path != "/")
+			_body += "/";
+		_body += cur->d_name;
+		_body += "\">";
+		_body += cur->d_name;
+		_body += "</a><br>\n";
+	}
+	closedir(dir);
+	_body += "</body>\n</html>\n";
+	return 0;
+}
 
 MethodStatus	MethodGet::manageRequest(std::string const &path)
 {
@@ -17,7 +43,10 @@ MethodStatus	MethodGet::manageRequest(std::string const &path)
 		_statusCode = notFound;
 		return error;
 	}
-	if ((_fd = open(path.c_str(), O_RDONLY | O_NONBLOCK)) <= 0){
+	// if (S_ISDIR(st.st_mode) && _config.locs[0].autoindex)
+	// 	generateIdxPage(path);//signalize that body not from fd
+	// else
+	if ((_fd = open(path.c_str(), O_RDONLY | O_NONBLOCK)) <= 0){//else
 		_statusCode = errorOpeningURL;
 		return error;
 	}
@@ -29,6 +58,7 @@ MethodStatus	MethodGet::createHeader(std::string const &path)
 {
 	_header = new Header(path);
 
+//what headers if dir///Last Modified?
 	std::cout << "////\tGET METHOD, statusCode: " << _statusCode << std::endl;
 
 	_header->createGeneralHeaders(_headersMap, _statusCode);
@@ -44,9 +74,10 @@ MethodStatus	MethodGet::createHeader(std::string const &path)
 	return ok;
 };
 
-MethodStatus		MethodGet::sendHeader(int socket) {
+MethodStatus		MethodGet::sendHeader(int socket)
+{
 	std::string headerStr;
-	_header->headersToString(_headersMap, _statusCode, headerStr);//// headersToString(_headersMap, &headerStr);//
+	_header->headersToString(_headersMap, _statusCode, headerStr);
 	if (send(socket, headerStr.c_str(), headerStr.length(), 0) < 0){
 		//if ret < length -> loop
 		_statusCode = errorSendingResponse;
@@ -59,9 +90,9 @@ MethodStatus		MethodGet::sendHeader(int socket) {
 MethodStatus		MethodGet::sendBody(int socket)
 {
 	size_t	ret;
-	char	buf[BUFSIZE];
+	char	buf[_bs];
 
-	while ((ret = read(_fd, buf, BUFSIZE)) >= 0){
+	while ((ret = read(_fd, buf, _bs)) >= 0){
 		size_t sent = write(socket, buf, ret);
 		if (sent == 0)
 			break ;
@@ -82,64 +113,62 @@ MethodStatus		MethodGet::sendBody(int socket)
 MethodStatus		MethodGet::sendResponse(int socket)
 {
 	std::string	response;
-	size_t		readBytes = 0;
+	size_t		readBytes;
 	size_t		sentBytes;
-	char		buf[BUFSIZE + 1];
-	size_t		headersize = 0;
+	char		buf[_bs + 1];
+	size_t		readBuf = _bs;
 
-	struct stat sbuf;
-	int res = fstat(_fd, &sbuf);
-	size_t filesize = sbuf.st_size;
-	std::cout << "file size:\t" << filesize << std::endl;
-
-	memset(buf, 0, BUFSIZE);
-	if (_statusCode == okSendingInProgress){
-		readBytes = read(_fd, buf, BUFSIZE);
-		buf[BUFSIZE] = '\0';
-		std::string bufStr(buf);
-		response += bufStr;
-
-		std::cout << "readBytes:\t" << readBytes << "\tresponse l:\t" << response.length() << std::endl;
-	}
-	else {
+	memset(buf, 0, _bs);
+	if (_statusCode != okSendingInProgress){
+		_remainder.clear();
 		_header->headersToString(_headersMap, _statusCode, response);
-		headersize = response.length();
-		std::cout << "header size:\t" << headersize << "\tresp length:\t" << response.length() << std::endl;
+		size_t headersize = response.length();
 
-		readBytes = read(_fd, buf, BUFSIZE - headersize);//buf > hlength//-1
-		buf[BUFSIZE - headersize] = '\0';
-		std::string bufStr(buf);
-		response += bufStr;
-		std::cout << "readBytes:\t" << readBytes << "\nh + b length:\t" << response.length() << std::endl;
+		// if (!_body.empty()){
+		// 	_bytesToSend = _body.length() + headersize;
+		// }
+		// else {
+			struct stat sbuf;
+			fstat(_fd, &sbuf);
+			_bytesToSend = sbuf.st_size + headersize;
+			readBuf -= headersize;
+		// }
 	}
+	if (!_remainder.empty()){
+		readBuf = _bs - _remainder.length();
+		response = _remainder;
+	}
+	readBytes = read(_fd, buf, readBuf);
 	if (readBytes < 0){
-		std::cout << "readBytes < 0" << std::endl;
-		_statusCode = errorSendingResponse;
+		_statusCode = errorReadingURL;
 		close(_fd);
 		return error;
 	}
-	else if (readBytes == 0){// && _sentBytesTotal >= filesize){// && response.find(EOF)){//&& sentTotal == filesize + headersize
-		std::cout << "finished reading" << std::endl;
-		close(_fd);
-		return ok;
-	}
-
+	buf[readBuf] = '\0';
+	std::string bufStr(buf, readBytes);
+	response += bufStr;
 
 	sentBytes = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
 	if (sentBytes < 0 || errno == EMSGSIZE){
-		std::cout << "error sending" << std::endl;
 		_statusCode = errorSendingResponse;
 		close(_fd);
 		return error;
 	}
-	// if (sentBytes < response.length()){
-		// remainder =
-	// };
+	if (sentBytes < response.length()){
+		// char const *str = response.c_str();
+		// str += sentBytes;
+		// _remainder.assign(str);
+		_remainder.assign(response.c_str(), sentBytes, response.length() - sentBytes);
+		_sentBytesTotal += sentBytes;
+		_statusCode = okSendingInProgress;
+		return inprogress;
+	};
+	// _remainder.clear();//
 	_sentBytesTotal += sentBytes;
-	if (_sentBytesTotal < filesize + headersize){//&& is not the end of file
-		std::cout << "sending in progress" << std::endl;
+	if (_sentBytesTotal < _bytesToSend){
 		_statusCode = okSendingInProgress;
 		return inprogress;
 	}
+	close(_fd);
 	return ok;
 }
