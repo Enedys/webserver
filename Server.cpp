@@ -76,8 +76,9 @@ std::ostream		&operator<<(std::ostream &o, const Server &s)
 
 /* ***************************************** */
 
-Server::Server(t_serv const &conf) try : _server(conf)
+Server::Server(t_serv const &conf) try
 {
+	_server.push_back(conf);
 	createSocketByStruct();
 }
 catch(char const *s)
@@ -95,11 +96,11 @@ int					Server::createSocketByStruct()
 		throw ("Socket options error.");
 	memset(&_sockAddr, 0, sizeof(_sockAddr));
 	_sockAddr.sin_family = AF_INET;
-	if  (_server.serverName == "localhost")
+	if  (_server.host == "localhost")
 		_sockAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-	else if (_server.serverName == "any")
+	else if (_server.host == "")
 		_sockAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	else if ((_sockAddr.sin_addr.s_addr = inet_addr(_server.serverName.c_str()))\
+	else if ((_sockAddr.sin_addr.s_addr = inet_addr(_server.host.c_str()))\
 				== INADDR_NONE)
 		throw ("Server addres error");
 	_sockAddr.sin_port = htons(_server.port);
