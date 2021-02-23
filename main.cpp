@@ -17,27 +17,12 @@ int main()
 	parser.parse("webserv.conf");
 	WebServer	myWebServer;
 	std::cout << parser.servers.size() << std::endl;
-	std::map<std::string, std::pair<int, Server *> >	host_port;
 	for (int i = 0; i < parser.servers.size(); i++)
 	{
-		std::cout << "Host: " << parser.servers[i].host << "\tServerName: " << parser.servers[i].serverName\
-		<< "\tPort: " << parser.servers[i].port << std::endl;
+		std::cout << "Host: " << parser.servers_ext[i].host << "\tPort: " << parser.servers_ext[i].port << std::endl;
 		try
 		{
-			if (host_port[parser.servers[i].host].first != parser.servers[i].port)
-			{
-				myWebServer.appendServer(new Server(parser.servers[i]));
-				host_port[parser.servers[i].host]. = parser.servers[i].port;
-			}
-			else
-			{
-				
-			}
-		}
-		catch (char const *s)
-		{
-			std::cerr << s << std::endl;
-			return (1);
+			myWebServer.appendServer(new Server(parser.servers_ext[i]));
 		}
 		catch (...)
 		{
