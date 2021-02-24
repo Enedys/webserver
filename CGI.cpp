@@ -1,17 +1,41 @@
 #include "CGI.hpp"
 
-CGI::CGI(char *execpath, char **args, char **env)
+void CGI::initPipes()
 {
-	// initialasing the pipe
-	pipe(pipein);
-	pipe(pipeout); // TODO: error handle
+	if (pipe(pipein) < 0)
+	{
+		throw CGI::pipeFailed();
+	}
+	if (pipe(pipeout) < 0)
+	{
+		close(pipein[0]);
+		close(pipein[1]);
+		throw CGI::pipeFailed();
+	}
 	status = 0;
 	/*
 	 * next we need to set fd as unblockable, so we won't hang at write function. Write will return -1 if pipe is full;
  	 */
-	fcntl(pipein[0], F_SETFL, O_NONBLOCK);
-	fcntl(pipeout[1], F_SETFL, O_NONBLOCK); // TODO: can return error;
-	pid = fork(); // TODO: if pid < 0 error;
+	if (fcntl(pipein[0], F_SETFL, O_NONBLOCK) < 0)
+	{
+		freeMem();
+		throw CGI::lockCanNotSet();
+	}
+	if (fcntl(pipeout[1], F_SETFL, O_NONBLOCK) < 0)
+	{
+		freeMem();
+		throw CGI::lockCanNotSet();
+	}
+}
+
+CGI::CGI(char *execpath, char **args, char **env)
+{
+	initPipes();
+	if ((pid = fork()) < 0)
+	{
+		freeMem();
+		throw CGI::forkFailed();
+	}
 	if (pid == 0)
 	{
 		dup2(pipein[1], 0);
@@ -66,33 +90,48 @@ MethodStatus CGI::cgiOut(std::string &str) // mb gonna change it later. Read and
 	{
 		int wp = waitpid(pid, &status, WNOHANG); // returns > 0 if process stopped;
 		if (status == 1024)
+		{
+			freeMem();
 			return (error); // execve failed;
+		}
 		if (wp > 0)
 		{
-			close(pipein[0]);
-			close(pipeout[1]);
-			// next code: ?
-			close(pipein[1]);
-			close(pipeout[0]);
+			freeMem();
 			return (ok);
 		}
 		else
 			return (inprogress);
 	}
-	str = buf;
-	if (!headersDone && (find = str.find("\n\n")) != std::string::npos) // headers ready for parser
+	if (!headersDone) // headers ready for parser
 	{
-		parseHeaders(str.substr(0, find)); // todo: test how it works
-		str = str.substr(find + 2, str.size()); //
-		headersDone = true;
+		str = outputBuf + str;
+		if ((find = str.find("\n\n")) != std::string::npos)
+		{
+			parseHeaders(str.substr(0, find)); // todo: test how it works
+			str = str.substr(find + 2, str.size()); //
+			headersDone = true;
+		}
+		else
+		{
+			outputBuf = str;
+		}
+	}
+	else
+	{
+		str = buf;
 	}
 	inputFromBuf();
 	return (inprogress);
 }
 
-CGI::~CGI()
+CGI::CGI()
 {
 
+}
+
+CGI::~CGI()
+{
+	freeMem();
 }
 
 void CGI::parseHeaders(std::string str)
@@ -110,4 +149,29 @@ void CGI::parseHeaders(std::string str)
 		str = str.substr(str.find('\n'), str.size());
 		_headersMap.insert(std::pair<std::string, std::string>(key, value));
 	}
+}
+
+void CGI::freeMem()
+{
+	close(pipein[0]);
+	close(pipeout[1]);
+	close(pipein[1]);
+	close(pipeout[0]);
+	inputBuf.clear();
+	outputBuf.clear();
+}
+
+const char *CGI::forkFailed::what() const throw()
+{
+	return ("Fork failed!");
+}
+
+const char *CGI::pipeFailed::what() const throw()
+{
+	return ("Pipe failed!");
+}
+
+const char *CGI::lockCanNotSet::what() const throw()
+{
+	return ("Lock can not set");
 }
