@@ -57,7 +57,7 @@ Client::conditionCode	Client::getNextState(MethodStatus status)
 	if (status == error)
 	{
 		if (_state <= analizeHeader)
-			createNewMethod();
+			createNewMethod(_config.servs[0]);
 		return (createHeaders);
 	}
 	else if (status == ok)
@@ -66,16 +66,64 @@ Client::conditionCode	Client::getNextState(MethodStatus status)
 	return (_state);
 }
 
+static int	match(std::string const &s1, std::string const &s2, size_t i1 = 0, size_t i2 = 0)
+{
+	if (i1 != s1.length() && s2[i2] == '*' && (i2 == 0 || i2 == s2.length() - 1))
+		return (match(s1, s2, i1 + 1, i2) + match(s1, s2, i1, i2 + 1));
+	else if (i1 == s1.length() && s2[i2] == '*' && (i2 == s2.length() - 1))
+		return (1);
+	else if (s1[i1] == s2[i2] && i1 != s1.length() && i2 != s2.length())
+		return (match(s1, s2, i1 + 1, i2 + 1));
+	else if (s1[i1] == s2[i2] && i1 == s1.length() && i2 == s2.length())
+		return (1);
+	return (0);
+}
+
+t_serv const		*Client::determineServer()
+{
+	constMapIter	it = _request.getHeadersMap().find("host");
+	size_t			portPos = it->second.find_last_of(':');
+	std::string		hostName = it->second.substr(0, portPos);
+	if (!HeaderAnalyser::isValidHost(hostName))
+	{
+		_statusCode = 400;
+		return (NULL);
+	}
+	if (portPos != std::string::npos)
+	{
+		std::string port = it->second.substr(portPos);
+		std::string servPort = size2Hex(_config.port, 10);
+		if (port != servPort)
+		{
+			_statusCode = 400;
+			return (NULL);
+		}
+	}
+	std::vector<t_serv>::const_iterator sv = _config.servs.cend();
+	for (std::vector<t_serv>::const_iterator i = _config.servs.cbegin(); i < _config.servs.cend(); i++)
+	{
+		if (match(hostName, i->serverName))
+			if (sv->serverName.length() < i->serverName.length()\
+				|| sv == _config.servs.cend())
+				sv = i;
+	}
+	if (sv == _config.servs.cend())
+		return (&(_config.servs[0]));
+	return (&(*sv));
+}
+
 MethodStatus		Client::analizeHeaders()
 {
-	MethodStatus	methodStatus = createNewMethod();
-	determineServer();
+	if (_statusCode)
+		return (createNewMethod(_config.servs[0]));
+	t_serv const	*serv = determineServer();
+	if (!serv)
+		return (createNewMethod(_config.servs[0]));
 	
+	
+	MethodStatus	methodStatus = createNewMethod();
 
-
-	if (methodStatus != ok)
-		return (methodStatus);
-	return (ok);
+	return (methodStatus);
 }
 
 std::string			Client::getRequestPath(std::string const &uri)
@@ -103,7 +151,7 @@ std::string			Client::getRequestPath(std::string const &uri)
 	return (itBest->root + uri.substr(itBest->path.length()));
 }
 
-MethodStatus		Client::createNewMethod()
+MethodStatus		Client::createNewMethod(t_serv const &serv)
 {
 	if (_socket == -1)
 		return (connectionClosed);

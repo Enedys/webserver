@@ -7,6 +7,7 @@
 #include "MethodPut.hpp"
 #include "MethodPost.hpp"
 #include "MethodOption.hpp"
+#include "ReqHeadAnalyser.hpp"
 
 typedef std::vector<s_loc>::iterator		locIter;
 typedef std::vector<s_loc>::const_iterator	constLocIter;
@@ -46,11 +47,15 @@ private:
 	int					_socket;
 	t_ext_serv const	&_config;
 
+
+
 	conditionCode		getNextState(MethodStatus status);
 	MethodStatus		requestInterraction();
 	MethodStatus		responseInterraction();
 	MethodStatus		refreshClient();
-	MethodStatus		createNewMethod();
+	MethodStatus		createNewMethod(t_serv const &serv);
 	MethodStatus		analizeHeaders();
+
+	t_serv const		*determineServer();
 	std::string			getRequestPath(std::string const &uri);
 };
