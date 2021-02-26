@@ -374,6 +374,23 @@ void Parser::getLocLogPass()
 	loc.authLogPass = value; // todo: validate ':' symbol
 }
 
+
+void Parser::getLocUploadPass()
+{
+	std::string value = getValue("location: upload_pass: ");
+	if (value == "allow")
+		loc.uploadPass = true;
+	if (value == "deny")
+		loc.uploadPass = false;
+	else
+		error("location: upload_pass: expected allow | deny");
+}
+
+void Parser::getLocUploadStore()
+{
+	loc.uploadStore = getValue("location: upload_store"); // TODO: put returns 500, if no subdirectory!
+}
+
 void Parser::parseLocValues()
 {
 	std::string value;
@@ -399,6 +416,10 @@ void Parser::parseLocValues()
 		getLocAuth();
 	else if (value == "auth_basic_log_pass")
 		getLocLogPass();
+	else if (value == "upload_pass")
+		getLocUploadPass();
+	else if (value == "upload_store")
+		getLocUploadStore();
 	else
 		error("Location: invalid token");
 }
@@ -475,6 +496,8 @@ void Parser::initLoc()
 	loc.fileRequestIsDir.clear();
 	loc.auth.clear();
 	loc.authLogPass.clear();
+	loc.uploadPass = false;
+	loc.uploadStore.clear();
 	loc.getAvailable = true;
 	loc.headAvailable = true;
 	loc.postAvailable = true;
@@ -494,7 +517,7 @@ void Parser::validateErrorStr(const std::vector<std::string> &v)
 	}
 }
 
-void Parser::fillRootLoc()
+void Parser::fillRootLoc() // todo: not only fill root loc, probably rename
 {
 	for (unsigned int i = 0; i < serv.locs.size(); i++)
 	{
@@ -504,6 +527,11 @@ void Parser::fillRootLoc()
 				error("location has no root. Can't resolve");
 			serv.locs[i].root = root;
 		}
+	}
+	for (unsigned int i = 0; i < serv.locs.size(); i++)
+	{
+		if (serv.locs[i].uploadPass && serv.locs[i].uploadStore.empty())
+			serv.locs[i].uploadStore = serv.locs[i].root;
 	}
 }
 
@@ -543,4 +571,5 @@ void Parser::makeServExt()
 		}
 	}
 }
+
 
