@@ -362,6 +362,18 @@ void Parser::getLocDenyMethod()
 		error("expected deny POST | HEAD | PUT | GET");
 }
 
+
+void Parser::getLocAuth()
+{
+	loc.auth = getValue("location: auth_basic: ");
+}
+
+void Parser::getLocLogPass()
+{
+	std::string value = getValue("location: auth_basic_log_pass: ");
+	loc.authLogPass = value; // todo: validate ':' symbol
+}
+
 void Parser::parseLocValues()
 {
 	std::string value;
@@ -383,6 +395,10 @@ void Parser::parseLocValues()
 		getLocFileIsDir(); // error?
 	else if (value == "cgi")
 		getLocCGI();
+	else if (value == "auth_basic")
+		getLocAuth();
+	else if (value == "auth_basic_log_pass")
+		getLocLogPass();
 	else
 		error("Location: invalid token");
 }
@@ -457,6 +473,8 @@ void Parser::initLoc()
 	loc.autoindex = false;
 	loc.root.clear();
 	loc.fileRequestIsDir.clear();
+	loc.auth.clear();
+	loc.authLogPass.clear();
 	loc.getAvailable = true;
 	loc.headAvailable = true;
 	loc.postAvailable = true;
@@ -525,3 +543,4 @@ void Parser::makeServExt()
 		}
 	}
 }
+

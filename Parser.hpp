@@ -39,6 +39,8 @@ struct s_loc
 	std::string root;
 	std::string fileRequestIsDir;
 	std::map<std::string, std::string> cgi;
+	std::string auth;
+	std::string authLogPass;
 	bool autoindex;
 	bool getAvailable;
 	bool postAvailable;
@@ -116,6 +118,8 @@ class Parser
 		void 	getLocFileIsDir();
 		void 	getLocDenyMethod();
 		void 	getLocCGI();
+		void 	getLocAuth();
+		void	getLocLogPass();
 		void 	initServ();
 		void 	initLoc();
 
