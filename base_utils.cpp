@@ -32,7 +32,7 @@ int			string2Size(const std::string &str, int base=16)
 	return (nbr);
 }
 
-std::string	size2Hex(size_t num)
+std::string	size2Hex(size_t num, int base = 16)
 {
 	const char		*dict = "0123456789abcdef";
 

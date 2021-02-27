@@ -16,8 +16,8 @@ protected:
 
 public:
 	AMethod(t_serv const &config, int &status, stringMap const &headers);
-	static const int			methodNums = 6;
 	static const std::string	validMethods[6];
+	static const int			methodNums = 6;
 	static bool					isValidMethod(std::string const &method);
 
 	virtual MethodStatus	createHeader(std::string const &_path) = 0;

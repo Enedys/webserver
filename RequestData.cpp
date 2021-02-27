@@ -1,7 +1,74 @@
 #include "RequestData.hpp"
 
+std::string	stringToUpper(const std::string &s)
+{
+
+}
+
 RequestData::RequestData(t_ext_serv const &s, stringMap const &rHs) :
 	servs(s), reqHeads(rHs), errorMask(0), in(0) {};
+
+void		RequestData::setHeaderState(headerNum hN, bool error)
+{
+	in |= hN;
+	errorMask |= ((error != true) ? hN : 0);
+}
+
+void		RequestData::procQualityHeaders()
+{
+	constMapIter	header;
+	qualityMap		m;
+
+	if ((header = reqHeads.find("accept-charset")) != reqHeads.end())
+	{
+		m = parseAcceptionLine(header->second, 0, 1);
+		setHeaderState(accChSet, m.first);
+		acceptCharset = m.second;
+	}
+	if ((header = reqHeads.find("accept-language")) != reqHeads.end())
+	{
+		m = parseAcceptionLine(header->second, 1, 1);
+		setHeaderState(accLang, m.first);
+		acceptLanguage = m.second;
+	}
+	if ((header = reqHeads.find("content-language")) != reqHeads.end())
+	{
+		m = parseAcceptionLine(header->second, 1, 0);
+		setHeaderState(contLang, m.first);
+		contentLanguage = m.second;
+	}
+}
+
+void		RequestData::procUserAgent()
+{
+	constMapIter	header;
+	bool			var;
+	if ((header = reqHeads.find("user-agent")) != reqHeads.end())
+	{
+		var = isValidUserAgent(header->second);
+		setHeaderState(userAgent, var);
+	}
+}
+
+void		RequestData::procContentType()
+{
+	constMapIter	header;
+	bool			var;
+	if ((header = reqHeads.find("content-type")) != reqHeads.end())
+	{
+		contTypeMap map = getContentType(header->second);
+		contentType = map.second;
+		setHeaderState(contType, map.first);
+	}
+}
+
+void		RequestData::procHost()
+{
+	bool			var;
+	hostName = reqHeads.find("host")->second;
+	var = isValidHost(hostName, servs.port);
+	setHeaderState(host, var);
+}
 
 bool		RequestData::isValidHost(std::string const &s1, size_t port)
 {
@@ -285,49 +352,107 @@ contTypeMap	RequestData::getContentType(std::string const &s)
 		{ m.first = true; return (m); }
 }
 
+int			isValidQuerySymbol(int c)
+{
+	if (std::isalnum(c) || c == '-' ||\
+		c == '_' || c == '.' || c == '~')
+		return (okQueryCh);
+	else if (c == '%')
+		return (percent);
+	else if (c == '=')
+		return (equal);
+	return (0);
+}
+
+int			isHex(int c)
+{
+	if (c >= 47 && c <= 57)
+		return (c);
+	else if (c >= 97 && c <= 122)
+		return (c - 'a');
+	else if (c >= 65 && c <= 90)
+		return (c - 'A');
+	return (-1);
+}
+
+std::pair<std::string, int>	RequestData::getEnvVar(std::string const &s, size_t start)
+{
+	std::pair<std::string, int> res;
+	res.second = -1;
+	size_t	eqPos = s.find('=', start);
+	if (eqPos == std::string::npos && start == 0)
+		{setHeaderState(query, false); return (res);}
+	size_t	delimPos = queryUri.find_first_of(";&", eqPos);
+	if (delimPos == std::string::npos)
+		delimPos = s.length();
+	std::string	envVar = "HTTP_";
+	envVar.reserve(5 + delimPos - start);
+	int	validSym;
+	int	i = 0;
+	int	eqNum = 0;
+	while (i < delimPos - start)
+	{
+		int	c = isValidQuerySymbol(s[i]);
+		if (c == okQueryCh)
+			envVar.push_back(s[i]);
+		else if (c == equal)
+			if (++eqNum == 1)
+				envVar.push_back(s[i]);
+		else if (c == percent && s.length() - i > 2)
+		{
+			int	c1 = isHex(s[i + 1]);
+			int	c2 = isHex(s[i + 2]);
+			if (c1 == -1 || c2 == -1)
+				{setHeaderState(query, false); return (res);}
+			envVar.push_back(c1 * 16 + c2);
+			i += 2;
+		}
+		else
+			{setHeaderState(query, false); return (res);}
+	}
+	res.first = envVar;
+	res.second = delimPos;
+	return (res);
+}
+
+bool		RequestData::isValidPath()
+{
+	setHeaderState(path, true);
+	return (true);
+}
+
+void		RequestData::uriParse(std::string &uri, bool envNeed)
+{
+	int i = 0;
+	for (; i < uri.length(); i++)
+		if (i != '/')
+			break ;
+	size_t	queryPos = uri.find('?', i);
+	pathUri = "/" + uri.substr(i, queryPos - i);
+	bool	val = isValidPath();
+	if (queryPos != std::string::npos && val)
+	{
+		setHeaderState(query, true);
+		size_t	fragmentPos = uri.find('#', queryPos);
+		queryUri = uri.substr(queryPos + 1, fragmentPos - queryPos - 1);
+		fragmentUri = uri.substr(fragmentPos);
+		if (!envNeed)
+			return ;
+		std::pair<std::string, int>	env = getEnvVar(queryUri, 0);
+		while (env.second != std::string::npos && env.second != -1)
+		{
+			queryEnv.push_back(env.first);
+			env = getEnvVar(queryUri, env.second + 1);
+		}
+	}
+}
+
 void		RequestData::prepareData()
 {
-	bool			var;
-	constMapIter	header;
-	var = isValidHost(reqHeads.find("host")->second, servs.port);
-	errorMask |= (host & (var != true ? 1 : 0));
-	in |= host;
-	hostName = reqHeads.find("host")->second;
-	if ((header = reqHeads.find("user-agent")) != reqHeads.end())
-	{
-		in |= userAgent;
-		var = isValidUserAgent(header->second);
-		errorMask |= (userAgent & (var != true ? 1 : 0));
-	}
-	qualityMap m; 
-	if ((header = reqHeads.find("accept-charset")) != reqHeads.end())
-	{
-		in |= accChSet;
-		m = parseAcceptionLine(header->second, 0, 1);
-		errorMask |= (accChSet & (m.first != true ? 1 : 0));
-		acceptCharset = m.second;
-	}
-	if ((header = reqHeads.find("accept-language")) != reqHeads.end())
-	{
-		in |= accLang;
-		m = parseAcceptionLine(header->second, 1, 1);
-		errorMask |= (accLang & (m.first != true ? 1 : 0));
-		acceptLanguage = m.second;
-	}
-	if ((header = reqHeads.find("content-language")) != reqHeads.end())
-	{
-		in |= contLang;
-		m = parseAcceptionLine(header->second, 1, 0);
-		errorMask |= (contLang & (m.first != true ? 1 : 0));
-		acceptLanguage = m.second;
-	}
-	if ((header = reqHeads.find("content-type")) != reqHeads.end())
-	{
-		in |= contType;
-		contTypeMap map = getContentType(header->second);
-		errorMask |= (contType & (map.first != true ? 1 : 0));
-		contentType = map.second;
-	}
-
+	procHost();
+	procQualityHeaders();
+	procUserAgent();
+	procContentType();
+	uriParse();
 }
 
