@@ -7,7 +7,7 @@
 #include "MethodPut.hpp"
 #include "MethodPost.hpp"
 #include "MethodOption.hpp"
-#include "ReqHeadAnalyser.hpp"
+#include "RequestData.hpp"
 
 typedef std::vector<s_loc>::iterator		locIter;
 typedef std::vector<s_loc>::const_iterator	constLocIter;

@@ -1,12 +1,13 @@
 #include "RequestData.hpp"
 
-std::string	stringToUpper(const std::string &s)
+RequestData::RequestData(t_ext_serv const &s, stringMap const &rHs, std::string const &uriR) :
+	servsList(s), reqHeads(rHs), uri(uriR), errorMask(0), in(0) {serv = NULL; location = NULL; };
+
+void		stringToLower(std::string &s)
 {
-
+	for (int i = 0; i < s.length(); i++)
+		s[i] = std::tolower(s[i]);
 }
-
-RequestData::RequestData(t_ext_serv const &s, stringMap const &rHs) :
-	servs(s), reqHeads(rHs), errorMask(0), in(0) {};
 
 void		RequestData::setHeaderState(headerNum hN, bool error)
 {
@@ -263,7 +264,7 @@ std::string	RequestData::base64encode(std::string const &s)
 	return (encoded);
 }
 
-static int	getPos(int ch)
+static int	getBase64Pos(int ch)
 {
 	if (ch >= 'A' && ch <= 'Z')
 		return (ch - 'A');
@@ -292,7 +293,7 @@ std::string	RequestData::base64decode(std::string const &s)
 			if (s[4 * i + j] == '=')
 				chunk = 0;
 			else
-				chunk = getPos(s[4 * i + j]);
+				chunk = getBase64Pos(s[4 * i + j]);
 			res += chunk * (1 << (6 * (3 - j)));
 		}
 		decode.push_back((res / 256) / 256);
@@ -366,11 +367,11 @@ int			isValidQuerySymbol(int c)
 
 int			isHex(int c)
 {
-	if (c >= 47 && c <= 57)
-		return (c);
-	else if (c >= 97 && c <= 122)
+	if (c >= 47 && c <= 57)			// digit
+		return (c - '0');
+	else if (c >= 97 && c <= 122)	// lowercase ascii
 		return (c - 'a');
-	else if (c >= 65 && c <= 90)
+	else if (c >= 65 && c <= 90)	// uppercase ascii
 		return (c - 'A');
 	return (-1);
 }
@@ -398,17 +399,9 @@ std::pair<std::string, int>	RequestData::getEnvVar(std::string const &s, size_t 
 		else if (c == equal)
 			if (++eqNum == 1)
 				envVar.push_back(s[i]);
-		else if (c == percent && s.length() - i > 2)
-		{
-			int	c1 = isHex(s[i + 1]);
-			int	c2 = isHex(s[i + 2]);
-			if (c1 == -1 || c2 == -1)
-				{setHeaderState(query, false); return (res);}
-			envVar.push_back(c1 * 16 + c2);
-			i += 2;
-		}
 		else
 			{setHeaderState(query, false); return (res);}
+		i++;
 	}
 	res.first = envVar;
 	res.second = delimPos;
@@ -421,21 +414,52 @@ bool		RequestData::isValidPath()
 	return (true);
 }
 
-void		RequestData::uriParse(std::string &uri, bool envNeed)
+std::string	normalizeURI(std::string const &s)
 {
-	int i = 0;
-	for (; i < uri.length(); i++)
-		if (i != '/')
+	std::string	normUri;
+	normUri.reserve(s.length());
+	size_t	i = 0;
+	while (i < s.length())
+	{
+		if (s[i] != '/')
 			break ;
-	size_t	queryPos = uri.find('?', i);
-	pathUri = "/" + uri.substr(i, queryPos - i);
+		else
+			i++;
+	}
+	normUri.push_back('/');
+	while (i < s.length())
+	{
+		if (s[i] == '%' && s.length() - i > 2)
+		{
+			int	c1 = isHex(s[i + 1]);
+			int	c2 = isHex(s[i + 2]);
+			if (c1 != -1 && c2 != -1)
+			{
+				normUri.push_back(c1 * 16 + c2);
+				i += 2;
+			}
+			else
+				normUri.push_back(s[i]);
+		}
+		else
+			normUri.push_back(s[i]);
+		i++;
+	}
+	return (normUri);
+}
+
+void		RequestData::uriParse(std::string const &uri, bool envNeed)
+{
+	std::string normUri = normalizeURI(uri);
+	size_t	queryPos = normUri.find('?');
+	pathFromUri = normUri.substr(0, queryPos);
 	bool	val = isValidPath();
 	if (queryPos != std::string::npos && val)
 	{
 		setHeaderState(query, true);
-		size_t	fragmentPos = uri.find('#', queryPos);
-		queryUri = uri.substr(queryPos + 1, fragmentPos - queryPos - 1);
-		fragmentUri = uri.substr(fragmentPos);
+		size_t	fragmentPos = normUri.find('#', queryPos);
+		queryUri = normUri.substr(queryPos + 1, fragmentPos - queryPos - 1);
+		fragmentUri = normUri.substr(fragmentPos);
 		if (!envNeed)
 			return ;
 		std::pair<std::string, int>	env = getEnvVar(queryUri, 0);
@@ -447,12 +471,106 @@ void		RequestData::uriParse(std::string &uri, bool envNeed)
 	}
 }
 
+static int	match(std::string const &s1, std::string const &s2, size_t i1 = 0, size_t i2 = 0)
+{
+	if (i1 != s1.length() && s2[i2] == '*' && (i2 == 0 || i2 == s2.length() - 1))
+		return (match(s1, s2, i1 + 1, i2) + match(s1, s2, i1, i2 + 1));
+	else if (i1 == s1.length() && s2[i2] == '*' && (i2 == s2.length() - 1))
+		return (1);
+	else if (s1[i1] == s2[i2] && i1 != s1.length() && i2 != s2.length())
+		return (match(s1, s2, i1 + 1, i2 + 1));
+	else if (s1[i1] == s2[i2] && i1 == s1.length() && i2 == s2.length())
+		return (1);
+	return (0);
+}
+
+void		RequestData::determineServer()
+{
+	if ((errorMask & host) || !(errorMask & path) || !(errorMask & query))
+		{setHeaderState(servT, false); serv = NULL; return ;}
+	size_t			portPos = hostName.find_last_of(':');
+	std::string		_hostName = hostName.substr(0, portPos);
+	stringToLower(_hostName);
+	std::vector<t_serv>::const_iterator sv = servsList.servs.cend();
+	for (std::vector<t_serv>::const_iterator i = servsList.servs.cbegin(); i < servsList.servs.cend(); i++)
+	{
+		std::string	tmpServName = i->serverName;
+		stringToLower(tmpServName);
+		if (match(_hostName, tmpServName))
+			if (sv->serverName.length() < i->serverName.length()\
+				|| sv == servsList.servs.cend())
+				sv = i;
+	}
+	if (sv == servsList.servs.cend())
+		serv = &(servsList.servs[0]);
+	else
+		serv = &(*sv);
+	setHeaderState(servT, true);
+}
+
+bool		RequestData::findLocation()
+{
+	if (!serv)
+		{setHeaderState(locFind, false); return (false);}
+	constLocIter	itLoc = serv->locs.begin();
+	constLocIter	itBest = serv->locs.end();
+	size_t	pos = 0;
+	while (itLoc != serv->locs.end())
+	{
+		if ((pos = uri.find(itLoc->path)) == std::string::npos)
+			;
+		if (itBest == serv->locs.end())
+			itBest = itLoc;
+		else if (itLoc->path.length() >= itBest->path.length())
+			itBest = itLoc;
+		itLoc++;
+	}
+	if (itBest == serv->locs.end())	/* what path should return if location for such uri does not exist ? */
+	{
+		// location = &(serv->locs[0]);
+		location = NULL;
+		setHeaderState(locFind, false);
+		return (false);
+	}
+	else
+		location = &(*itBest);
+	size_t	root_len = itBest->root.length();
+	if (itBest->root.back() == '/')
+		pathToFile = itBest->root.substr(0, root_len - 1) + pathFromUri;
+	else
+		pathToFile = itBest->root + pathFromUri;
+	setHeaderState(locFind, true);
+	return (true);
+}
+
+void		RequestData::getCGIconfig()
+{
+
+}
+
+void		RequestData::procAuthorization()
+{
+	constMapIter	header;
+	qualityMap		m;
+
+	if ((header = reqHeads.find("authorization")) != reqHeads.end())
+	{
+		m = parseAcceptionLine(header->second, 0, 1);
+		setHeaderState(accChSet, m.first);
+		acceptCharset = m.second;
+	}
+}
+
 void		RequestData::prepareData()
 {
 	procHost();
 	procQualityHeaders();
 	procUserAgent();
 	procContentType();
-	uriParse();
+	uriParse(uri, true);
+	determineServer();
+	findLocation();
+	procAuthorization();
+	getCGIconfig();
 }
 
