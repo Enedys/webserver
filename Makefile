@@ -15,6 +15,7 @@ HEADERS			=	NewClient.hpp \
 					Server.hpp \
 					WebServer.hpp \
 					include_resources.hpp \
+					RequestData.hpp \
 
 SRC				=	Debugger.cpp \
 					Method.cpp \
@@ -29,6 +30,7 @@ SRC				=	Debugger.cpp \
 					WebServer.cpp \
 					NewClient.cpp \
 					base_utils.cpp \
+					RequestData.cpp \
 					main.cpp
 
 OBJ_DIR = ./bin/
@@ -39,7 +41,7 @@ all: $(NAME)
 
 $(NAME): $(OBJ_DIR) $(OBJS)
 	echo "Danone!"
-	clang++ $(FLAGS) $(OBJS) -o $(NAME)
+	clang++ -g $(FLAGS) $(OBJS) -o $(NAME)
 
 $(OBJ_DIR):
 	mkdir $(OBJ_DIR)
