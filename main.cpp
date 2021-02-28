@@ -11,7 +11,6 @@ void				printLog(Logger *_webLogger, std::string msg, int addInfo, Message::LogL
 
 int main()
 {
-
 	//Server myServer("127.0.0.1", 3535);
 	Parser	parser;
 	parser.parse("webserv.conf");
@@ -20,7 +19,7 @@ int main()
 	std::cout << parser.servers.size() << std::endl;
 	// return (0);
 
-	for (int i = 0; i < parser.servers.size(); i++)
+	for (int i = 0; i < parser.servers_ext.size(); i++)
 	{
 		std::cout << "Host: " << parser.servers_ext[i].host << "\tPort: " << parser.servers_ext[i].port << std::endl;
 		try

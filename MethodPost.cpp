@@ -16,9 +16,11 @@ MethodStatus MethodPost::processBody(const std::string &requestBody, MethodStatu
 	static int  var = 0;
 	// std::cout << "BOOOODY: " << requestBody << std::endl;
 	var += requestBody.length();
+	std::cout << "BODY: " << requestBody << "\n";
 	if (bodyStatus == inprogress)
 		return (inprogress);
 	std::cout << "size: " << var << std::endl;
+	var = 0;
 	return (ok);
 };
 

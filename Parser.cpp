@@ -570,6 +570,7 @@ void Parser::makeServExt()
 			newStruct.servs.push_back(servers[i]);
 		}
 	}
+	servers_ext.push_back(newStruct);
 }
 
 
