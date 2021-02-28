@@ -70,11 +70,10 @@ MethodStatus		Client::analizeHeaders()
 {
 	if (_statusCode)
 		return (createNewMethod());
-	
 	procData.setData(&_config, &_request.getHeadersMap(), &_request.getURI());
 	procData.prepareData(_request.getContentLength(), _request.getMethod(), _clientAddr);
 	MethodStatus	methodStatus = createNewMethod();
-
+	// std::cout << "HERE\n";git 
 	return (methodStatus);
 }
 
@@ -84,7 +83,7 @@ MethodStatus		Client::createNewMethod()
 		return (connectionClosed);
 	if (_statusCode)
 	{
-		_method = new MethodGet(*procData.serv, _statusCode, _request.getHeadersMap());
+		_method = new MethodGet(_statusCode, procData);
 		_state = createHeaders;
 		return (ok);
 	}
@@ -92,15 +91,15 @@ MethodStatus		Client::createNewMethod()
 		return (logicError);
 	const std::string method = _request.getStartLine().find("method")->second;
 	if (method == "GET")
-		_method = new MethodGet(*procData.serv, _statusCode, _request.getHeadersMap());
+		_method = new MethodGet(_statusCode, procData);
 	else if (method == "HEAD")
-		_method = new MethodHead(*procData.serv, _statusCode, _request.getHeadersMap());
+		_method = new MethodHead(_statusCode, procData);
 	else if (method == "OPTION")
-		_method = new MethodOption(*procData.serv, _statusCode, _request.getHeadersMap());
+		_method = new MethodOption(_statusCode, procData);
 	else if (method == "PUT")
-		_method = new MethodPut(*procData.serv, _statusCode, _request.getHeadersMap());
+		_method = new MethodPut(_statusCode, procData);
 	else if (method == "POST")
-		_method = new MethodPost(*procData.serv, _statusCode, _request.getHeadersMap());
+		_method = new MethodPost(_statusCode, procData);
 	return (ok);
 }
 

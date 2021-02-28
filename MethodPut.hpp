@@ -8,8 +8,8 @@ private:
     /* data */
 	MethodPut(/* args */);
 public:
-	MethodPut(t_serv const &config, int &status, stringMap const &headers) : 
-		AMethod(config, status, headers) {_type = PUT; };
+	MethodPut(int &status, RequestData const &data) : 
+		AMethod(status, data) {_type = PUT; };
 	~MethodPut();
 	MethodStatus	createHeader();
 	MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus);

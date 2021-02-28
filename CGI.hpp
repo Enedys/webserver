@@ -21,8 +21,8 @@ class CGI
 		int pid; // fork id
 		int status;
 		bool headersDone;
-		static std::string inputBuf;
-		static std::string outputBuf; // Smaller string, just to get data to send;
+		std::string inputBuf;
+		std::string outputBuf; // Smaller string, just to get data to send;
 		const char *execpath; // remove const?
 		char **args;
 		char **env;

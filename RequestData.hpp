@@ -1,3 +1,4 @@
+#pragma once
 #include "include_resources.hpp"
 #include "Parser.hpp"
 

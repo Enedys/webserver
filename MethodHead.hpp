@@ -8,8 +8,8 @@ private:
     /* data */
 	MethodHead(/* args */);
 public:
-	MethodHead(t_serv const &config, int &status, stringMap const &headers) :
-		AMethod(config, status, headers) {_type = HEAD;};
+	MethodHead(int &status, RequestData const &data) :
+		AMethod(status, data) {_type = HEAD;};
 	~MethodHead();
 	MethodStatus	createHeader();
 	MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus);
