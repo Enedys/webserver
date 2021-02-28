@@ -25,8 +25,8 @@ MethodStatus		Request::cleanRequest()
 	return (ok);
 }
 
-const stringMap		Request::getStartLine() const {return (startLine); };
-const stringMap		Request::getHeadersMap() const { return (headersMap); };
+const stringMap		&Request::getStartLine() const {return (startLine); };
+const stringMap		&Request::getHeadersMap() const { return (headersMap); };
 
 std::string const	&Request::getURI()
 {

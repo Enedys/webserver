@@ -30,8 +30,8 @@ public:
 	MethodStatus		cleanRequest();
 	size_t				getBufferResidual();
 	requestStatus		getRequestState() const;
-	const stringMap		getHeadersMap() const;
-	const stringMap		getStartLine() const;
+	const stringMap		&getHeadersMap() const;
+	const stringMap		&getStartLine() const;
 	std::string const	&getURI();
 	std::string const	&getMethod();
 	size_t				getContentLength();

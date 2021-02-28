@@ -15,8 +15,11 @@ int main()
 	//Server myServer("127.0.0.1", 3535);
 	Parser	parser;
 	parser.parse("webserv.conf");
+	
 	WebServer	myWebServer;
 	std::cout << parser.servers.size() << std::endl;
+	// return (0);
+
 	for (int i = 0; i < parser.servers.size(); i++)
 	{
 		std::cout << "Host: " << parser.servers_ext[i].host << "\tPort: " << parser.servers_ext[i].port << std::endl;

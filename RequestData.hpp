@@ -14,15 +14,11 @@ enum
 	equal = '=',
 };
 
-typedef struct	s_cgi_conf
-{
-
-}				t_cgi_conf;
-
 class RequestData
 {	
 	public:
-		RequestData(t_ext_serv const &s, stringMap const &rHs, std::string const &uri);
+		RequestData(t_ext_serv const *s, stringMap const *rHs, std::string const *uri);
+		RequestData();
 		typedef enum
 		{
 			host = 1,
@@ -49,10 +45,9 @@ class RequestData
 		std::string		pathInfo; //
 		std::string		queryUri;
 		std::string		fragmentUri;
-		std::vector<std::string>	
+		std::vector<std::string>
 						queryEnv;
 
-		std::string		authDecode;
 		s2IntMap		acceptCharset;
 		s2IntMap		acceptLanguage;
 		s2IntMap		contentLanguage;
@@ -61,13 +56,14 @@ class RequestData
 		int				errorMask;
 		int				in;
 		void			prepareData(size_t contLen, std::string method, sockaddr_in addr);
+		void			cleanData();
+		void			setData(t_ext_serv const *s, stringMap const *rHs, std::string const *uri);
 	
 	
 	private:
-		t_ext_serv const	&servsList;
-		stringMap const		&reqHeads;
-		std::string	const	&uri;
-		RequestData();
+		t_ext_serv const	*servsList;
+		stringMap const		*reqHeads;
+		std::string	const	*uri;
 
 		bool			isValidHost(std::string const &s, size_t port);
 		bool			isValidUserAgent(std::string const &s);
@@ -82,7 +78,7 @@ class RequestData
 		void			procContentType();
 		void			procHost();
 		bool			isValidPath();
-		void			uriParse(std::string const &uri, bool envNeed);
+		void			uriParse(std::string const *uri, bool envNeed);
 		void			determineServer();
 		bool			findLocation();
 		void			procAuthorization();

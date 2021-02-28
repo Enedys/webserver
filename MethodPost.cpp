@@ -5,7 +5,7 @@ MethodPost::~MethodPost()
 
 };
 
-MethodStatus	MethodPost::createHeader(std::string const &_path)
+MethodStatus	MethodPost::createHeader()
 {
 	return (ok);
 };
@@ -22,7 +22,7 @@ MethodStatus MethodPost::processBody(const std::string &requestBody, MethodStatu
 	return (ok);
 };
 
-MethodStatus	MethodPost::manageRequest(std::string const &path)
+MethodStatus	MethodPost::manageRequest()
 {
 	return (ok);
 };

@@ -20,10 +20,10 @@ public:
 	static const int			methodNums = 6;
 	static bool					isValidMethod(std::string const &method);
 
-	virtual MethodStatus	createHeader(std::string const &_path) = 0;
+	virtual MethodStatus	createHeader() = 0;
 	virtual MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus) = 0;
 	virtual MethodStatus	sendHeader(int socket) = 0;
-	virtual MethodStatus	manageRequest(std::string const &location) = 0;
+	virtual MethodStatus	manageRequest() = 0;
 	virtual MethodStatus	sendBody(int socket) = 0;
 	virtual ~AMethod();
 };

@@ -47,6 +47,7 @@ private:
 	int					_statusCode;
 	int					_socket;
 	t_ext_serv const	&_config;
+	RequestData			procData;
 
 
 
@@ -54,7 +55,7 @@ private:
 	MethodStatus		requestInterraction();
 	MethodStatus		responseInterraction();
 	MethodStatus		refreshClient();
-	MethodStatus		createNewMethod(t_serv const &serv);
+	MethodStatus		createNewMethod();
 	MethodStatus		analizeHeaders();
 
 	t_serv const		*determineServer();

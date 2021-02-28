@@ -57,7 +57,7 @@ Client::conditionCode	Client::getNextState(MethodStatus status)
 	if (status == error)
 	{
 		if (_state <= analizeHeader)
-			createNewMethod(_config.servs[0]);
+			createNewMethod();
 		return (createHeaders);
 	}
 	else if (status == ok)
@@ -69,27 +69,22 @@ Client::conditionCode	Client::getNextState(MethodStatus status)
 MethodStatus		Client::analizeHeaders()
 {
 	if (_statusCode)
-		return (createNewMethod(_config.servs[0]));
-	RequestData	data(_config, _request.getHeadersMap(), _request.getURI());
-	data.prepareData();
+		return (createNewMethod());
 	
-	t_serv const	*serv = determineServer();
-	if (!serv)
-		return (createNewMethod(_config.servs[0]));
-	
-	
+	procData.setData(&_config, &_request.getHeadersMap(), &_request.getURI());
+	procData.prepareData(_request.getContentLength(), _request.getMethod(), _clientAddr);
 	MethodStatus	methodStatus = createNewMethod();
 
 	return (methodStatus);
 }
 
-MethodStatus		Client::createNewMethod(t_serv const &serv)
+MethodStatus		Client::createNewMethod()
 {
 	if (_socket == -1)
 		return (connectionClosed);
 	if (_statusCode)
 	{
-		_method = new MethodGet(_config, _statusCode, _request.getHeadersMap());
+		_method = new MethodGet(*procData.serv, _statusCode, _request.getHeadersMap());
 		_state = createHeaders;
 		return (ok);
 	}
@@ -97,15 +92,15 @@ MethodStatus		Client::createNewMethod(t_serv const &serv)
 		return (logicError);
 	const std::string method = _request.getStartLine().find("method")->second;
 	if (method == "GET")
-		_method = new MethodGet(_config, _statusCode, _request.getHeadersMap());
+		_method = new MethodGet(*procData.serv, _statusCode, _request.getHeadersMap());
 	else if (method == "HEAD")
-		_method = new MethodHead(_config, _statusCode, _request.getHeadersMap());
+		_method = new MethodHead(*procData.serv, _statusCode, _request.getHeadersMap());
 	else if (method == "OPTION")
-		_method = new MethodOption(_config, _statusCode, _request.getHeadersMap());
+		_method = new MethodOption(*procData.serv, _statusCode, _request.getHeadersMap());
 	else if (method == "PUT")
-		_method = new MethodPut(_config, _statusCode, _request.getHeadersMap());
+		_method = new MethodPut(*procData.serv, _statusCode, _request.getHeadersMap());
 	else if (method == "POST")
-		_method = new MethodPost(_config, _statusCode, _request.getHeadersMap());
+		_method = new MethodPost(*procData.serv, _statusCode, _request.getHeadersMap());
 	return (ok);
 }
 
@@ -128,12 +123,10 @@ MethodStatus		Client::requestInterraction()
 			_state = sendingErrorState;
 
 	if (_state == manageRequest)
-		_state = getNextState(_method->manageRequest(\
-					getRequestPath(_request.getURI())));
+		_state = getNextState(_method->manageRequest());
 
 	if (_state == createHeaders)
-		_state = getNextState(_method->createHeader(\
-					getRequestPath(_request.getURI())));
+		_state = getNextState(_method->createHeader());
 
 	if (stateBefore == _state)
 		return (inprogress);
