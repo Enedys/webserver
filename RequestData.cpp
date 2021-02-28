@@ -486,7 +486,7 @@ static int	match(std::string const &s1, std::string const &s2, size_t i1 = 0, si
 
 void		RequestData::determineServer()
 {
-	if ((errorMask & host) || !(errorMask & path) || !(errorMask & query))
+	if ((errorMask & host) || (errorMask & path) || (errorMask & query)) // возможно нужна проверка только на существование хоста?
 		{setHeaderState(servT, false); serv = NULL; return ;}
 	size_t			portPos = hostName.find_last_of(':');
 	std::string		_hostName = hostName.substr(0, portPos);
@@ -543,9 +543,74 @@ bool		RequestData::findLocation()
 	return (true);
 }
 
-void		RequestData::getCGIconfig()
+std::string	getClientIp(in_addr_t ip)
 {
+	uint16_t x = 0x0001;
+	std::string	clientIp;
+	int n1, n2, n3, n4;
+	n1 = ip >> 24;
+	n2 = ((int32_t)(ip << 8)) >> 24;
+	n3 = ((int32_t)(ip << 16)) >> 24;
+	n4 = ((int32_t)(ip << 24)) >> 24;
+	if (*((uint8_t *) &x))
+	{
+		int	tmp;
+		tmp = n4;
+		n4 = n1;
+		n1 = tmp;
+		tmp = n3;
+		n3 = n2;
+		n2 = tmp;
+	}
+	clientIp = size2Hex(n1, 10) + size2Hex(n2, 10) +size2Hex(n3, 10) + size2Hex(n4, 10);
+	return (clientIp);
+}
 
+void		RequestData::getCGIconfig(size_t contLen, std::string method, sockaddr_in addr)
+{
+	if (!serv || !location || (errorMask & query))
+		{setHeaderState(cgiE, false); return ;}
+	size_t dotPos = pathToFile.find_last_of('.');
+	std::string	extension = "";
+	if (dotPos != std::string::npos)
+		extension = pathToFile.substr(dotPos + 1); 
+	if (location->cgi.find(extension) == location->cgi.end())
+		{setHeaderState(cgiE, false); return ;}
+	if (!(cgi_conf = (char **)malloc(18 * sizeof(char *))))
+		{setHeaderState(cgiE, false); return ;}
+	int	i = 0;
+	if ((in & auth) && !(errorMask & auth))
+		cgi_conf[i++] = strdup("AUTH_TYPE=Basic");
+	cgi_conf[i++] = strdup("GATEWAY_INTERFACE=CGI/1.1");
+	cgi_conf[i++] = strdup("SERVER_PROTOCOL=HTTP/1.1");
+	cgi_conf[i++] = strdup("SERVER_SOFTWARE=BSHABILLUM/1.1");
+	cgi_conf[i++] = strdup(("SERVER_NAME=" + serv->serverName).c_str());
+	cgi_conf[i++] = strdup(("SERVER_PORT=" + size2Hex(serv->port, 10)).c_str());
+
+	if ((in & query) && !(errorMask & query))
+		cgi_conf[i++] = strdup(("QUERY_STRING=" + queryUri).c_str());
+	cgi_conf[i++] = strdup(("REQUEST_URI=" + uri).c_str());
+	if (!pathInfo.empty())
+	{
+		cgi_conf[i++] = strdup("PATH_INFO=");
+		cgi_conf[i++] = strdup("PATH_TRANSLATED=");
+	}
+	cgi_conf[i++] = strdup(("SCRIPT_NAME=" + pathFromUri).c_str());
+
+	cgi_conf[i++] = strdup(("CONTENT_TYPE=" + contentType["type"]).c_str());
+	cgi_conf[i++] = strdup(("CONTENT_LENGTH=" + size2Hex(contLen, 10)).c_str());
+
+	
+	cgi_conf[i++] = strdup(("REMOTE_ADDR=" + getClientIp(addr.sin_addr.s_addr)).c_str());
+	cgi_conf[i++] = strdup(("REQUEST_METHOD=" + method).c_str());
+	if ((in & auth) && !(errorMask & auth) && !(errorMask & host))
+	{
+		std::string	username = location->authLogPass.substr(0,\
+								location->authLogPass.find_first_of(':'));
+		cgi_conf[i++] = strdup(("REMOTE_IDENT=" + username + '.' + hostName).c_str());
+		cgi_conf[i++] = strdup(("REMOTE_USER=" + username).c_str());
+	}
+	cgi_conf[i] = NULL;
 }
 
 void		RequestData::procAuthorization()
@@ -554,21 +619,28 @@ void		RequestData::procAuthorization()
 
 	if ((header = reqHeads.find("authorization")) != reqHeads.end())
 	{
-
 		if (!location)
 			{setHeaderState(auth, false); return ;}
-		if (location->authLogPass == "")
-			{setHeaderState(auth, true); return ;}
-			// Пришел запрос на авторизацию, но она не требуется.
+		if (location->authLogPass == "" || location->auth == "")
+			{setHeaderState(auth, true); return ;} // Пришел запрос на авторизацию, но она не требуется.
+		std::string	authCont = header->second;
+		size_t spacePos = authCont.find(' ', 0);
+		if (spacePos == std::string::npos)
+			{setHeaderState(auth, false); return ;}
+		std::string	authType = authCont.substr(0, spacePos);
+		stringToLower(authType);
+		if (authType != "basic")
+			{setHeaderState(auth, false); return ;}
+		std::string encodedReq = authCont.substr(spacePos + 1);
 		std::string encoded = base64encode(location->authLogPass);
-		if (encoded == header->second)
+		if (encoded == encodedReq)
 			{setHeaderState(auth, true); return ;}
 		else
 			{setHeaderState(auth, false); return ;}
 	}
 }
 
-void		RequestData::prepareData()
+void		RequestData::prepareData(size_t contLen, std::string method, sockaddr_in addr)
 {
 	procHost();
 	procQualityHeaders();
@@ -578,6 +650,6 @@ void		RequestData::prepareData()
 	determineServer();
 	findLocation();
 	procAuthorization();
-	getCGIconfig();
+	getCGIconfig(contLen, method, addr);
 }
 

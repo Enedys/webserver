@@ -36,6 +36,19 @@ std::string const	&Request::getURI()
 	return (startLine["uri"]);
 }
 
+std::string const	&Request::getMethod()
+{
+	constMapIter	uri = startLine.find("method");
+	if (uri == startLine.end())
+		startLine["method"] = "";
+	return (startLine["method"]);
+}
+
+size_t				Request::getContentLength()
+{
+	return (_bodySize);
+}
+
 MethodStatus		Request::setErrorCode(int code)
 {
 	_errorCode = code;

@@ -35,12 +35,13 @@ public:
 	MethodStatus		interract(int newData, int allow2Write);
 
 
-	Client(int socket, t_ext_serv const &config);
+	Client(int socket, sockaddr_in adr, t_ext_serv const &config);
 	~Client();
 
 private:
 	Client();
 	conditionCode		_state;
+	sockaddr_in			_clientAddr;
 	Request				_request;
 	AMethod				*_method;
 	int					_statusCode;

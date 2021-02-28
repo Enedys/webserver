@@ -1,7 +1,7 @@
 #include "NewClient.hpp"
 
-Client::Client(int socket, t_ext_serv const &config) :
-	_socket(socket), _statusCode(0), _request(socket, _statusCode),\
+Client::Client(int socket, sockaddr_in adr, t_ext_serv const &config) :
+	_socket(socket), _clientAddr(adr), _statusCode(0), _request(socket, _statusCode),\
 	_config(config), _method(NULL), _state(defaultState)
 {
 }

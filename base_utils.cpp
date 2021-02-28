@@ -41,8 +41,8 @@ std::string	size2Hex(size_t num, int base = 16)
 	std::string		res;
 	while (num)
 	{
-		res.insert(res.begin(), dict[num % 16]);
-		num /= 16;
+		res.insert(res.begin(), dict[num % base]);
+		num /= base;
 	}
 	return (res);
 }

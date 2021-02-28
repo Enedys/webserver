@@ -105,7 +105,7 @@ int						WebServer::acceptNewConnections()
 				return (1);
 			}
 			fcntl(newSocket, F_SETFL, O_NONBLOCK);
-			_clientList.push_back(new Client(newSocket, (*sIt)->getConfig()));
+			_clientList.push_back(new Client(newSocket, clientName, (*sIt)->getConfig()));
 		}
 		sIt++;
 	}

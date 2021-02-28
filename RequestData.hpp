@@ -37,14 +37,16 @@ class RequestData
 			query = 1 << 9,
 			servT = 1 << 10,
 			locFind = 1 << 11,
+			cgiE = 1 << 12,
 		}		headerNum;
 
 		t_serv const	*serv;
 		s_loc const		*location;
-		t_cgi_conf		cgi_conf;
+		char**			cgi_conf;
 		std::string		hostName;
 		std::string		pathFromUri;
 		std::string		pathToFile;
+		std::string		pathInfo; //
 		std::string		queryUri;
 		std::string		fragmentUri;
 		std::vector<std::string>	
@@ -58,7 +60,7 @@ class RequestData
 
 		int				errorMask;
 		int				in;
-		void			prepareData();
+		void			prepareData(size_t contLen, std::string method, sockaddr_in addr);
 	
 	
 	private:
@@ -84,6 +86,6 @@ class RequestData
 		void			determineServer();
 		bool			findLocation();
 		void			procAuthorization();
-		void			getCGIconfig();
+		void			getCGIconfig(size_t contLen, std::string method, sockaddr_in addr);
 		std::pair<std::string, int>		getEnvVar(std::string const &s, size_t start);
 };

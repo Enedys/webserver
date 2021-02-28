@@ -33,12 +33,14 @@ public:
 	const stringMap		getHeadersMap() const;
 	const stringMap		getStartLine() const;
 	std::string const	&getURI();
+	std::string const	&getMethod();
+	size_t				getContentLength();
 
 private:
 	Request();
 	/* Fiels */
 	static const size_t					_headBufsize = 1024;
-	static const size_t					_bodyBufsize = 304;
+	static const size_t					_bodyBufsize = 16386;
 	std::map<std::string, std::string>	startLine;
 	std::map<std::string, std::string>	headersMap;
 	requestStatus						requestStage;
