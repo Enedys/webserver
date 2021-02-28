@@ -12,25 +12,32 @@ int			MethodGet::generateIdxPage(std::string const &path){
 	DIR				*dir;
 	struct dirent	*cur;
 
+	std::cout << "path: " << path << std::cout;
 	dir = opendir(path.c_str());//if -1
 	if (!dir){//EACCES
 		_statusCode = errorOpeningURL;
 		return -1;//
 	}
-	_body = "<html>\n<body>\n"
+	_body = "<html>\n \
+			<head><style> \
+					body {background-color: rgb(252, 243, 233);}\
+					h1   {color: lightseagreen;}\
+					p    {color: rgb(60, 179, 113);}\
+					a {color: rgba(255, 99, 71, 0.95);}\
+			</style></head>\
+			<body>\n"
 			"<h1>Directory listing:</h1>\n";
 	errno = 0;
 	while ((cur = readdir(dir)) != NULL && errno == 0){
 		if (cur->d_name[0] == '.')
 			continue ;//
 		_body += "<a href=\"" + path;
-		if (path != "/")
-			_body += "/";
+		// if (path != "/")
+		// 	_body += "/";
 		_body += cur->d_name;
 		_body += "\">";
 		_body += cur->d_name;
 		_body += "</a><br>\n";
-		// std::cout << "_body" << _body << std::endl;
 	}
 	closedir(dir);
 	_body += "</body>\n</html>\n";
@@ -127,12 +134,13 @@ MethodStatus		MethodGet::sendResponse(int socket)
 		size_t headersize = response.length();
 
 		if (!_body.empty()){//only for autoindex
-			_bytesToSend = _body.length() + headersize - 1;//-1
+			_bytesToSend = _body.length() + headersize;// - 1;//-1
 			response += _body;
 			size_t pos = response.find("Content-Length", 0);
 			pos += 16;
 			size_t fin = response.find_first_of(CRLF, pos);
 			response.replace(pos, fin - pos, std::to_string(_body.length()));//to_string
+			std::cout << "1response:\n" << response << "\n" << std::cout;
 		}
 		else {
 			struct stat sbuf;
@@ -140,13 +148,15 @@ MethodStatus		MethodGet::sendResponse(int socket)
 			_bytesToSend = sbuf.st_size + headersize;
 			readBuf -= headersize;
 		}
+		std::cout << "response:\n" << response << "\n" << std::cout;
 	}
-	if (!_remainder.empty()){
+	if (!_remainder.empty()){//only if not a full response was sent (by send)
 		readBuf = _bs - _remainder.length();
 		response = _remainder;
 	}
 	if (_body.empty()){//not listing -> //no if braces without autoindex
 		readBytes = read(_fd, buf, readBuf);
+		std::cout << "_________readBytes: " << readBytes << "\n" << std::cout;
 		if (readBytes < 0){
 			_statusCode = errorReadingURL;
 			close(_fd);
@@ -174,11 +184,14 @@ MethodStatus		MethodGet::sendResponse(int socket)
 	};
 	// _remainder.clear();//
 	_sentBytesTotal += sentBytes;
-	std::cout << "_bytesToSend" << _bytesToSend << " _sentBytesTotal" << _sentBytesTotal << std::endl;
+	std::cout << "****\t\t\t\t\t\t\t\t_bytesToSend: " << _bytesToSend << " _sentBytesTotal: " << _sentBytesTotal << std::endl;
 	if (_sentBytesTotal < _bytesToSend){
 		_statusCode = okSendingInProgress;
 		return inprogress;
 	}
+
+	_statusCode = okSuccess;//
 	close(_fd);
+	_body.clear();
 	return ok;
 }
