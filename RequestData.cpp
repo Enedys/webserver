@@ -67,7 +67,7 @@ void		RequestData::procHost()
 {
 	bool			var;
 	hostName = reqHeads.find("host")->second;
-	var = isValidHost(hostName, servs.port);
+	var = isValidHost(hostName, servsList.port);
 	setHeaderState(host, var);
 }
 
@@ -551,13 +551,20 @@ void		RequestData::getCGIconfig()
 void		RequestData::procAuthorization()
 {
 	constMapIter	header;
-	qualityMap		m;
 
 	if ((header = reqHeads.find("authorization")) != reqHeads.end())
 	{
-		m = parseAcceptionLine(header->second, 0, 1);
-		setHeaderState(accChSet, m.first);
-		acceptCharset = m.second;
+
+		if (!location)
+			{setHeaderState(auth, false); return ;}
+		if (location->authLogPass == "")
+			{setHeaderState(auth, true); return ;}
+			// Пришел запрос на авторизацию, но она не требуется.
+		std::string encoded = base64encode(location->authLogPass);
+		if (encoded == header->second)
+			{setHeaderState(auth, true); return ;}
+		else
+			{setHeaderState(auth, false); return ;}
 	}
 }
 
