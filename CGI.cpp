@@ -28,9 +28,8 @@ void CGI::initPipes()
 	}
 }
 
-CGI::CGI(char *execpath, char **args, char **env)
+void CGI::initFork()
 {
-	initPipes();
 	if ((pid = fork()) < 0)
 	{
 		freeMem();
@@ -46,10 +45,16 @@ CGI::CGI(char *execpath, char **args, char **env)
 		std::cout << "ALARM! EXECVE FAILED!\n"; // what to do?
 		exit(4);
 	}
+}
+
+CGI::CGI(char *execpath, char **args, char **env)
+{
+	initPipes();
+	initFork();
 	headersDone = false;
 }
 
-void CGI::cgiInput(const std::string &str) // inputting body
+void CGI::input(const std::string &str) // inputting body
 {
 	int r;
 	if (inputBuf.empty())
@@ -80,7 +85,7 @@ void CGI::inputFromBuf()
 	}
 }
 
-MethodStatus CGI::cgiOut(std::string &str) // mb gonna change it later. Read and write into pipes and outputting. Less memory usage
+MethodStatus CGI::output(std::string &str) // mb gonna change it later. Read and write into pipes and outputting. Less memory usage
 {
 	char buf[BUFSIZ];
 	size_t find;
@@ -159,6 +164,30 @@ void CGI::freeMem()
 	close(pipeout[0]);
 	inputBuf.clear();
 	outputBuf.clear();
+}
+
+void CGI::setExecpath(const char *expath) {
+	CGI::execpath = expath;
+}
+
+void CGI::setArgs(char **argv) {
+	CGI::args = argv;
+}
+
+void CGI::setEnv(char **argve) {
+	CGI::env = argve;
+}
+
+void CGI::init()
+{
+	initPipes();
+	initFork();
+	headersDone = false;
+}
+
+bool CGI::isHeadersDone() const
+{
+	return headersDone;
 }
 
 const char *CGI::forkFailed::what() const throw()

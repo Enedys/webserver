@@ -6,7 +6,7 @@
 // Pragma - * Turns document caching on and off.
 // Status (cannot be sent as part of a complete header).
 // class constructor input: **env in constructor, args, execpath;
-// class methods: void cgiIn(const std::string &str); MethodStatus cgiOut(?);
+// class methods: void cgiIn(const std::string &str); MethodStatus output(?);
 // TODO: args: arg[0] = executable file; arg[1] = location root; arg[2] = NULL
 #ifndef CGI_HPP
 #define CGI_HPP
@@ -24,17 +24,26 @@ class CGI
 		stringMap _headersMap;
 		static std::string inputBuf;
 		static std::string outputBuf; // Smaller string, just to get data to send;
-
+		const char *execpath; // remove const?
+		char **args;
+		char **env;
 		void parseHeaders(std::string str);
 		void inputFromBuf();
 		void freeMem();
 		void initPipes();
-
-		CGI();
+		void initFork();
 	public:
+		CGI();
 		CGI(char *execpath, char **args, char **env); // prepare cgi process, prepare forks, etc
-		void cgiInput(const std::string &str); // ready to input;
-		MethodStatus cgiOut(std::string &str); // ready to output
+		void init(); // if default constructor, this func need to be called;
+		void input(const std::string &str); // ready to input;
+		MethodStatus output(std::string &str); // ready to output
+		void setExecpath(const char *execpat);
+		void setArgs(char **args);
+
+	bool isHeadersDone() const;
+
+	void setEnv(char **env);
 		~CGI();
 		class pipeFailed: public std::exception
 		{
