@@ -126,7 +126,7 @@ bool		RequestData::isValidHost(std::string const &s1, size_t port)
 	size_t			portPos = s1.find_last_of(':');
 	if (portPos != std::string::npos)
 	{
-		std::string portReq = s1.substr(portPos);
+		std::string portReq = s1.substr(portPos + 1);
 		std::string servPort = size2Hex(port, 10);
 		if (portReq != servPort)
 			return (false);
@@ -614,7 +614,7 @@ std::string	getClientIp(in_addr_t ip)
 		n3 = n2;
 		n2 = tmp;
 	}
-	clientIp = size2Hex(n1, 10) + size2Hex(n2, 10) +size2Hex(n3, 10) + size2Hex(n4, 10);
+	clientIp = size2Hex(n1, 10) + '.' + size2Hex(n2, 10) + '.' + size2Hex(n3, 10) + '.' + size2Hex(n4, 10);
 	return (clientIp);
 }
 
@@ -663,6 +663,8 @@ void		RequestData::getCGIconfig(size_t contLen, std::string method, sockaddr_in 
 		cgi_conf[i++] = strdup(("REMOTE_USER=" + username).c_str());
 	}
 	cgi_conf[i] = NULL;
+	for (int k = 0; k < i; k++)
+		std::cout << cgi_conf[k] << std::endl;
 }
 
 void		RequestData::procAuthorization()

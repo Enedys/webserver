@@ -43,13 +43,13 @@ all: $(NAME)
 
 $(NAME): $(OBJ_DIR) $(OBJS)
 	echo "Danone!"
-	clang++ -g $(FLAGS) $(OBJS) -o $(NAME)
+	clang++ -g -D_GLIBCXX_DEBUG $(FLAGS) $(OBJS) -o $(NAME)
 
 $(OBJ_DIR):
 	mkdir $(OBJ_DIR)
 
 $(OBJ_DIR)%.o: %.cpp
-	clang++ -c -g $< -o $@
+	clang++ -c -g -D_GLIBCXX_DEBUG $< -o $@
 
 clean:
 	rm -f $(OBJS)
