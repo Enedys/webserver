@@ -9,6 +9,7 @@
 // ** autoindex
 // ** default file to answer if the request is a directory
 // ** execute CGI based on certain file extension (for example .php)
+// ** make the route able to accept uploaded files and configure where it should be saved
 // tokens: server_name, listen, location, root, autoindex, error_page [NUM], {, }
 // listen -> HOST:IP
 // server_name -> STRING
@@ -39,6 +40,10 @@ struct s_loc
 	std::string root;
 	std::string fileRequestIsDir;
 	std::map<std::string, std::string> cgi;
+	std::string auth;
+	std::string authLogPass;
+	bool uploadPass;
+	std::string uploadStore;
 	bool autoindex;
 	bool getAvailable;
 	bool postAvailable;
@@ -116,6 +121,10 @@ class Parser
 		void 	getLocFileIsDir();
 		void 	getLocDenyMethod();
 		void 	getLocCGI();
+		void 	getLocAuth();
+		void	getLocLogPass();
+		void	getLocUploadPass();
+		void 	getLocUploadStore();
 		void 	initServ();
 		void 	initLoc();
 
