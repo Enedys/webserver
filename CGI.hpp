@@ -21,7 +21,6 @@ class CGI
 		int pid; // fork id
 		int status;
 		bool headersDone;
-		stringMap _headersMap;
 		static std::string inputBuf;
 		static std::string outputBuf; // Smaller string, just to get data to send;
 		const char *execpath; // remove const?
@@ -40,10 +39,8 @@ class CGI
 		MethodStatus output(std::string &str); // ready to output
 		void setExecpath(const char *execpat);
 		void setArgs(char **args);
-
-	bool isHeadersDone() const;
-
-	void setEnv(char **env);
+		bool isHeadersDone() const;
+		void setEnv(char **env);
 		~CGI();
 		class pipeFailed: public std::exception
 		{
@@ -57,6 +54,7 @@ class CGI
 		{
 				virtual const char *what() const throw();
 		};
+		stringMap _headersMap;
 };
 
 

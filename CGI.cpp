@@ -85,6 +85,50 @@ void CGI::inputFromBuf()
 	}
 }
 
+//MethodStatus CGI::output(std::string &str) // mb gonna change it later. Read and write into pipes and outputting. Less memory usage
+//{
+//	char buf[BUFSIZ];
+//	size_t find;
+//	int r;
+//	r = read(pipeout[1], buf, BUFSIZ); // read < 0 = pipe is empty..
+//	if (r < -1)
+//	{
+//		int wp = waitpid(pid, &status, WNOHANG); // returns > 0 if process stopped;
+//		if (status == 1024)
+//		{
+//			freeMem();
+//			return (error); // execve failed;
+//		}
+//		if (wp > 0)
+//		{
+//			freeMem();
+//			return (ok);
+//		}
+//		else
+//			return (inprogress);
+//	}
+//	if (!headersDone) // headers ready for parser
+//	{
+//		str = outputBuf + str;
+//		if ((find = str.find("\n\n")) != std::string::npos)
+//		{
+//			parseHeaders(str.substr(0, find)); // todo: test how it works
+//			str = str.substr(find + 2, str.size()); //
+//			headersDone = true;
+//		}
+//		else
+//		{
+//			outputBuf = str;
+//		}
+//	}
+//	else
+//	{
+//		str = buf;
+//	}
+//	inputFromBuf();
+//	return (inprogress);
+//}
+
 MethodStatus CGI::output(std::string &str) // mb gonna change it later. Read and write into pipes and outputting. Less memory usage
 {
 	char buf[BUFSIZ];
@@ -113,17 +157,16 @@ MethodStatus CGI::output(std::string &str) // mb gonna change it later. Read and
 		if ((find = str.find("\n\n")) != std::string::npos)
 		{
 			parseHeaders(str.substr(0, find)); // todo: test how it works
-			str = str.substr(find + 2, str.size()); //
+			str = str.substr(find + 2, str.size());
+			outputBuf.clear();
 			headersDone = true;
 		}
-		else
-		{
-			outputBuf = str;
-		}
+		outputBuf = str;
 	}
 	else
 	{
-		str = buf;
+		str = outputBuf + buf;
+		outputBuf.clear();
 	}
 	inputFromBuf();
 	return (inprogress);

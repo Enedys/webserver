@@ -34,11 +34,29 @@ MethodStatus	MethodPost::manageRequest(std::string const &path)
 
 MethodStatus	MethodPost::sendBody(int socket)
 {
-	return (ok);
+	MethodStatus status;
+	std::string str;
+	status = cgi.output(str);
+	send(socket, str.c_str(), str.length(), MSG_DONTWAIT); // TODO buffer!!
+	if (status == ok)
+		send(socket, "\r\n\r\n", 4, MSG_DONTWAIT);
+	return (status);
 };
 
 MethodStatus	MethodPost::sendHeader(int socket)
 {
-
-	return (AMethod::sendHeader(socket));
+	std::string str;
+	while (!cgi.isHeadersDone())
+		cgi.output(str);
+	// output str to socket, probably not;
+	std::string st = "HTTP/1.1 200 OK\r\n";
+	send(socket, st.c_str(), st.length(), MSG_DONTWAIT);
+	for (auto it = _headersMap.begin(); it != _headersMap.end(); ++it)
+	{
+		send(socket, it->first.c_str(), it->first.length(), MSG_DONTWAIT);
+		send(socket, ": ", 2, MSG_DONTWAIT);
+		send(socket, it->second.c_str(), it->second.length(), MSG_DONTWAIT);
+		send(socket, "\r\n", 1, MSG_DONTWAIT);
+	}
+	return (ok);
 };
