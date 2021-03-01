@@ -16,12 +16,12 @@ void CGI::initPipes()
 	/*
 	 * next we need to set fd as unblockable, so we won't hang at write function. Write will return -1 if pipe is full;
  	 */
-	if (fcntl(pipein[0], F_SETFL, O_NONBLOCK) < 0)
+	if (fcntl(pipein[1], F_SETFL, O_NONBLOCK) < 0)
 	{
 		freeMem();
 		throw CGI::lockCanNotSet();
 	}
-	if (fcntl(pipeout[1], F_SETFL, O_NONBLOCK) < 0)
+	if (fcntl(pipeout[0], F_SETFL, O_NONBLOCK) < 0)
 	{
 		freeMem();
 		throw CGI::lockCanNotSet();
@@ -37,10 +37,10 @@ void CGI::initFork()
 	}
 	if (pid == 0)
 	{
-		dup2(pipein[1], 0);
-		close(pipein[1]);
-		dup2(pipeout[0], 1);
-		close(pipeout[0]);
+		dup2(pipein[0], 0);
+		close(pipein[0]);
+		dup2(pipeout[1], 1);
+		close(pipeout[1]);
 		execve(execpath, args, env);
 		std::cout << "ALARM! EXECVE FAILED!\n"; // what to do?
 		exit(4);
@@ -57,9 +57,13 @@ CGI::CGI(char *execpath, char **args, char **env)
 void CGI::input(const std::string &str) // inputting body
 {
 	int r;
+	if (inputBuf.empty() && str.empty())
+	{
+		close(pipein[1]);
+	}
 	if (inputBuf.empty())
 	{
-		r = write(pipein[0], str.c_str(), str.length());
+		r = write(pipein[1], str.c_str(), str.length());
 		if (r == -1) // pipe is absolutely full
 			inputBuf += str;
 		else if (r < str.size()) // pipe is full;
@@ -67,7 +71,7 @@ void CGI::input(const std::string &str) // inputting body
 	}
 	else
 	{
-		r = write(pipein[0], inputBuf.c_str(), 8192); // TODO: set bufsize
+		r = write(pipein[1], inputBuf.c_str(), 8192); // TODO: set bufsize
 		if (r > 0 && r < inputBuf.size())
 			inputBuf = inputBuf.substr(r, inputBuf.size());
 		inputBuf += str;
@@ -79,7 +83,7 @@ void CGI::inputFromBuf()
 	if (!inputBuf.empty())
 	{
 		int r;
-		r = write(pipein[0], inputBuf.c_str(), 8192); // TODO: set bufsize
+		r = write(pipein[1], inputBuf.c_str(), 8192); // TODO: set bufsize
 		if (r > 0 && r < inputBuf.size())
 			inputBuf = inputBuf.substr(r, inputBuf.size());
 	}
@@ -134,8 +138,8 @@ MethodStatus CGI::output(std::string &str) // mb gonna change it later. Read and
 	char buf[BUFSIZ];
 	size_t find;
 	int r;
-	r = read(pipeout[1], buf, BUFSIZ); // read < 0 = pipe is empty..
-	if (r < -1)
+	r = read(pipeout[0], buf, BUFSIZ); // read < 0 = pipe is empty..
+	if (r < 0)
 	{
 		int wp = waitpid(pid, &status, WNOHANG); // returns > 0 if process stopped;
 		if (status == 1024)
@@ -151,19 +155,21 @@ MethodStatus CGI::output(std::string &str) // mb gonna change it later. Read and
 		else
 			return (inprogress);
 	}
-	if (!headersDone) // headers ready for parser
-	{
-		str = outputBuf + str;
-		if ((find = str.find("\n\n")) != std::string::npos)
-		{
-			parseHeaders(str.substr(0, find)); // todo: test how it works
-			str = str.substr(find + 2, str.size());
-			outputBuf.clear();
-			headersDone = true;
-		}
-		outputBuf = str;
-	}
-	else
+	std::cout << "!!!!\n\n";
+	std::cout << buf << std::endl;
+//	if (!headersDone) // headers ready for parser
+//	{
+//		str = outputBuf + str;
+//		if ((find = str.find("\n\n")) != std::string::npos)
+//		{
+//			parseHeaders(str.substr(0, find)); // todo: test how it works
+//			str = str.substr(find + 2, str.size());
+//			outputBuf.clear();
+//			headersDone = true;
+//		}
+//		outputBuf = str;
+//	}
+//	else
 	{
 		str = outputBuf + buf;
 		outputBuf.clear();
@@ -210,11 +216,11 @@ void CGI::freeMem()
 }
 
 void CGI::setExecpath(const char *expath) {
-	CGI::execpath = expath;
+	this->execpath = expath;
 }
 
 void CGI::setArgs(char **argv) {
-	CGI::args = argv;
+	this->args = argv;
 }
 
 void CGI::setEnv(char **argve) {
