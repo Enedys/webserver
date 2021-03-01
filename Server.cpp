@@ -102,13 +102,16 @@ s_loc const		*Server::findLocation(t_serv const *serv, std::string const &script
 	s_loc const	*location;
 	if (!serv)
 		return (NULL);
+	std::cout << "SNAME: " << script_name << std::endl;
 	constLocIter	itLoc = serv->locs.begin();
 	constLocIter	itBest = serv->locs.end();
-	size_t	pos = 0;
 	while (itLoc != serv->locs.end())
 	{
-		if ((pos = script_name.find(itLoc->path)) == std::string::npos)
-			;
+		if (script_name.find(itLoc->path) == std::string::npos)
+		{
+			itLoc++;
+			continue;
+		}
 		if (itBest == serv->locs.end())
 			itBest = itLoc;
 		else if (itLoc->path.length() >= itBest->path.length())
@@ -119,5 +122,6 @@ s_loc const		*Server::findLocation(t_serv const *serv, std::string const &script
 		return (NULL);
 	else
 		location = &(*itBest);
+	std::cout << "VOTE: " << location->path << '\n';
 	return (location);
 }

@@ -9,6 +9,7 @@ RequestData::RequestData(t_ext_serv const *s,\
 	_method = &rFl->find("method")->second;
 	serv = NULL;
 	location = NULL;
+	cgi_conf = NULL;
 	badalloc_index = -1;
 };
 
@@ -17,6 +18,7 @@ RequestData::RequestData()
 	location = NULL;	serv = NULL;
 	_servsList = NULL;	_uri = NULL;
 	_reqHeads = NULL;	_method = NULL;
+	cgi_conf = NULL;
 	error_code = 0;	errorMask = 0;	in = 0;
 	badalloc_index = -1;
 }
@@ -33,6 +35,7 @@ void		RequestData::cleanData()
 	uri.cleanData();
 	cleanCGIenv();
 	badalloc_index = -1;
+	cgi_conf = NULL;
 }
 
 void		RequestData::setData(t_ext_serv const *s,\
@@ -500,7 +503,7 @@ void		RequestData::procCGI(size_t contLen, sockaddr_in addr)
 {
 	if (!serv || !location || (errorMask & e_uri))
 		return (setHeaderState(e_cgi, false));
-	if (location->cgi.find(uri.extension) != location->cgi.end())
+	if (location->cgi.find(uri.extension) == location->cgi.end())
 		return ;
 	setHeaderState(e_cgi, true);
 	if (!(cgi_conf = (char **)malloc(envCgiSize * sizeof(char *))))
@@ -552,4 +555,7 @@ void		RequestData::prepareData(size_t contLen, sockaddr_in addr)
 	procUri();
 	procAuthorization();
 	procCGI(contLen, addr);
+	std::cout << "LOCATION_ROOT: " << location->root << std::endl;
+	// std::cout << "CGI_ROOT: " << location->cgi.find(uri.extension) << std::endl;
+
 }
