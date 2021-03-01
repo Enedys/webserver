@@ -156,7 +156,7 @@ bool		URI::procUri(std::string const &uri)
 	path_info = script_info.second;
 	size_t	extPos = script_name.find_last_of('.');
 	if (extPos != std::string::npos)
-		extension = script_name.substr(extPos);
+		extension = script_name.substr(extPos + 1);
 	return (true);
 }
 
