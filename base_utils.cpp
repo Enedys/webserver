@@ -46,3 +46,9 @@ std::string	size2Hex(size_t num, int base = 16)
 	}
 	return (res);
 }
+
+void		stringToLower(std::string &s)
+{
+	for (int i = 0; i < s.length(); i++)
+		s[i] = std::tolower(s[i]);
+}

@@ -57,5 +57,67 @@ int					Server::createSocket()
 	if (listen(_socket, 10))														/* open socket for listening and set max connections number for current server */
 		throw ("Listen failed.");
 	return (1);
-	
+}
+
+int				Server::match(std::string const &s1, std::string const &s2, size_t i1 = 0, size_t i2 = 0)
+{
+	if (i1 != s1.length() && s2[i2] == '*' && (i2 == 0 || i2 == s2.length() - 1))
+		return (match(s1, s2, i1 + 1, i2) + match(s1, s2, i1, i2 + 1));
+	else if (i1 == s1.length() && s2[i2] == '*' && (i2 == s2.length() - 1))
+		return (1);
+	else if (s1[i1] == s2[i2] && i1 != s1.length() && i2 != s2.length())
+		return (match(s1, s2, i1 + 1, i2 + 1));
+	else if (s1[i1] == s2[i2] && i1 == s1.length() && i2 == s2.length())
+		return (1);
+	return (0);
+}
+
+t_serv const	*Server::determineServer(t_ext_serv const *servsList, std::string const &host)
+{
+	t_serv const	*serv;
+	if (!servsList)
+		return (NULL);
+	size_t			portPos = host.find_last_of(':');
+	std::string		_hostName = host.substr(0, portPos);
+	stringToLower(_hostName);
+	std::vector<t_serv>::const_iterator sv = servsList->servs.cend();
+	for (std::vector<t_serv>::const_iterator i = servsList->servs.cbegin(); i < servsList->servs.cend(); i++)
+	{
+		std::string	tmpServName = i->serverName;
+		stringToLower(tmpServName);
+		if (match(_hostName, tmpServName))
+			if (sv->serverName.length() < i->serverName.length()\
+				|| sv == servsList->servs.cend())
+				sv = i;
+	}
+	if (sv == servsList->servs.cend())
+		serv = &(servsList->servs[0]);
+	else
+		serv = &(*sv);
+	return (serv);
+}
+
+s_loc const		*Server::findLocation(t_serv const *serv, std::string const &script_name)
+{
+	s_loc const	*location;
+	if (!serv)
+		return (NULL);
+	constLocIter	itLoc = serv->locs.begin();
+	constLocIter	itBest = serv->locs.end();
+	size_t	pos = 0;
+	while (itLoc != serv->locs.end())
+	{
+		if ((pos = script_name.find(itLoc->path)) == std::string::npos)
+			;
+		if (itBest == serv->locs.end())
+			itBest = itLoc;
+		else if (itLoc->path.length() >= itBest->path.length())
+			itBest = itLoc;
+		itLoc++;
+	}
+	if (itBest == serv->locs.end()) //404
+		return (NULL);
+	else
+		location = &(*itBest);
+	return (location);
 }
