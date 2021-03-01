@@ -79,7 +79,7 @@ MethodStatus	MethodPost::sendHeader(int socket)
 	// output str to socket, probably not;
 	std::string st = "HTTP/1.1 200 OK\r\n";
 	send(socket, st.c_str(), st.length(), MSG_DONTWAIT);
-	st = "Content-type: text/html; charset=UTF-8\r\n";
+//	st = "Content-type: text/html; charset=UTF-8\r\n";
 	send(socket, st.c_str(), st.length(), MSG_DONTWAIT);
 /*	for (auto it = cgi._headersMap.begin(); it != cgi._headersMap.end(); ++it)
 	{
@@ -88,7 +88,7 @@ MethodStatus	MethodPost::sendHeader(int socket)
 		send(socket, it->second.c_str(), it->second.length(), MSG_DONTWAIT);
 		send(socket, "\r\n", 2, MSG_DONTWAIT);
 	} */
-	st = "Transfer-Encoding: chunked\r\n";
+	st = "Transfer-Encoding: chunked\r\n\r\n";
 	send(socket, st.c_str(), st.length(), MSG_DONTWAIT);
 	return (ok);
 };
