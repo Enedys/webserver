@@ -503,6 +503,7 @@ void Parser::initLoc()
 	loc.postAvailable = true;
 	loc.putAvailable = true;
 	loc.path.clear();
+	loc.cgi.clear();
 }
 
 void Parser::validateErrorStr(const std::vector<std::string> &v)
