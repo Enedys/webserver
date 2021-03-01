@@ -18,7 +18,7 @@ MethodStatus	MethodPost::createHeader()
 	args[0] = (char *)bin.c_str();
 	args[1] = (char *)data.pathToFile.c_str();
 	cgi.setEnv(data.cgi_conf);
-	//cgi.setEnv(NULL);
+	cgi.setEnv(NULL);
 	cgi.setExecpath((char *)bin.c_str());
 	cgi.setArgs(args);
 	cgi.init();
@@ -64,8 +64,11 @@ MethodStatus	MethodPost::sendHeader(int socket)
 {
 	std::cout << "send header!\n";
 	std::string str;
-	while (!cgi.isHeadersDone())
-		cgi.output(str);
+	MethodStatus status = ok;
+	while (!cgi.isHeadersDone() && status != error)
+		status = cgi.output(str);
+	if (status == error)
+		return (error);
 	// output str to socket, probably not;
 	std::string st = "HTTP/1.1 200 OK\r\n";
 	send(socket, st.c_str(), st.length(), MSG_DONTWAIT);
