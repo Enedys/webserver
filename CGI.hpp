@@ -21,11 +21,17 @@ class CGI
 		int pid; // fork id
 		int status;
 		bool headersDone;
+		bool headersNotFound;
+		bool headersNotFoundProcessExited;
 		std::string inputBuf;
 		std::string outputBuf; // Smaller string, just to get data to send;
 		const char *execpath; // remove const?
 		char **args;
 		char **env;
+	public:
+		bool isHeadersNotFound() const;
+
+	private:
 		void parseHeaders(std::string str);
 		void inputFromBuf();
 		void freeMem();

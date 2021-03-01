@@ -52,6 +52,8 @@ CGI::CGI(char *execpath, char **args, char **env)
 	initPipes();
 	initFork();
 	headersDone = false;
+	headersNotFound = false;
+	headersNotFoundProcessExited = false;
 }
 
 void CGI::input(const std::string &str) // inputting body
@@ -136,6 +138,7 @@ void CGI::inputFromBuf()
 MethodStatus CGI::output(std::string &str) // mb gonna change it later. Read and write into pipes and outputting. Less memory usage
 {
 	char buf[BUFSIZ];
+	bzero(buf, BUFSIZ);
 	size_t find;
 	int r;
 	r = read(pipeout[0], buf, BUFSIZ); // read < 0 = pipe is empty..
@@ -147,9 +150,19 @@ MethodStatus CGI::output(std::string &str) // mb gonna change it later. Read and
 			freeMem();
 			return (error); // execve failed;
 		}
-		if (wp > 0)
+		if (wp > 0 || headersNotFoundProcessExited) // 2 times WNOHANG = wp = -1; TODO: test || headersNotFound
 		{
-			freeMem();
+//			freeMem();
+			if (!headersDone) // means, headers not found, just output as it is
+			{
+				headersDone = true;
+				headersNotFoundProcessExited = true;
+			}
+			else
+			{
+				str = outputBuf;
+				freeMem();
+			}
 			return (ok);
 		}
 		else
@@ -157,19 +170,24 @@ MethodStatus CGI::output(std::string &str) // mb gonna change it later. Read and
 	}
 	std::cout << "!!!!\n\n";
 	std::cout << buf << std::endl;
-//	if (!headersDone) // headers ready for parser
-//	{
-//		str = outputBuf + str;
-//		if ((find = str.find("\n\n")) != std::string::npos)
-//		{
-//			parseHeaders(str.substr(0, find)); // todo: test how it works
-//			str = str.substr(find + 2, str.size());
-//			outputBuf.clear();
-//			headersDone = true;
-//		}
-//		outputBuf = str;
-//	}
-//	else
+	if (!headersDone) // headers ready for parser
+	{
+		str = outputBuf + buf;
+		if ((find = str.find("\r\n\r\n")) != std::string::npos)
+		{
+			parseHeaders(str.substr(0, find + 2)); // todo: test how it works
+			str = str.substr(find + 4, str.size());
+			outputBuf.clear();
+			headersDone = true;
+		}
+		else if (str.size() > 16000) // todo: CLARIFY
+		{
+			headersDone = true;
+			headersNotFound = true;
+		}
+		outputBuf = str;
+	}
+	else
 	{
 		str = outputBuf + buf;
 		outputBuf.clear();
@@ -193,14 +211,14 @@ void CGI::parseHeaders(std::string str)
 	size_t pos;
 	std::string key;
 	std::string value;
-	while (str.find('\n') != std::string::npos)
+	while (str.find("\r\n") != std::string::npos)
 	{
-		key = str.substr(0, str.find(':') - 1);
+		key = str.substr(0, str.find(':'));
 		for (int i = 0; i < key.length(); i++)
 			key.at(i) = std::tolower(key.at(i));
-		value = str.substr(str.find(':'), str.find('\n'));
+		value = str.substr(str.find(':') + 1, str.find('\n'));
 		value = value.substr(value.find_first_not_of(" \v\t"), value.size()); // test ' '
-		str = str.substr(str.find('\n'), str.size());
+		str = str.substr(str.find("\r\n") + 2, str.size());
 		_headersMap.insert(std::pair<std::string, std::string>(key, value));
 	}
 }
@@ -232,11 +250,18 @@ void CGI::init()
 	initPipes();
 	initFork();
 	headersDone = false;
+	headersNotFound = false;
+	headersNotFoundProcessExited = false;
 }
 
 bool CGI::isHeadersDone() const
 {
 	return headersDone;
+}
+
+bool CGI::isHeadersNotFound() const
+{
+	return (this->headersNotFound || this->headersNotFoundProcessExited);
 }
 
 const char *CGI::forkFailed::what() const throw()
