@@ -22,6 +22,7 @@ private:
     /* data */
     MethodPost(/* args */);
     CGI cgi;
+    std::string outputString;
     // RequestData const &reqData;
 
 public:
