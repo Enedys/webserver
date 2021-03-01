@@ -57,11 +57,12 @@ MethodStatus	MethodPost::sendBody(int socket)
 	{
 		std::cout << "I'VE GOT THAT!\n";
 		std::cout << str;
-		std::string num = std::to_string(str.length());
-		num = "\r\n" + num;
+		std::string num = size2Hex(str.length());
+		num = num + "\r\n";
 		send(socket, num.c_str(), num.length(), MSG_DONTWAIT);
 		send(socket, str.c_str(), str.length(), MSG_DONTWAIT); // TODO buffer!!
 		send(socket, "\r\n", 2, MSG_DONTWAIT);
+		str.clear();
 	//	send(socket, "0\r\n\r\n", 5, MSG_DONTWAIT);
 	}
 	if (status == ok)
@@ -78,13 +79,15 @@ MethodStatus	MethodPost::sendHeader(int socket)
 	// output str to socket, probably not;
 	std::string st = "HTTP/1.1 200 OK\r\n";
 	send(socket, st.c_str(), st.length(), MSG_DONTWAIT);
-	for (auto it = cgi._headersMap.begin(); it != cgi._headersMap.end(); ++it)
+	st = "Content-type: text/html; charset=UTF-8\r\n";
+	send(socket, st.c_str(), st.length(), MSG_DONTWAIT);
+/*	for (auto it = cgi._headersMap.begin(); it != cgi._headersMap.end(); ++it)
 	{
 		send(socket, it->first.c_str(), it->first.length(), MSG_DONTWAIT);
 		send(socket, ": ", 2, MSG_DONTWAIT);
 		send(socket, it->second.c_str(), it->second.length(), MSG_DONTWAIT);
 		send(socket, "\r\n", 2, MSG_DONTWAIT);
-	}
+	} */
 	st = "Transfer-Encoding: chunked\r\n";
 	send(socket, st.c_str(), st.length(), MSG_DONTWAIT);
 	return (ok);
