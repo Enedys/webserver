@@ -13,10 +13,10 @@ MethodStatus	MethodPost::createHeader()
 	args[2] = 0;
 
 
-	std::string ext = data.pathToFile.substr(data.pathToFile.find_last_of('.') + 1, data.pathToFile.size());
+	std::string ext = data.uri.script_name.substr(data.uri.script_name.find_last_of('.') + 1, data.uri.script_name.size());
 	std::string bin = data.location->cgi.find(ext)->second;
 	args[0] = (char *)bin.c_str();
-	args[1] = (char *)data.pathToFile.c_str();
+	args[1] = (char *)data.uri.script_name.c_str();
 	cgi.setEnv(data.cgi_conf);
 	cgi.setEnv(NULL);
 	cgi.setExecpath((char *)bin.c_str());
