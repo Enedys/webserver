@@ -169,7 +169,7 @@ MethodStatus CGI::output(std::string &str) // mb gonna change it later. Read and
 			return (inprogress);
 	}
 	std::cout << "!!!!\n\n";
-	std::cout << buf << std::endl;
+	// std::cout << buf << std::endl;
 	if (!headersDone) // headers ready for parser
 	{
 		str = outputBuf + buf;

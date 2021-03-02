@@ -46,7 +46,7 @@ MethodStatus	MethodPost::sendBody(int socket)
 	if (!str.empty())
 	{
 		std::cout << "I'VE GOT THAT!\n";
-		std::cout << str;
+		// std::cout << str;
 		std::string num = size2Hex(str.length());
 		num = num + "\r\n";
 		send(socket, num.c_str(), num.length(), MSG_DONTWAIT);
