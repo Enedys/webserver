@@ -14,7 +14,10 @@ HEADERS			=	NewClient.hpp \
 					Request.hpp \
 					Server.hpp \
 					WebServer.hpp \
+					CGI.hpp \
 					include_resources.hpp \
+					RequestData.hpp \
+					URI.hpp \
 
 SRC				=	Debugger.cpp \
 					Header.cpp \
@@ -29,6 +32,10 @@ SRC				=	Debugger.cpp \
 					Server.cpp \
 					WebServer.cpp \
 					NewClient.cpp \
+					base_utils.cpp \
+					RequestData.cpp \
+					CGI.cpp \
+					URI.cpp \
 					main.cpp
 
 OBJ_DIR = ./bin/
@@ -39,13 +46,13 @@ all: $(NAME)
 
 $(NAME): $(OBJ_DIR) $(OBJS)
 	echo "Danone!"
-	clang++ $(FLAGS) $(OBJS) -o $(NAME)
+	clang++ -g -D_GLIBCXX_DEBUG $(FLAGS) $(OBJS) -o $(NAME)
 
 $(OBJ_DIR):
 	mkdir $(OBJ_DIR)
 
 $(OBJ_DIR)%.o: %.cpp
-	clang++ -c -g $< -o $@
+	clang++ -c -g -D_GLIBCXX_DEBUG $< -o $@
 
 clean:
 	rm -f $(OBJS)

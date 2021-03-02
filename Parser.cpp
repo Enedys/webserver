@@ -173,6 +173,7 @@ void Parser::parse(const std::string& fin)
 	}
 	dup2(tmpin, 0);
 	close(tmpin);
+	makeServExt();
 }
 
 std::string Parser::getValue(const std::string &section)
@@ -361,6 +362,35 @@ void Parser::getLocDenyMethod()
 		error("expected deny POST | HEAD | PUT | GET");
 }
 
+
+void Parser::getLocAuth()
+{
+	loc.auth = getValue("location: auth_basic: ");
+}
+
+void Parser::getLocLogPass()
+{
+	std::string value = getValue("location: auth_basic_log_pass: ");
+	loc.authLogPass = value; // todo: validate ':' symbol
+}
+
+
+void Parser::getLocUploadPass()
+{
+	std::string value = getValue("location: upload_pass: ");
+	if (value == "allow")
+		loc.uploadPass = true;
+	if (value == "deny")
+		loc.uploadPass = false;
+	else
+		error("location: upload_pass: expected allow | deny");
+}
+
+void Parser::getLocUploadStore()
+{
+	loc.uploadStore = getValue("location: upload_store"); // TODO: put returns 500, if no subdirectory!
+}
+
 void Parser::parseLocValues()
 {
 	std::string value;
@@ -382,6 +412,14 @@ void Parser::parseLocValues()
 		getLocFileIsDir(); // error?
 	else if (value == "cgi")
 		getLocCGI();
+	else if (value == "auth_basic")
+		getLocAuth();
+	else if (value == "auth_basic_log_pass")
+		getLocLogPass();
+	else if (value == "upload_pass")
+		getLocUploadPass();
+	else if (value == "upload_store")
+		getLocUploadStore();
 	else
 		error("Location: invalid token");
 }
@@ -456,11 +494,16 @@ void Parser::initLoc()
 	loc.autoindex = false;
 	loc.root.clear();
 	loc.fileRequestIsDir.clear();
+	loc.auth.clear();
+	loc.authLogPass.clear();
+	loc.uploadPass = false;
+	loc.uploadStore.clear();
 	loc.getAvailable = true;
 	loc.headAvailable = true;
 	loc.postAvailable = true;
 	loc.putAvailable = true;
 	loc.path.clear();
+	loc.cgi.clear();
 }
 
 void Parser::validateErrorStr(const std::vector<std::string> &v)
@@ -475,7 +518,7 @@ void Parser::validateErrorStr(const std::vector<std::string> &v)
 	}
 }
 
-void Parser::fillRootLoc()
+void Parser::fillRootLoc() // todo: not only fill root loc, probably rename
 {
 	for (unsigned int i = 0; i < serv.locs.size(); i++)
 	{
@@ -485,6 +528,11 @@ void Parser::fillRootLoc()
 				error("location has no root. Can't resolve");
 			serv.locs[i].root = root;
 		}
+	}
+	for (unsigned int i = 0; i < serv.locs.size(); i++)
+	{
+		if (serv.locs[i].uploadPass && serv.locs[i].uploadStore.empty())
+			serv.locs[i].uploadStore = serv.locs[i].root;
 	}
 }
 
@@ -499,3 +547,31 @@ void Parser::splitHost(const std::string &val)
 	serv.host = host;
 	serv.port = std::atoi(port.c_str());
 }
+
+
+void Parser::makeServExt()
+{
+	s_comparator			comp;
+	std::sort(servers.begin(), servers.end(), comp);
+
+	t_ext_serv	newStruct;
+	newStruct.servs.push_back(servers.front());
+	newStruct.port = servers.front().port;
+	newStruct.host = servers.front().host;
+	for (int i = 1; i < servers.size(); i++)
+	{
+		if (servers[i - 1].host == servers[i].host && servers[i-1].port == servers[i].port)
+			newStruct.servs.push_back(servers[i]);
+		else
+		{
+			servers_ext.push_back(newStruct);
+			newStruct.servs.erase(newStruct.servs.begin(), newStruct.servs.end());
+			newStruct.port = servers[i].port;
+			newStruct.host = servers[i].host;
+			newStruct.servs.push_back(servers[i]);
+		}
+	}
+	servers_ext.push_back(newStruct);
+}
+
+

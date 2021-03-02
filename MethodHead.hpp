@@ -12,12 +12,21 @@ private:
 	static const size_t	_bs = 4096;
 	std::string			_remainder;
 public:
-	MethodHead(t_serv const &config, int &code, stringMap const &headersMapRequest);
+	// MethodHead(t_serv const &config, int &code, stringMap const &headersMapRequest);
+	// ~MethodHead();
+	// virtual MethodStatus	createHeader(std::string const &_path);
+	// virtual MethodStatus	readRequestBody(int socket);
+	// virtual MethodStatus	sendHeader(int socket);
+	// virtual MethodStatus	manageRequest(std::string const &location);
+	// virtual MethodStatus	sendBody(int socket);
+	// virtual MethodStatus	sendResponse(int socket);
+
+	MethodHead(int &status, RequestData const &data) :
+		AMethod(status, data) {_type = HEAD;};
 	~MethodHead();
-	virtual MethodStatus	createHeader(std::string const &_path);
-	virtual MethodStatus	readRequestBody(int socket);
-	virtual MethodStatus	sendHeader(int socket);
-	virtual MethodStatus	manageRequest(std::string const &location);
-	virtual MethodStatus	sendBody(int socket);
-	virtual MethodStatus	sendResponse(int socket);
+	MethodStatus	createHeader();
+	MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus);
+	MethodStatus	sendHeader(int socket);
+	MethodStatus	manageRequest();
+	MethodStatus	sendBody(int socket);
 };

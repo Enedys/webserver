@@ -3,14 +3,22 @@
 
 # define BUFSIZE 4096
 
-MethodHead::MethodHead(t_serv const &config, int &code, stringMap const &headers) \
-	: AMethod(config, code, headers) {};
+// MethodHead::MethodHead(t_serv const &config, int &code, stringMap const &headers) \
+// 	: AMethod(config, code, headers) {};
 
-MethodHead::~MethodHead(){};
+// MethodHead::~MethodHead(){};
 
 MethodStatus	MethodHead::readRequestBody(int socket) { return ok; };
 
 MethodStatus	MethodHead::manageRequest(std::string const &path)
+MethodHead::~MethodHead() {};
+MethodStatus	MethodHead::createHeader() { return (ok); };
+MethodStatus 	MethodHead::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return (ok); };
+MethodStatus	MethodHead::manageRequest() { return (ok); };
+MethodStatus	MethodHead::sendBody(int socket) { return (ok); };
+
+
+MethodStatus	MethodHead::sendHeader(int socket)
 {
 	struct stat	st;
 	if (stat(path.c_str(), &st) == -1){// && errno == ENOENT)//lstat?//fstat IS_DIR

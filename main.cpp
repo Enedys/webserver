@@ -11,32 +11,28 @@ void				printLog(Logger *_webLogger, std::string msg, int addInfo, Message::LogL
 
 int main()
 {
-	try{
+	//Server myServer("127.0.0.1", 3535);
+	Parser	parser;
+	parser.parse("webserv.conf");
+	
+	WebServer	myWebServer;
+	std::cout << parser.servers.size() << std::endl;
+	// return (0);
 
-		//Server myServer("127.0.0.1", 3535);
-		Parser	parser;
-		parser.parse("webserv.conf");
-		WebServer	myWebServer;
-		std::cout << parser.servers.size() << std::endl;
-		for (int i = 0; i < parser.servers.size(); i++)
-		{
-			std::cout << "Host: " << parser.servers[i].host << "\nServerName: " << parser.servers[i].serverName\
-			<< "\nPort: " << parser.servers[i].port << std::endl;
-			myWebServer.appendServer(new Server(parser.servers[i]));
-		}
-		myWebServer.showServerList();
-		// std::cout << myServer << std::endl;
-		// myWebServer.appendServer(myServer);
-		// myServer.setRoot("/");
-		// myServer.appendLocation("/webserver/files", "/Users/kwillum");
-		// myServer.appendLocation("/webserver/files/ft_webserver", "");
-		// std::string	fileUri = myServer.getUri("/webserver/files/ft_webserver/test.cpp");
-		// std::cout << fileUri << std::endl;
-		myWebServer.runWebServer();
-	}
-	catch(char const *s)
+	for (int i = 0; i < parser.servers_ext.size(); i++)
 	{
-		std::cout << s << std::endl;
+		std::cout << "Host: " << parser.servers_ext[i].host << "\tPort: " << parser.servers_ext[i].port << std::endl;
+		try
+		{
+			myWebServer.appendServer(new Server(parser.servers_ext[i]));
+		}
+		catch (...)
+		{
+			std::cerr << "Creation server error" << std::endl;
+			return (1);
+		}
 	}
+	myWebServer.showServerList();
+	myWebServer.runWebServer();
 	return (0);
 }

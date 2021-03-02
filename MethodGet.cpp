@@ -1,12 +1,12 @@
 #include "MethodGet.hpp"
 #include "Header.hpp"
 
-MethodGet::MethodGet(t_serv const &config, int &code, stringMap const &headers) \
-	: AMethod(config, code, headers) { _sentBytesTotal = 0; };
+// MethodGet::MethodGet(t_serv const &config, int &code, stringMap const &headers) \
+// 	: AMethod(config, code, headers) { _sentBytesTotal = 0; };
 
 MethodGet::~MethodGet(){ };
 
-MethodStatus	MethodGet::readRequestBody(int socket) { return ok; };
+// MethodStatus	MethodGet::readRequestBody(int socket) { return ok; };
 
 int			MethodGet::generateIdxPage(std::string const &path){
 	DIR				*dir;
@@ -44,7 +44,13 @@ int			MethodGet::generateIdxPage(std::string const &path){
 	return 0;
 }
 
-MethodStatus	MethodGet::manageRequest(std::string const &path)
+// MethodStatus	MethodGet::manageRequest(std::string const &path)
+// MethodGet::~MethodGet() {};
+// MethodStatus	MethodGet::createHeader() { return (ok); };
+// MethodStatus	MethodGet::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return (ok); };
+// MethodStatus	MethodGet::manageRequest() { return (ok); };
+// MethodStatus	MethodGet::sendBody(int socket) { return (ok); };
+MethodStatus	MethodGet::sendHeader(int socket)
 {
 	struct stat	st;
 	if (stat(path.c_str(), &st) == -1){// && errno == ENOENT)

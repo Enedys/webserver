@@ -1,10 +1,9 @@
 #include "NewClient.hpp"
 
-Client::Client(int socket, t_serv const &config) :
-	_socket(socket), _config(config), _statusCode(0), _request(socket, _statusCode), _method(NULL), _state(defaultState)
+Client::Client(int socket, sockaddr_in adr, t_ext_serv const &config) :
+	_socket(socket), _clientAddr(adr), _statusCode(0), _request(socket, _statusCode),\
+	_config(config), _method(NULL), _state(defaultState)
 {
-	_requestCounter = 0;
-	isReadMode = true;
 }
 
 Client::~Client()
@@ -13,19 +12,23 @@ Client::~Client()
 	close(_socket);
 }
 
-int					Client::getClientSocket() const {return _socket; };
-void				Client::setMode(bool mode) {isReadMode = mode; };
+int					Client::getClientSocket() const
+{
+	return _socket;
+};
 
 bool				Client::isReading() const
 {
-	if (_state == defaultState || _state == readingHeader || _state == readRequestBody)
+	if (_state == defaultState || _state == readingHeader || _state == readingBody)
+		return (true);
+	if (_request.getRequestState() == Request::body)
 		return (true);
 	return (false);
 }
 
-bool				Client::isSending() const
+bool				Client::readyToSend() const
 {
-	if (_state == sendResponseBody || _state == sendResponseHeader)
+	if (_state == sendingBody || _state == sendindHeader)
 		return (true);
 	return (false);
 }
@@ -36,12 +39,11 @@ MethodStatus		Client::refreshClient()
 	_method = NULL;
 	_statusCode = 0;
 	_request.cleanRequest();
-	if (_request.getBufferResidual() > 0)
-		_state = readingHeader;
+	if ((_request.getRequestState() == Request::firstLine) &&\
+		_request.getBufferResidual() > 0)
+		return (requestInterraction());
 	else
 		_state = defaultState;
-
-	_requestCounter = _requestCounter - 1;
 	return (ok);
 }
 
@@ -49,146 +51,115 @@ Client::conditionCode	Client::getNextState(MethodStatus status)
 {
 	if (status == connectionClosed)
 		return (sendingErrorState);
-	if ((_state == sendResponseBody || _state == sendResponseHeader) && status == error)
-		return (sendingErrorState); // here must cut connection
+	if (status == error &&\
+		(_state == sendingBody || _state == sendindHeader))
+		return (sendingErrorState);
 	if (status == error)
 	{
 		if (_state <= analizeHeader)
 			createNewMethod();
-		return (createResponseHeader);
+		return (createHeaders);
 	}
 	else if (status == ok)
-		return (static_cast<Client::conditionCode>(static_cast<int>(_state) + 1));
+		return (static_cast<Client::conditionCode>\
+				(static_cast<int>(_state) + 1));
 	return (_state);
 }
 
 MethodStatus		Client::analizeHeaders()
 {
-	if (createNewMethod() != ok)
-		return (error);
-	return (ok);
-}
-
-std::string			Client::getRequestPath(std::string const &uri)
-{
-	constLocIter	itLoc = _config.locs.begin();
-	constLocIter	itBest = _config.locs.end();
-	size_t	pos = 0;
-	while (itLoc != _config.locs.end())
-	{
-		if ((pos = uri.find(itLoc->path)) == std::string::npos)
-		{
-			itLoc++;
-			continue ;
-		}
-		if (itBest == _config.locs.end())
-			itBest = itLoc;
-		else if (itLoc->path.length() >= itBest->path.length())
-			itBest = itLoc;
-		itLoc++;
-	}
-	if (itBest == _config.locs.end())													/* what path should return if location for such uri does not exist ? */
-		return ("");
-	if (itBest->root == "/")
-		return (uri.substr(itBest->path.length()));
-	return (itBest->root + uri.substr(itBest->path.length()));
+	if (_statusCode)
+		return (createNewMethod());
+	procData.setData(&_config, &_request.getHeadersMap(), &_request.getStartLine());
+	procData.prepareData(_request.getContentLength(), _clientAddr);
+	MethodStatus	methodStatus = createNewMethod();
+	// std::cout << "HERE\n";git 
+	return (methodStatus);
 }
 
 MethodStatus		Client::createNewMethod()
 {
 	if (_socket == -1)
-		return (socketError); // и что туту делать?
+		return (connectionClosed);
 	if (_statusCode)
 	{
-		_method = new MethodGet(_config, _statusCode, _request.getHeadersMap());
-		_state = createResponseHeader;
+		_method = new MethodGet(_statusCode, procData);
+		_state = createHeaders;
 		return (ok);
 	}
 	if (_state != analizeHeader)
 		return (logicError);
 	const std::string method = _request.getStartLine().find("method")->second;
 	if (method == "GET")
-		_method = new MethodGet(_config, _statusCode, _request.getHeadersMap());
+		_method = new MethodGet(_statusCode, procData);
 	else if (method == "HEAD")
-		_method = new MethodHead(_config, _statusCode, _request.getHeadersMap());
+		_method = new MethodHead(_statusCode, procData);
 	else if (method == "OPTION")
-		_method = new MethodOption(_config, _statusCode, _request.getHeadersMap());
+		_method = new MethodOption(_statusCode, procData);
 	else if (method == "PUT")
-		_method = new MethodPut(_config, _statusCode, _request.getHeadersMap());
+		_method = new MethodPut(_statusCode, procData);
 	else if (method == "POST")
-		_method = new MethodPost(_config, _statusCode, _request.getHeadersMap());
+		_method = new MethodPost(_statusCode, procData);
 	return (ok);
 }
-
 
 MethodStatus		Client::requestInterraction()
 {
+	conditionCode	stateBefore = _state;
 	if (_state == defaultState)
 		_state = readingHeader;
+
 	if (_state == readingHeader)
-	{
-		_state = getNextState(_request.readRequestHead(NULL));
-		if (_state == readingHeader)
-			return (inprogress);
-	}
+		_state = getNextState(_request.getRequestHead());
+
 	if (_state == analizeHeader)
 		_state = getNextState(analizeHeaders());
-	if (_state == readRequestBody)
-	{
-		_state = getNextState(_request.readRequestBody(_method, NULL));
-		if (_state == readRequestBody)
-			return (inprogress);
-	}
-	if (_state == manageRequest){
-		_state = getNextState(_method->manageRequest(\
-					getRequestPath(_request.getURI())));
 
-		std::cout << "////\tMethod's status code: "<< _method->getStatusCode()  << std::endl;//
-	}
-	if (_state == createResponseHeader)
-		_state = getNextState(_method->createHeader(\
-					getRequestPath(_request.getURI())));
-	std::cout << "////\theader sent" << std::endl;//
+	if (_state == readingBody)
+		_state = getNextState(_request.getRequestBody(_method));
+	else if (_request.getRequestState() == Request::body)	// cgi case, when we send answer,
+		if (_request.getRequestBody(_method) == error)		// before read all request bodey
+			_state = sendingErrorState;
 
+	if (_state == manageRequest)
+		_state = getNextState(_method->manageRequest());
+
+	if (_state == createHeaders)
+		_state = getNextState(_method->createHeader());
+
+	if (stateBefore == _state)
+		return (inprogress);
 	return (ok);
 }
 
-MethodStatus		Client::responseInsterraction()
+MethodStatus		Client::responseInterraction()
 {
-	if (_state == sendResponseHeader)
-	{
-		_state = getNextState(_method->sendResponse(_socket));
-		if (_state == sendResponseHeader)
-			return (inprogress);
-	}
-	if (_state == sendResponseBody){
-		_state = finalState;
-	}
+	conditionCode	stateBefore = _state;
+	if (_state == sendindHeader)
+		_state = getNextState(_method->sendHeader(_socket));
 
-	// if (_state == sendResponseHeader)
-	// {
-	// 	_state = getNextState(_method->sendHeader(_socket));
-	// 	if (_state == sendResponseHeader)
-	// 		return (inprogress);
-	// }
-	// if (_state == sendResponseBody)
-	// {
-	// 	_state = getNextState(_method->sendBody(_socket));
-	// 	if (_state == sendResponseBody)
-	// 		return (inprogress);
-	// }
+	if (_state == sendingBody)
+		_state = getNextState(_method->sendBody(_socket));
+
 	if (_state == finalState)
-		refreshClient();
+		if (refreshClient() == connectionClosed)
+			return (connectionClosed);
+
+	if (stateBefore == _state)
+		return (inprogress);
 	return (ok);
 }
 
-MethodStatus		Client::interract()
+MethodStatus		Client::interract(int newData, int allow2Write)
 {
 	MethodStatus	returnStatus;
-	if (isReadMode)
+	bool			ready2Send = readyToSend();
+	if (newData)
+		_state = getNextState(_request.readFromSocket());
+	if (isReading())
 		returnStatus = requestInterraction();
-	else
-		returnStatus = responseInsterraction();
+	if (ready2Send)
+		returnStatus = responseInterraction();
 	if (_state == sendingErrorState)
 		return (error);
 	return (returnStatus);

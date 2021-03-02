@@ -19,15 +19,25 @@ private:
 	std::string			_body;
 
 public:
-	MethodGet(t_serv const &config, int &code, stringMap const &headersMapRequest);
-	~MethodGet();
+	// MethodGet(t_serv const &config, int &code, stringMap const &headersMapRequest);
+	// ~MethodGet();
 
-	virtual MethodStatus	readRequestBody(int socket);	//+path for cgi
-	virtual MethodStatus	manageRequest(std::string const &path);
-	virtual MethodStatus	createHeader(std::string const &_path);
-	virtual MethodStatus	sendHeader(int socket);
-	virtual MethodStatus	sendBody(int socket);
-	virtual MethodStatus	sendResponse(int socket);
+	// virtual MethodStatus	readRequestBody(int socket);	//+path for cgi
+	// virtual MethodStatus	manageRequest(std::string const &path);
+	// virtual MethodStatus	createHeader(std::string const &_path);
+	// virtual MethodStatus	sendHeader(int socket);
+	// virtual MethodStatus	sendBody(int socket);
+	// virtual MethodStatus	sendResponse(int socket);
 
 	int						generateIdxPage(std::string const &_path);
+
+
+	MethodGet(int &status, RequestData const &data) :
+		AMethod(status, data) {_type = GET; };
+	~MethodGet();
+	MethodStatus	createHeader();
+	MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus);
+	MethodStatus	sendHeader(int socket);
+	MethodStatus	manageRequest();
+	MethodStatus	sendBody(int socket);
 };

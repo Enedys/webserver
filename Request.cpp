@@ -1,7 +1,7 @@
 #include "Request.hpp"
 
 Request::Request(int fd, int &statusCode) : 
-_socket(fd), _errorCode(statusCode), _bodySize(0), readingStage(firstLine)
+_socket(fd), _errorCode(statusCode), _bodySize(0), requestStage(firstLine)
 {
 	createErrorCodesMap();
 };
@@ -11,26 +11,43 @@ size_t				Request::getBufferResidual()
 	return (_buffer.length());
 }
 
+Request::requestStatus		Request::getRequestState() const
+{
+	return (requestStage);
+}
+
 MethodStatus		Request::cleanRequest()
 {
 	_bodySize = 0;
-	readingStage = firstLine;
+	requestStage = firstLine;
 	startLine.clear();
 	headersMap.clear();
 	return (ok);
 }
 
-const stringMap		Request::getStartLine() const {return (startLine); };
-const stringMap		Request::getHeadersMap() const { return (headersMap); };
+const stringMap		&Request::getStartLine() const {return (startLine); };
+const stringMap		&Request::getHeadersMap() const { return (headersMap); };
 
-std::string const	&Request::getURI() const
+std::string const	&Request::getURI()
 {
 	constMapIter	uri = startLine.find("uri");
 	if (uri == startLine.end())
-		return ("");
-	return (uri->second);
+		startLine["uri"] = "";
+	return (startLine["uri"]);
 }
 
+std::string const	&Request::getMethod()
+{
+	constMapIter	uri = startLine.find("method");
+	if (uri == startLine.end())
+		startLine["method"] = "";
+	return (startLine["method"]);
+}
+
+size_t				Request::getContentLength()
+{
+	return (_bodySize);
+}
 
 MethodStatus		Request::setErrorCode(int code)
 {
@@ -38,49 +55,60 @@ MethodStatus		Request::setErrorCode(int code)
 	return (error);
 };
 
-MethodStatus		Request::readRequestHead(Logger *_webLogger)
+MethodStatus		Request::getRequestHead()
 {
-	char	buffer[_buffer_size];
-	int		readBytes = recv(_socket, buffer, _buffer_size - 1, MSG_DONTWAIT);
-	std::cout << "READ " << readBytes << " bytes\n";
-	if (readBytes < 0)
-		return (error);
-	else if (readBytes == 0)
-		return (connectionClosed);
-	if (readBytes > 0)
-	{
-		buffer[readBytes] = '\0';
-		_buffer += buffer;
-	}
+	std::cout << "\033[32m Into getRequestHead: " << requestStage << " IN BUFFER: " << getBufferResidual() << "\033[0m "<< std::endl;
+	if (requestStage < body && _buffer.length() > MAX_REQUEST_SIZE)
+		return (setErrorCode(400));
 	size_t posCRLF = _buffer.find(CRLF);
 	if (posCRLF == std::string::npos)
 		return (inprogress);
-	if (readingStage == firstLine)
+	MethodStatus	headStatus = parseRequestHead(posCRLF);
+	if (headStatus == error)
+		return (error);
+	return (headStatus);
+}
+
+MethodStatus		Request::readFromSocket()
+{
+	size_t const	bufsize = requestStage < body ? _headBufsize : _bodyBufsize;
+	char	buffer[bufsize + 1];
+	int		readBytes = recv(_socket, buffer, bufsize, MSG_DONTWAIT);
+	std::cout << "READ " << readBytes << " bytes fromsocket: " << _socket << "\n";
+	if (readBytes < 0)
+		return (connectionClosed);
+	else if (readBytes == 0)
+		return (connectionClosed);
+	buffer[readBytes] = '\0';
+	_buffer += buffer;
+	return (inprogress);
+}
+
+MethodStatus		Request::parseRequestHead(size_t posCRLF)
+{
+	if (requestStage == firstLine)
 	{
-		readingStage = headers;
+		requestStage = headers;
 		if (parseStartLine(posCRLF) == error)
 			return (error);
 	}
-	if (readingStage == headers)
+	if (requestStage == headers)
 	{
 		MethodStatus	headersStatus = parseHeaders();
 		if (headersStatus == error)
 			return (error);
 		else if (headersStatus == ok)
-			readingStage = body;
+			requestStage = body;
 		else
 			return (inprogress);
 	}
-	if (readingStage == body)
+	if (requestStage == body)
 	{
 		if (validateHeaders() == error)
 			return (error);
-		printRequest(); // Same logging
-		return (ok);
+		printRequest();
 	}
-	if (readingStage < body && _buffer.length() > MAX_REQUEST_SIZE)
-		return (setErrorCode(400));
-	return (inprogress);
+	return (ok);
 }
 
 MethodStatus		Request::validateHeaders()
@@ -122,7 +150,7 @@ MethodStatus		Request::parseHeaders()
 		if (posCRLF == 0)
 		{
 			_buffer = _buffer.substr(posCRLF + 2);
-			return (ok) ; // end of headers
+			return (ok); // end of headers
 		}
 		headerLine = _buffer.substr(0, posCRLF);
 		sepPos = headerLine.find(':');
@@ -186,12 +214,69 @@ MethodStatus		Request::parseStartLine(size_t posCRLF)
 	return (ok);
 }
 
-MethodStatus		Request::readRequestBody(AMethod *method, Logger *_webLogger)
+MethodStatus		Request::getRequestBody(AMethod *method)
 {
+	static	size_t	residBodysize = _bodySize;
+	MethodStatus	rbodyStatus = ok;
+	std::string		reqBody;
+	if (requestStage != body)
+		return (logicError);
+	if (residBodysize == 0)
+		residBodysize = _bodySize;
+	if (_bodySize > 0)
+	{
+		reqBody = _buffer.substr(0, residBodysize);
+		residBodysize -= reqBody.length();
+		_buffer = _buffer.erase(0, reqBody.length());
+		rbodyStatus = residBodysize == 0 ? ok : inprogress;
+	}
+	else if (_bodySize < 0)
+		rbodyStatus = getTrEncodedMsg(reqBody);
+	if (rbodyStatus == error)
+		return (error);
+	rbodyStatus = method->processBody(reqBody, rbodyStatus);
+	if (rbodyStatus == ok)
+		requestStage = init;
+	return (rbodyStatus);
+}
+
+MethodStatus	Request::getTrEncodedMsg(std::string &dest)
+{
+	dest = "";
+	static size_t	chunkSize = 0;
+	size_t			pullBytes = 0;
+	size_t			posCRLF;
+	while (true)
+	{
+		posCRLF = _buffer.find(CRLF, pullBytes);
+		if (chunkSize)
+		{
+			dest += _buffer.substr(pullBytes, chunkSize - 2);
+			chunkSize -= dest.length();
+			pullBytes += dest.length();
+			if (posCRLF != std::string::npos && chunkSize != 2)
+				return (error);
+			else if (posCRLF != std::string::npos)
+				pullBytes += 2;
+			else
+				return (inprogress);
+			continue ;
+		}
+		if (posCRLF == std::string::npos)
+			return (inprogress);
+		chunkSize = string2Size(_buffer.substr(pullBytes, posCRLF - pullBytes)) + 2;
+		if (chunkSize < 2)
+			return (error);
+		pullBytes += (posCRLF - pullBytes + 2);
+	}
+	_buffer.erase(0, pullBytes);
+	chunkSize = 0;
 	return (ok);
 }
 
-Request::~Request() {}
+Request::~Request()
+{
+}
 
 /* Extra functions */
 void				Request::createErrorCodesMap()
@@ -199,8 +284,10 @@ void				Request::createErrorCodesMap()
 	_errors[400] = "Bad Request";
 	_errors[404] = "Not Found";
 	_errors[414] = "URI Too Long";
+	_errors[500] = "Internal Server Error";
 	_errors[501] = "Not Implemented";
 	_errors[505] = "HTTP Version Not Supported";
+	_errors[507] = "Insufficient Storage";
 }
 
 /* Functions for debugging */

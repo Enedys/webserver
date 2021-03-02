@@ -7,13 +7,13 @@ private:
     /* data */
 	MethodPut(/* args */);
 public:
-	MethodPut(t_serv const &config, int &status, stringMap const &headers);
-		// AMethod(config, status, headers) {};
+	MethodPut(int &status, RequestData const &data) : 
+		AMethod(status, data) {_type = PUT; };
 	~MethodPut();
-	MethodStatus	createHeader(std::string const &_path);
-	MethodStatus	readRequestBody(int socket);
+	MethodStatus	createHeader();
+	MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus);
 	MethodStatus	sendHeader(int socket);
-	MethodStatus	manageRequest(std::string const &location);
+	MethodStatus	manageRequest();
 	MethodStatus	sendBody(int socket);
 	virtual MethodStatus	sendResponse(int socket);
 };

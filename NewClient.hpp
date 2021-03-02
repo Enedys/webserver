@@ -7,6 +7,7 @@
 #include "MethodPut.hpp"
 #include "MethodPost.hpp"
 #include "MethodOption.hpp"
+#include "RequestData.hpp"
 
 typedef std::vector<s_loc>::iterator		locIter;
 typedef std::vector<s_loc>::const_iterator	constLocIter;
@@ -18,49 +19,45 @@ class Client
 		defaultState,
 		readingHeader,
 		analizeHeader,
-		readRequestBody,
+		readingBody,
 		manageRequest,
-		createResponseHeader,
-		sendResponseHeader,
-		sendResponseBody,
+		createHeaders,
+		sendindHeader,
+		sendingBody,
 		finalState,
 		sendingErrorState,
 	}			conditionCode;
 	
 public:
 	int					getClientSocket() const;
-	void				setMode(bool mode);
 	bool				isReading() const;
-	bool				isSending() const;
-	MethodStatus		interract();
-	int					_requestCounter;
+	bool				readyToSend() const;
+	MethodStatus		interract(int newData, int allow2Write);
 
-	Client(int socket, s_serv const &config);
+
+	Client(int socket, sockaddr_in adr, t_ext_serv const &config);
 	~Client();
 
 private:
 	Client();
 	conditionCode		_state;
+	sockaddr_in			_clientAddr;
 	Request				_request;
 	AMethod				*_method;
 	int					_statusCode;
-	bool				isReadMode;
-
-	t_serv const		&_config;
 	int					_socket;
+	t_ext_serv const	&_config;
+	RequestData			procData;
+
+
 
 	conditionCode		getNextState(MethodStatus status);
 	MethodStatus		requestInterraction();
-	MethodStatus		responseInsterraction();
+	MethodStatus		responseInterraction();
 	MethodStatus		refreshClient();
 	MethodStatus		createNewMethod();
 	MethodStatus		analizeHeaders();
-	std::string			getRequestPath(std::string const &uri);
 
-	// MethodStatus		readRequestHeades();
-	// MethodStatus		readBodyRequest();
-	// MethodStatus		manageRequest();
-	// MethodStatus		createHeaders();
-	// MethodStatus		sendHeaders();
-	// MethodStatus		sendBody();
+	t_serv const		*determineServer();
+	std::string			getRequestPath(std::string const &uri);
 };

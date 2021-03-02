@@ -25,13 +25,12 @@ private:
 	fd_set					_fdsToWrite;
 	fd_set					_actualFds;
 	int						max_fd;
-	bool					isReadMod;
 
+	int						checkOldConnections();
 	int						checkActualConnections();
 	int						acceptNewConnections();
 	int						setActualConnections();
-	int						readActualRequests();
-	int						sendActualResponses();
+	int						clientIsReady(client cli);
 	int						communicate();
 	client					&detachConnection(client &cIt);
 };
