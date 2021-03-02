@@ -70,8 +70,8 @@ MethodStatus		Client::analizeHeaders()
 {
 	if (_statusCode)
 		return (createNewMethod());
-	procData.setData(&_config, &_request.getHeadersMap(), &_request.getURI());
-	procData.prepareData(_request.getContentLength(), _request.getMethod(), _clientAddr);
+	procData.setData(&_config, &_request.getHeadersMap(), &_request.getStartLine());
+	procData.prepareData(_request.getContentLength(), _clientAddr);
 	MethodStatus	methodStatus = createNewMethod();
 	// std::cout << "HERE\n";git 
 	return (methodStatus);

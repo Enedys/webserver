@@ -17,6 +17,7 @@ HEADERS			=	NewClient.hpp \
 					CGI.hpp \
 					include_resources.hpp \
 					RequestData.hpp \
+					URI.hpp \
 
 SRC				=	Debugger.cpp \
 					Method.cpp \
@@ -33,6 +34,7 @@ SRC				=	Debugger.cpp \
 					base_utils.cpp \
 					RequestData.cpp \
 					CGI.cpp \
+					URI.cpp \
 					main.cpp
 
 OBJ_DIR = ./bin/

@@ -1,63 +1,54 @@
 #include "RequestData.hpp"
 
-void		RequestData::cleanData()
+RequestData::RequestData(t_ext_serv const *s,\
+						stringMap const *rHs,\
+						stringMap const *rFl) :
+	_servsList(s), _reqHeads(rHs), errorMask(0), in(0)
 {
+	_uri = &rFl->find("uri")->second;
+	_method = &rFl->find("method")->second;
 	serv = NULL;
 	location = NULL;
-	int i = 0;
-	while (cgi_conf[i])
-		free(cgi_conf[i++]);
-	free(cgi_conf);
-	hostName = "";
-	pathFromUri = "";
-	pathToFile = "";
-	pathInfo = "";
-	queryUri = "";
-	fragmentUri = "";
-	queryEnv.clear();
-	acceptCharset.clear();
-	acceptLanguage.clear();
-	contentType.clear();
-	contentLanguage.clear();
-	errorMask = 0;
-	in = 0;
-
-	servsList = NULL;
-	reqHeads = NULL;
-	uri = NULL;
-}
-
-void			RequestData::setData(t_ext_serv const *s, stringMap const *rHs, std::string const *uriR)
-{
-	servsList = s;
-	reqHeads = rHs;
-	uri = uriR;
-}
-
-RequestData::RequestData(t_ext_serv const *s, stringMap const *rHs, std::string const *uriR) :
-	servsList(s), reqHeads(rHs), uri(uriR), errorMask(0), in(0)
-{
-	serv = NULL;
-	location = NULL;
+	cgi_conf = NULL;
+	badalloc_index = -1;
 };
 
 RequestData::RequestData()
 {
-
-	serv = NULL;
-	location = NULL;
-	servsList = NULL;
-	reqHeads = NULL;
-	uri = NULL;
-	errorMask = 0;
-	in = 0;
+	location = NULL;	serv = NULL;
+	_servsList = NULL;	_uri = NULL;
+	_reqHeads = NULL;	_method = NULL;
+	cgi_conf = NULL;
+	error_code = 0;	errorMask = 0;	in = 0;
+	badalloc_index = -1;
 }
 
-void		stringToLower(std::string &s)
+void		RequestData::cleanData()
 {
-	for (int i = 0; i < s.length(); i++)
-		s[i] = std::tolower(s[i]);
+	location = NULL;	serv = NULL;
+	_servsList = NULL;	_uri = NULL;
+	_reqHeads = NULL;	_method = NULL;
+	hostName = "";
+	acceptLanguage.clear();		acceptCharset.clear();
+	contentLanguage.clear();	contentType.clear();
+	errorMask = 0;	in = 0;	error_code = 0;
+	uri.cleanData();
+	cleanCGIenv();
+	badalloc_index = -1;
+	cgi_conf = NULL;
 }
+
+void		RequestData::setData(t_ext_serv const *s,\
+									stringMap const *rHs,\
+									stringMap const *rFl)
+{
+	_servsList = s;
+	_reqHeads = rHs;
+	_uri = &rFl->find("uri")->second;
+	_method = &rFl->find("method")->second;
+}
+
+RequestData::~RequestData() {cleanCGIenv();};
 
 void		RequestData::setHeaderState(headerNum hN, bool error)
 {
@@ -70,22 +61,22 @@ void		RequestData::procQualityHeaders()
 	constMapIter	header;
 	qualityMap		m;
 
-	if ((header = reqHeads->find("accept-charset")) != reqHeads->end())
+	if ((header = _reqHeads->find("accept-charset")) != _reqHeads->end())
 	{
 		m = parseAcceptionLine(header->second, 0, 1);
-		setHeaderState(accChSet, m.first);
+		setHeaderState(e_accChSet, m.first);
 		acceptCharset = m.second;
 	}
-	if ((header = reqHeads->find("accept-language")) != reqHeads->end())
+	if ((header = _reqHeads->find("accept-language")) != _reqHeads->end())
 	{
 		m = parseAcceptionLine(header->second, 1, 1);
-		setHeaderState(accLang, m.first);
+		setHeaderState(e_accLang, m.first);
 		acceptLanguage = m.second;
 	}
-	if ((header = reqHeads->find("content-language")) != reqHeads->end())
+	if ((header = _reqHeads->find("content-language")) != _reqHeads->end())
 	{
 		m = parseAcceptionLine(header->second, 1, 0);
-		setHeaderState(contLang, m.first);
+		setHeaderState(e_contLang, m.first);
 		contentLanguage = m.second;
 	}
 }
@@ -94,10 +85,10 @@ void		RequestData::procUserAgent()
 {
 	constMapIter	header;
 	bool			var;
-	if ((header = reqHeads->find("user-agent")) != reqHeads->end())
+	if ((header = _reqHeads->find("user-agent")) != _reqHeads->end())
 	{
 		var = isValidUserAgent(header->second);
-		setHeaderState(userAgent, var);
+		setHeaderState(e_userAgent, var);
 	}
 }
 
@@ -105,20 +96,20 @@ void		RequestData::procContentType()
 {
 	constMapIter	header;
 	bool			var;
-	if ((header = reqHeads->find("content-type")) != reqHeads->end())
+	if ((header = _reqHeads->find("content-type")) != _reqHeads->end())
 	{
 		contTypeMap map = getContentType(header->second);
 		contentType = map.second;
-		setHeaderState(contType, map.first);
+		setHeaderState(e_contType, map.first);
 	}
 }
 
 void		RequestData::procHost()
 {
 	bool			var;
-	hostName = reqHeads->find("host")->second;
-	var = isValidHost(hostName, servsList->port);
-	setHeaderState(host, var);
+	hostName = _reqHeads->find("host")->second;
+	var = isValidHost(hostName, _servsList->port);
+	setHeaderState(e_host, var);
 }
 
 bool		RequestData::isValidHost(std::string const &s1, size_t port)
@@ -249,7 +240,6 @@ qualityMap	RequestData::parseAcceptionLine(std::string const &s, int isLang, int
 						{ok = false; break ;}
 					i++;
 				}
-
 			}
 			else
 				ok = false;
@@ -403,306 +393,169 @@ contTypeMap	RequestData::getContentType(std::string const &s)
 		{ m.first = true; return (m); }
 }
 
-int			isValidQuerySymbol(int c)
+static std::string
+			getClientIp(in_addr_t ip)
 {
-	if (std::isalnum(c) || c == '-' ||\
-		c == '_' || c == '.' || c == '~')
-		return (okQueryCh);
-	else if (c == '%')
-		return (percent);
-	else if (c == '=')
-		return (equal);
-	return (0);
-}
-
-int			isHex(int c)
-{
-	if (c >= 47 && c <= 57)			// digit
-		return (c - '0');
-	else if (c >= 97 && c <= 122)	// lowercase ascii
-		return (c - 'a');
-	else if (c >= 65 && c <= 90)	// uppercase ascii
-		return (c - 'A');
-	return (-1);
-}
-
-std::pair<std::string, int>	RequestData::getEnvVar(std::string const &s, size_t start)
-{
-	std::pair<std::string, int> res;
-	res.second = -1;
-	size_t	eqPos = s.find('=', start);
-	if (eqPos == std::string::npos && start == 0)
-		{setHeaderState(query, false); return (res);}
-	size_t	delimPos = queryUri.find_first_of(";&", eqPos);
-	if (delimPos == std::string::npos)
-		delimPos = s.length();
-	std::string	envVar = "HTTP_";
-	envVar.reserve(5 + delimPos - start);
-	int	validSym;
-	int	i = 0;
-	int	eqNum = 0;
-	while (i < delimPos - start)
-	{
-		int	c = isValidQuerySymbol(s[i]);
-		if (c == okQueryCh)
-			envVar.push_back(s[i]);
-		else if (c == equal)
-		{
-			if (++eqNum == 1)
-				envVar.push_back(s[i]);
-		}
-		else
-			{setHeaderState(query, false); return (res);}
-		i++;
-	}
-	res.first = envVar;
-	res.second = delimPos;
-	return (res);
-}
-
-bool		RequestData::isValidPath()
-{
-	setHeaderState(path, true);
-	return (true);
-}
-
-std::string	normalizeURI(std::string const &s)
-{
-	std::string	normUri;
-	normUri.reserve(s.length());
-	size_t	i = 0;
-	while (i < s.length())
-	{
-		if (s[i] != '/')
-			break ;
-		else
-			i++;
-	}
-	normUri.push_back('/');
-	while (i < s.length())
-	{
-		if (s[i] == '%' && s.length() - i > 2)
-		{
-			int	c1 = isHex(s[i + 1]);
-			int	c2 = isHex(s[i + 2]);
-			if (c1 != -1 && c2 != -1)
-			{
-				normUri.push_back(c1 * 16 + c2);
-				i += 2;
-			}
-			else
-				normUri.push_back(s[i]);
-		}
-		else
-			normUri.push_back(s[i]);
-		i++;
-	}
-	return (normUri);
-}
-
-void		RequestData::uriParse(std::string const *uri, bool envNeed)
-{
-	std::string normUri = normalizeURI(*uri);
-	size_t	queryPos = normUri.find('?');
-	pathFromUri = normUri.substr(0, queryPos);
-	bool	val = isValidPath();
-	if (queryPos != std::string::npos && val)
-	{
-		setHeaderState(query, true);
-		size_t	fragmentPos = normUri.find('#', queryPos);
-		queryUri = normUri.substr(queryPos + 1, fragmentPos - queryPos - 1);
-		fragmentUri = normUri.substr(fragmentPos);
-		if (!envNeed)
-			return ;
-		std::pair<std::string, int>	env = getEnvVar(queryUri, 0);
-		while (env.second != std::string::npos && env.second != -1)
-		{
-			queryEnv.push_back(env.first);
-			env = getEnvVar(queryUri, env.second + 1);
-		}
-	}
-}
-
-static int	match(std::string const &s1, std::string const &s2, size_t i1 = 0, size_t i2 = 0)
-{
-	if (i1 != s1.length() && s2[i2] == '*' && (i2 == 0 || i2 == s2.length() - 1))
-		return (match(s1, s2, i1 + 1, i2) + match(s1, s2, i1, i2 + 1));
-	else if (i1 == s1.length() && s2[i2] == '*' && (i2 == s2.length() - 1))
-		return (1);
-	else if (s1[i1] == s2[i2] && i1 != s1.length() && i2 != s2.length())
-		return (match(s1, s2, i1 + 1, i2 + 1));
-	else if (s1[i1] == s2[i2] && i1 == s1.length() && i2 == s2.length())
-		return (1);
-	return (0);
-}
-
-void		RequestData::determineServer()
-{
-	if ((errorMask & host) || (errorMask & path) || (errorMask & query)) // возможно нужна проверка только на существование хоста?
-		{setHeaderState(servT, false); serv = NULL; return ;}
-	size_t			portPos = hostName.find_last_of(':');
-	std::string		_hostName = hostName.substr(0, portPos);
-	stringToLower(_hostName);
-	std::vector<t_serv>::const_iterator sv = servsList->servs.cend();
-	for (std::vector<t_serv>::const_iterator i = servsList->servs.cbegin(); i < servsList->servs.cend(); i++)
-	{
-		std::string	tmpServName = i->serverName;
-		stringToLower(tmpServName);
-		if (match(_hostName, tmpServName))
-			if (sv->serverName.length() < i->serverName.length()\
-				|| sv == servsList->servs.cend())
-				sv = i;
-	}
-	if (sv == servsList->servs.cend())
-		serv = &(servsList->servs[0]);
-	else
-		serv = &(*sv);
-	setHeaderState(servT, true);
-}
-
-bool		RequestData::findLocation()
-{
-	if (!serv)
-		{setHeaderState(locFind, false); return (false);}
-	constLocIter	itLoc = serv->locs.begin();
-	constLocIter	itBest = serv->locs.end();
-	size_t	pos = 0;
-	while (itLoc != serv->locs.end())
-	{
-		if ((pos = uri->find(itLoc->path)) == std::string::npos)
-			;
-		if (itBest == serv->locs.end())
-			itBest = itLoc;
-		else if (itLoc->path.length() >= itBest->path.length())
-			itBest = itLoc;
-		itLoc++;
-	}
-	if (itBest == serv->locs.end())	/* what path should return if location for such uri does not exist ? */
-	{
-		// location = &(serv->locs[0]);
-		location = NULL;
-		setHeaderState(locFind, false);
-		return (false);
-	}
-	else
-		location = &(*itBest);
-	size_t	root_len = itBest->root.length();
-	if (itBest->root.back() == '/')
-		pathToFile = itBest->root.substr(0, root_len - 1) + pathFromUri;
-	else
-		pathToFile = itBest->root + pathFromUri;
-	setHeaderState(locFind, true);
-	return (true);
-}
-
-std::string	getClientIp(in_addr_t ip)
-{
-	uint16_t x = 0x0001;
+	uint16_t	x = 0x0001;
 	std::string	clientIp;
 	int n1, n2, n3, n4;
 	n1 = ip >> 24;
 	n2 = ((int32_t)(ip << 8)) >> 24;
 	n3 = ((int32_t)(ip << 16)) >> 24;
 	n4 = ((int32_t)(ip << 24)) >> 24;
-	if (*((uint8_t *) &x))
+	if (*((uint8_t *)&x))
 	{
 		int	tmp;
-		tmp = n4;
-		n4 = n1;
-		n1 = tmp;
-		tmp = n3;
-		n3 = n2;
-		n2 = tmp;
+		tmp = n4; n4 = n1; n1 = tmp;
+		tmp = n3; n3 = n2; n2 = tmp;
 	}
-	clientIp = size2Hex(n1, 10) + '.' + size2Hex(n2, 10) + '.' + size2Hex(n3, 10) + '.' + size2Hex(n4, 10);
+	clientIp = size2Hex(n1, 10) + '.' + size2Hex(n2, 10) + '.'\
+				+ size2Hex(n3, 10) + '.' + size2Hex(n4, 10);
 	return (clientIp);
 }
 
-void		RequestData::getCGIconfig(size_t contLen, std::string method, sockaddr_in addr)
+void	RequestData::procServer()
 {
-	if (!serv || !location || (errorMask & query))
-		{setHeaderState(cgiE, false); return ;}
-	size_t dotPos = pathToFile.find_last_of('.');
-	std::string	extension = "";
-	if (dotPos != std::string::npos)
-		extension = pathToFile.substr(dotPos + 1); 
-	if (location->cgi.find(extension) == location->cgi.end())
-		{setHeaderState(cgiE, false); return ;}
-	if (!(cgi_conf = (char **)malloc(18 * sizeof(char *))))
-		{setHeaderState(cgiE, false); return ;}
-	int	i = 0;
-	if ((in & auth) && !(errorMask & auth))
-		cgi_conf[i++] = strdup("AUTH_TYPE=Basic");
-	cgi_conf[i++] = strdup("GATEWAY_INTERFACE=CGI/1.1");
-	cgi_conf[i++] = strdup("SERVER_PROTOCOL=HTTP/1.1");
-	cgi_conf[i++] = strdup("SERVER_SOFTWARE=BSHABILLUM/1.1");
-	cgi_conf[i++] = strdup(("SERVER_NAME=" + serv->serverName).c_str());
-	cgi_conf[i++] = strdup(("SERVER_PORT=" + size2Hex(serv->port, 10)).c_str());
+	serv = Server::determineServer(_servsList, hostName);
+	if (!serv)
+		setHeaderState(e_serv, false);
+	else
+		setHeaderState(e_serv, true);
+}
 
-	if ((in & query) && !(errorMask & query))
-		cgi_conf[i++] = strdup(("QUERY_STRING=" + queryUri).c_str());
-	cgi_conf[i++] = strdup(("REQUEST_URI=" + *uri).c_str());
-	if (!pathInfo.empty())
+void	RequestData::procUri()
+{
+	if (!uri.procUri(*_uri))
 	{
-		cgi_conf[i++] = strdup("PATH_INFO=");
-		cgi_conf[i++] = strdup("PATH_TRANSLATED=");
+		setHeaderState(e_uri, false);
+		return ;
 	}
-	cgi_conf[i++] = strdup(("SCRIPT_NAME=" + pathFromUri).c_str());
-
-	cgi_conf[i++] = strdup(("CONTENT_TYPE=" + contentType["type"]).c_str());
-	if (contLen > 0)
-		cgi_conf[i++] = strdup(("CONTENT_LENGTH=" + size2Hex(contLen, 10)).c_str());
-
-	cgi_conf[i++] = strdup(("REMOTE_ADDR=" + getClientIp(addr.sin_addr.s_addr)).c_str());
-	cgi_conf[i++] = strdup(("REQUEST_METHOD=" + method).c_str());
-	if ((in & auth) && !(errorMask & auth) && !(errorMask & host))
+	location = Server::findLocation(serv, uri.script_name);
+	if (!location)
 	{
-		std::string	username = location->authLogPass.substr(0,\
-								location->authLogPass.find_first_of(':'));
-		cgi_conf[i++] = strdup(("REMOTE_IDENT=" + username + '.' + hostName).c_str());
-		cgi_conf[i++] = strdup(("REMOTE_USER=" + username).c_str());
+		setHeaderState(e_loc, false);
+		error_code = 404;
+		return ;
 	}
-	cgi_conf[i] = NULL;
-	for (int k = 0; k < i; k++)
-		std::cout << cgi_conf[k] << std::endl;
+	if (!uri.setTranslatedPath(location))
+		setHeaderState(e_uri, false);
 }
 
 void		RequestData::procAuthorization()
 {
 	constMapIter	header;
 
-	if ((header = reqHeads->find("authorization")) != reqHeads->end())
+	if (location->authLogPass.empty() || location->auth.empty())
+		return ;
+	if (!location)
+		return (setHeaderState(e_auth, false));
+	header = _reqHeads->find("authorization");
+	if (header == _reqHeads->end() &&\
+		!location->authLogPass.empty() &&\
+		!location->auth.empty())
 	{
-		if (!location)
-			{setHeaderState(auth, false); return ;}
-		if (location->authLogPass == "" || location->auth == "")
-			{setHeaderState(auth, true); return ;} // Пришел запрос на авторизацию, но она не требуется.
-		std::string	authCont = header->second;
-		size_t spacePos = authCont.find(' ', 0);
-		if (spacePos == std::string::npos)
-			{setHeaderState(auth, false); return ;}
-		std::string	authType = authCont.substr(0, spacePos);
-		stringToLower(authType);
-		if (authType != "basic")
-			{setHeaderState(auth, false); return ;}
-		std::string encodedReq = authCont.substr(spacePos + 1);
-		std::string encoded = base64encode(location->authLogPass);
-		if (encoded == encodedReq)
-			{setHeaderState(auth, true); return ;}
-		else
-			{setHeaderState(auth, false); return ;}
+		error_code = 401;
+		return (setHeaderState(e_auth, false));
+	}
+	std::string	authCont = header->second;
+	size_t spacePos = authCont.find(' ', 0);
+	if (spacePos == std::string::npos)
+		{setHeaderState(e_auth, false); return ;}
+	std::string	authType = authCont.substr(0, spacePos);
+	stringToLower(authType);
+	if (authType != "basic")
+		{setHeaderState(e_auth, false); return ;}
+	std::string encodedReq = authCont.substr(spacePos + 1);
+	std::string encoded = base64encode(location->authLogPass);
+	if (encoded == encodedReq)
+		return (setHeaderState(e_auth, true));
+	else
+	{
+		error_code = 401;
+		return (setHeaderState(e_auth, false));
 	}
 }
 
-void		RequestData::prepareData(size_t contLen, std::string method, sockaddr_in addr)
+void		RequestData::addCgiVar(int i, std::string const &s)
+{
+	if (badalloc_index != -1)
+		return ;
+	cgi_conf[i] = strdup(s.c_str());
+	if (!cgi_conf[i])
+	{
+		setHeaderState(e_cgi, false);
+		badalloc_index = i;
+	}
+}
+
+void			RequestData::cleanCGIenv()
+{
+	int i = 0;
+	while (cgi_conf[i])
+	{
+		if (i == badalloc_index)
+			break ;
+		free(cgi_conf[i++]);
+	}
+}
+
+void		RequestData::procCGI(size_t contLen, sockaddr_in addr)
+{
+	if (!serv || !location || (errorMask & e_uri))
+		return (setHeaderState(e_cgi, false));
+	if (location->cgi.find(uri.extension) == location->cgi.end())
+		return ;
+	setHeaderState(e_cgi, true);
+	if (!(cgi_conf = (char **)malloc(envCgiSize * sizeof(char *))))
+		setHeaderState(e_cgi, false);
+	int	i = 0;
+	if ((in & e_auth) && !(errorMask & e_auth))
+		addCgiVar(i++, "AUTH_TYPE=Basic");
+	addCgiVar(i++, "GATEWAY_INTERFACE=CGI/1.1");
+	addCgiVar(i++, "SERVER_PROTOCOL=HTTP/1.1");
+	addCgiVar(i++, "SERVER_SOFTWARE=BSHABILLUM/1.1");
+	addCgiVar(i++, "SERVER_NAME=" + serv->serverName);
+	addCgiVar(i++, "SERVER_PORT=" + size2Hex(serv->port, 10));
+	if (!uri.query_string.empty())
+		addCgiVar(i++, "QUERY_STRING=" + uri.query_string);
+	addCgiVar(i++, "REQUEST_URI=" + uri.request_uri);
+	if (!uri.path_info.empty())
+	{
+		addCgiVar(i++, "PATH_INFO=" + uri.path_info);
+		addCgiVar(i++, "PATH_TRANSLATED=" + uri.path_translated);
+	}
+	addCgiVar(i++, "SCRIPT_NAME=" + uri.script_name);
+	if ((in & e_contType) && !(errorMask & e_contType))
+		addCgiVar(i++, "CONTENT_TYPE=" + contentType["type"]);
+	if (contLen > 0)
+		addCgiVar(i++, "CONTENT_LENGTH=" + size2Hex(contLen, 10));
+	addCgiVar(i++, "REMOTE_ADDR=" + getClientIp(addr.sin_addr.s_addr));
+	addCgiVar(i++, "REQUEST_METHOD=" + *_method);
+	if ((in & e_auth) && !(errorMask & e_auth))
+	{
+		std::string	username = location->authLogPass.substr(0,\
+								location->authLogPass.find_first_of(':'));
+		addCgiVar(i++, "REMOTE_IDENT=" + username + '.' + hostName);
+		addCgiVar(i++, "REMOTE_USER=" + username);
+	}
+	cgi_conf[i] = NULL;
+	if (badalloc_index != -1)
+		{cleanCGIenv(); return ;}
+	for (int k = 0; k < i; k++)
+		std::cout << cgi_conf[k] << std::endl;
+}
+
+void		RequestData::prepareData(size_t contLen, sockaddr_in addr)
 {
 	procHost();
 	procQualityHeaders();
 	procUserAgent();
 	procContentType();
-	uriParse(uri, true);
-	determineServer();
-	findLocation();
+	procServer();
+	procUri();
 	procAuthorization();
-	getCGIconfig(contLen, method, addr);
+	procCGI(contLen, addr);
+	std::cout << "LOCATION_ROOT: " << location->root << std::endl;
+	// std::cout << "CGI_ROOT: " << location->cgi.find(uri.extension) << std::endl;
+
 }
