@@ -44,25 +44,27 @@ int			MethodGet::generateIdxPage(std::string const &path){
 	return 0;
 }
 
-// MethodStatus	MethodGet::manageRequest(std::string const &path)
+MethodStatus	MethodGet::manageRequest() { return (ok); };
 // MethodGet::~MethodGet() {};
 // MethodStatus	MethodGet::createHeader() { return (ok); };
-// MethodStatus	MethodGet::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return (ok); };
+MethodStatus	MethodGet::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return (ok); };
 // MethodStatus	MethodGet::manageRequest() { return (ok); };
 // MethodStatus	MethodGet::sendBody(int socket) { return (ok); };
 MethodStatus	MethodGet::sendHeader(int socket)
 {
 	struct stat	st;
-	if (stat(path.c_str(), &st) == -1){// && errno == ENOENT)
+	// if (stat(path.c_str(), &st) == -1){// && errno == ENOENT)
+	if (stat(data.uri.script_name.c_str(), &st) == -1){// && errno == ENOENT)
 		_statusCode = notFound;
 		return error;
 	}
-	if (S_ISDIR(st.st_mode) && _config.locs[0].autoindex){
-		if (generateIdxPage(path))//signalize that body not from fd
+	// if (S_ISDIR(st.st_mode) && _config.locs[0].autoindex){
+	if (S_ISDIR(st.st_mode) && data.location->autoindex){
+		if (generateIdxPage(data.uri.script_name))//signalize that body not from fd
 			return error;
 	}
 	// else S_ISFIFO S_ISLNK /// O_DIRECTORY
-	else if (S_ISREG(st.st_mode) && (_fd = open(path.c_str(), O_RDONLY | O_NONBLOCK)) < 0){
+	else if (S_ISREG(st.st_mode) && (_fd = open(data.uri.script_name.c_str(), O_RDONLY | O_NONBLOCK)) < 0){
 		_statusCode = errorOpeningURL;
 		return error;
 	}
@@ -70,9 +72,10 @@ MethodStatus	MethodGet::sendHeader(int socket)
 	return ok;
 };
 
-MethodStatus	MethodGet::createHeader(std::string const &path)
+// MethodStatus	MethodGet::createHeader(std::string const &path)
+MethodStatus	MethodGet::createHeader()
 {
-	_header = new Header(path);
+	_header = new Header(data.uri.script_name);
 
 //what headers if dir///Last Modified?
 	std::cout << "////\tGET METHOD, statusCode: " << _statusCode << std::endl;
@@ -81,7 +84,8 @@ MethodStatus	MethodGet::createHeader(std::string const &path)
 	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206)){
 		_header->createEntityHeaders(_headersMap, _statusCode);
 	}
-	_header->addAllowHeader(_headersMap, _statusCode, _config);
+	// _header->addAllowHeader(_headersMap, _statusCode, _config);
+	_header->addAllowHeader(_headersMap, _statusCode, *data.serv);
 	_header->addLocationHeader(_headersMap, _statusCode);
 	_header->addRetryAfterHeader(_headersMap, _statusCode);
 	// _header->addTransferEncodingHeader(_headersMap, _statusCode, _headersMapRequest);
@@ -90,18 +94,18 @@ MethodStatus	MethodGet::createHeader(std::string const &path)
 	return ok;
 };
 
-MethodStatus		MethodGet::sendHeader(int socket)
-{
-	std::string headerStr;
-	_header->headersToString(_headersMap, _statusCode, headerStr);
-	if (send(socket, headerStr.c_str(), headerStr.length(), 0) < 0){
-		//if ret < length -> loop
-		_statusCode = errorSendingResponse;
-		return error;
-	}
-	std::cout << "Response header string: \n" << headerStr <<std::endl;
-	return ok;
-}
+// MethodStatus		MethodGet::sendHeader(int socket)
+// {
+// 	std::string headerStr;
+// 	_header->headersToString(_headersMap, _statusCode, headerStr);
+// 	if (send(socket, headerStr.c_str(), headerStr.length(), 0) < 0){
+// 		//if ret < length -> loop
+// 		_statusCode = errorSendingResponse;
+// 		return error;
+// 	}
+// 	std::cout << "Response header string: \n" << headerStr <<std::endl;
+// 	return ok;
+// }
 
 MethodStatus		MethodGet::sendBody(int socket)
 {
