@@ -1,19 +1,13 @@
 #include "MethodGet.hpp"
 #include "Header.hpp"
 
-// MethodGet::MethodGet(t_serv const &config, int &code, stringMap const &headers) \
-// 	: AMethod(config, code, headers) { _sentBytesTotal = 0; };
-
 MethodGet::~MethodGet(){ };
 
-// MethodStatus	MethodGet::readRequestBody(int socket) { return ok; };
-
-int			MethodGet::generateIdxPage(std::string const &path){
+int			MethodGet::generateIdxPage(){
 	DIR				*dir;
 	struct dirent	*cur;
 
-	std::cout << "path: " << path << std::cout;
-	dir = opendir(path.c_str());//if -1
+	dir = opendir(data.uri.script_name.c_str());//if -1
 	if (!dir){//EACCES
 		_statusCode = errorOpeningURL;
 		return -1;//
@@ -31,8 +25,8 @@ int			MethodGet::generateIdxPage(std::string const &path){
 	while ((cur = readdir(dir)) != NULL && errno == 0){
 		if (cur->d_name[0] == '.')
 			continue ;//
-		_body += "<a href=\"" + path;
-		// if (path != "/")
+		_body += "<a href=\"" + data.uri.script_name;
+		// if (path != "/")//
 		// 	_body += "/";
 		_body += cur->d_name;
 		_body += "\">";
@@ -44,28 +38,43 @@ int			MethodGet::generateIdxPage(std::string const &path){
 	return 0;
 }
 
-MethodStatus	MethodGet::manageRequest() { return (ok); };
-// MethodGet::~MethodGet() {};
-// MethodStatus	MethodGet::createHeader() { return (ok); };
+int			MethodGet::generateErrorPage(){
+
+	_body = "<html>\n \
+			<head><style> \
+					body {background-color: rgb(252, 243, 233);}\
+					h1   {color: red;}\
+			</style></head>\
+			<body>\n"
+			"<h1>ERROR ";
+	_body += std::to_string(_statusCode);
+	_body += "</h1>\n</body>\n</html>\n";
+	return 0;
+}
+
 MethodStatus	MethodGet::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return (ok); };
-// MethodStatus	MethodGet::manageRequest() { return (ok); };
-// MethodStatus	MethodGet::sendBody(int socket) { return (ok); };
-MethodStatus	MethodGet::sendHeader(int socket)
+
+MethodStatus	MethodGet::manageRequest()
 {
 	struct stat	st;
-	// if (stat(path.c_str(), &st) == -1){// && errno == ENOENT)
+
+	std::cout << "path: " << data.uri.script_name << std::endl;
 	if (stat(data.uri.script_name.c_str(), &st) == -1){// && errno == ENOENT)
+		std::cout << "here" << std::endl;
 		_statusCode = notFound;
-		return error;
+		generateErrorPage();//can be moved to headerCreate...
+		return error;//ok;
 	}
-	// if (S_ISDIR(st.st_mode) && _config.locs[0].autoindex){
+
 	if (S_ISDIR(st.st_mode) && data.location->autoindex){
-		if (generateIdxPage(data.uri.script_name))//signalize that body not from fd
-			return error;
+		if (generateIdxPage())//signalize that body not from fd
+			return error;//ok
 	}
-	// else S_ISFIFO S_ISLNK /// O_DIRECTORY
-	else if (S_ISREG(st.st_mode) && (_fd = open(data.uri.script_name.c_str(), O_RDONLY | O_NONBLOCK)) < 0){
+	
+	// else if (S_ISREG(st.st_mode) && (_fd = open(data.uri.script_name.c_str(), O_RDONLY | O_NONBLOCK)) < 0){// else S_ISFIFO S_ISLNK /// O_DIRECTORY
+	else if ((_fd = open(data.uri.script_name.c_str(), O_RDONLY | O_NONBLOCK)) < 0){
 		_statusCode = errorOpeningURL;
+		generateErrorPage();
 		return error;
 	}
 	_statusCode = okSuccess;
@@ -78,7 +87,7 @@ MethodStatus	MethodGet::createHeader()
 	_header = new Header(data.uri.script_name);
 
 //what headers if dir///Last Modified?
-	std::cout << "////\tGET METHOD, statusCode: " << _statusCode << std::endl;
+	std::cout << "\n////\tGET METHOD, statusCode: " << _statusCode << std::endl;
 
 	_header->createGeneralHeaders(_headersMap, _statusCode);
 	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206)){
@@ -94,43 +103,11 @@ MethodStatus	MethodGet::createHeader()
 	return ok;
 };
 
-// MethodStatus		MethodGet::sendHeader(int socket)
-// {
-// 	std::string headerStr;
-// 	_header->headersToString(_headersMap, _statusCode, headerStr);
-// 	if (send(socket, headerStr.c_str(), headerStr.length(), 0) < 0){
-// 		//if ret < length -> loop
-// 		_statusCode = errorSendingResponse;
-// 		return error;
-// 	}
-// 	std::cout << "Response header string: \n" << headerStr <<std::endl;
-// 	return ok;
-// }
+MethodStatus		MethodGet::sendResponse(int socket) { return ok; };
+
+MethodStatus		MethodGet::sendHeader(int socket) { _statusCode = okSuccess; return ok; };
 
 MethodStatus		MethodGet::sendBody(int socket)
-{
-	size_t	ret;
-	char	buf[_bs];
-
-	while ((ret = read(_fd, buf, _bs)) >= 0){
-		size_t sent = write(socket, buf, ret);
-		if (sent == 0)
-			break ;
-		if (sent < 0){
-			_statusCode = errorSocket;
-			return error;
-		}
-	}
-	if (ret == -1){
-		_statusCode = errorReadingURL;//updates STATUSCODE or return error
-		return error;
-	}
-	close(_fd);
-	_statusCode = okSuccess;
-	return ok;
-}
-
-MethodStatus		MethodGet::sendResponse(int socket)
 {
 	std::string	response;
 	size_t		readBytes;
@@ -150,7 +127,6 @@ MethodStatus		MethodGet::sendResponse(int socket)
 			pos += 16;
 			size_t fin = response.find_first_of(CRLF, pos);
 			response.replace(pos, fin - pos, std::to_string(_body.length()));//to_string
-			std::cout << "1response:\n" << response << "\n" << std::cout;
 		}
 		else {
 			struct stat sbuf;
@@ -158,7 +134,7 @@ MethodStatus		MethodGet::sendResponse(int socket)
 			_bytesToSend = sbuf.st_size + headersize;
 			readBuf -= headersize;
 		}
-		std::cout << "response:\n" << response << "\n" << std::cout;
+		// std::cout << "response:\n" << response << "\n" << std::cout;
 	}
 	if (!_remainder.empty()){//only if not a full response was sent (by send)
 		readBuf = _bs - _remainder.length();
@@ -177,6 +153,7 @@ MethodStatus		MethodGet::sendResponse(int socket)
 		response += bufStr;
 	}
 
+std::cout << "\t\t\t\t\t\t__________________response:\n" << response << "\n" << std::cout;
 	sentBytes = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
 	if (sentBytes < 0 || errno == EMSGSIZE){
 		_statusCode = errorSendingResponse;
@@ -184,9 +161,6 @@ MethodStatus		MethodGet::sendResponse(int socket)
 		return error;
 	}
 	if (sentBytes < response.length()){
-		// char const *str = response.c_str();
-		// str += sentBytes;
-		// _remainder.assign(str);
 		_remainder.assign(response.c_str(), sentBytes, response.length() - sentBytes);
 		_sentBytesTotal += sentBytes;
 		_statusCode = okSendingInProgress;
@@ -201,7 +175,7 @@ MethodStatus		MethodGet::sendResponse(int socket)
 	}
 
 	_statusCode = okSuccess;//
-	close(_fd);
+	close(_fd);//do not need if error occured
 	_body.clear();
 	return ok;
 }

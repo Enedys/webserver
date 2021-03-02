@@ -21,13 +21,14 @@ private:
 public:
 	MethodGet(int &status, RequestData const &data) : AMethod(status, data) {_type = GET; };
 	~MethodGet();
-	virtual MethodStatus	createHeader();
+	virtual MethodStatus	createHeader();//2
 	virtual MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus);
-	virtual MethodStatus	sendHeader(int socket);
-	virtual MethodStatus	manageRequest();
-	virtual MethodStatus	sendBody(int socket);
+	virtual MethodStatus	sendHeader(int socket);//3
+	virtual MethodStatus	manageRequest();//1
+	virtual MethodStatus	sendBody(int socket);//4
 
 	virtual MethodStatus	sendResponse(int socket);
 
-	int						generateIdxPage(std::string const &_path);
+	int						generateIdxPage();
+	int						generateErrorPage();
 };
