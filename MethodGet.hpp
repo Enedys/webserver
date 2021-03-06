@@ -36,5 +36,5 @@ public:
 	virtual MethodStatus	sendResponse(int socket);
 
 	void					generateIdxPage();
-	int						generateErrorPage();
+	// int						generateErrorPage();
 };

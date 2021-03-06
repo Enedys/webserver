@@ -10,42 +10,54 @@ void			MethodGet::generateIdxPage(){
 
 	dir = opendir(data.uri.script_name.c_str());
 	if (!dir){//EACCES
-		std::cout << "__________opendir " << std::endl;
 		_statusCode = errorOpeningURL;
+		return ;
 	}
-	_body = "<html>\n \
-			<head><style> \
+	_body = "<html><head><style> \
 					body {background-color: rgb(252, 243, 233);}\
 					h1   {color: lightseagreen;}\
-					p    {color: rgb(60, 179, 113);}\
-					a {color: rgba(255, 99, 71, 0.95);}\
-			</style></head>\
-			<body>\n"
-			"<h1>Directory listing:</h1>\n";
+					td   {color: rgb(75, 8, 23);}\
+					a    {color: rgba(255, 99, 71, 0.95);}\
+			</style></head><body>"
+			"<h1>Directory index</h1><table style=\"width:30%\">";
 
-	// std::cout << "______uri.script_name: " << data.uri.script_name << std::endl;
-	size_t fin = data.uri.script_name.find_last_of("/");//пошаманить
-	std::string fname;
-	if (fin == data.uri.script_name.length() - 1){
-		fin = data.uri.script_name.find_last_of("/", data.uri.script_name.length() - 2);
-		fname = data.uri.script_name.substr(fin, data.uri.script_name.length() - fin - 1);
-	}
-	else
-		fname = data.uri.script_name.substr(fin);
+	std::string fname = data.uri.script_name.substr(data.location->root.length(), data.uri.script_name.length());
+	size_t fin = fname.find_last_of("/");
+	if (fin != fname.length() - 1)
+		fname += "/";
+	std::cout << "fname: " << fname << std::endl;
 
 	errno = 0;
 	while ((cur = readdir(dir)) != NULL && errno == 0){
-		if (cur->d_name[0] == '.')
-			continue ;//
-		_body += "<a href=\"" + fname;
-		_body += "/";// if (path != "/")//
+		if (strcmp(cur->d_name, ".") == 0)
+			continue ;
+
+		std::string fullPath(data.uri.script_name);
+		fullPath += cur->d_name;
+		struct stat	st;
+		char buf[100];
+		stat(fullPath.c_str(), &st);
+		struct tm *tm2 = gmtime(&st.st_mtime);
+		strftime(buf, 100, "%d-%b-%Y %H:%M\n", tm2);
+		std::string lastModified(buf);
+		size_t size = st.st_size;
+		std::string fileSize = std::to_string(size);//
+		if (S_ISDIR(st.st_mode))
+			fileSize = "-";
+
+		_body += "<tr><td><a href=\"/" + fname;
 		_body += cur->d_name;
+		if (S_ISDIR(st.st_mode))
+			_body += "/";
 		_body += "\">";
 		_body += cur->d_name;
-		_body += "</a><br>\n";
+		if (S_ISDIR(st.st_mode))
+			_body += "/";
+		_body += "</a></td>";
+		_body += "<td><small>" + lastModified + "</small></td><td><small>" + fileSize + "</small></td></tr><br>";
 	}
-	closedir(dir);
 	_body += "</body>\n</html>\n";
+	closedir(dir);
 }
 
 MethodStatus	MethodGet::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return (ok); };
@@ -56,6 +68,7 @@ MethodStatus	MethodGet::manageRequest(){
 
 	_statusCode = okSuccess;
 
+	// std::cout << "__PATH_NAME: " << data.uri.script_name << std::endl;
 	if (stat(data.uri.script_name.c_str(), &st) == -1){// && errno == ENOENT)
 		_statusCode = notFound;
 		return error;
@@ -71,7 +84,7 @@ MethodStatus	MethodGet::manageRequest(){
 	// else if (S_ISREG(st.st_mode) && (_fd = open(data.uri.script_name.c_str(), O_RDONLY | O_NONBLOCK)) < 0){// else S_ISFIFO S_ISLNK /// O_DIRECTORY
 	else if ((_fd = open(data.uri.script_name.c_str(), O_RDONLY | O_NONBLOCK)) < 0)
 		_statusCode = errorOpeningURL;
-	return ok;//not possib to return inprogress
+	return ok;
 };
 
 MethodStatus	MethodGet::createHeader()
@@ -133,7 +146,7 @@ MethodStatus		MethodGet::sendBody(int socket)
 		readBuf = _bs - _remainder.length();
 		response = _remainder;
 	}
-	if (_body.empty()){//not listing -> //no if braces without autoindex
+	if (_body.empty()){//not listing, regular file
 		readBytes = read(_fd, buf, readBuf);
 		std::cout << "_________readBytes: " << readBytes << "\n" << std::endl;
 		if (readBytes < 0){
@@ -146,7 +159,6 @@ MethodStatus		MethodGet::sendBody(int socket)
 		response += bufStr;
 	}
 
-std::cout << "\t\t\t\t\t\t__________________response:\n" << response << "\n" << std::endl;
 	sentBytes = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
 	if (sentBytes < 0 || errno == EMSGSIZE){
 		_statusCode = errorSendingResponse;
@@ -161,7 +173,6 @@ std::cout << "\t\t\t\t\t\t__________________response:\n" << response << "\n" << 
 	};
 	// _remainder.clear();//
 	_sentBytesTotal += sentBytes;
-	std::cout << "****\t\t\t\t\t\t\t\t_bytesToSend: " << _bytesToSend << " _sentBytesTotal: " << _sentBytesTotal << std::endl;
 	if (_sentBytesTotal < _bytesToSend){
 		_statusCode = okSendingInProgress;
 		return inprogress;
