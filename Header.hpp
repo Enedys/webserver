@@ -10,10 +10,13 @@
 class Header
 {
 private:
-	std::string const &_path;
+	std::string const	&_path;
+	std::string			_errorPage;//body
+	int					_statusCode;//&
+	// std::string			&_responseHeaders;//response
 	Header();
 public:
-	Header(std::string const &path);
+	Header(std::string const &path, int statusCode);
 	~Header();
 
 	void	createGeneralHeaders(stringMap &_headersMap, int &_statusCode);
@@ -22,7 +25,7 @@ public:
 
 	void	addAllowHeader(stringMap &_headersMap, int &_statusCode, const t_serv &_config);
 	void	addContentLanguageHeader(stringMap &_headersMap, int &_statusCode);
-	void	addContentLengthHeader(stringMap &_headersMap, int &_statusCode);
+	void	addContentLengthHeader(stringMap &_headersMap, int &_statusCode, std::string const & body);
 	void	addContentLocationHeader(stringMap &_headersMap, int &_statusCode);
 	void	addContentTypeHeader(stringMap &_headersMap, int &_statusCode);
 
@@ -34,4 +37,7 @@ public:
 	void	addAuthenticateHeader(stringMap &_headersMap, int &_statusCode);
 
 	void	headersToString(stringMap const &headersMap, int const &_statusCode, std::string &output);
+	void	generateErrorPage(int const &statusCode, std::string &body);
+	// std::string		&getErrorPage();//
+	// std::string		&getResponseHeaders();
 };

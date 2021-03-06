@@ -1,8 +1,10 @@
 #pragma once
+#include <dirent.h>
+#include <iostream>
+
 #include "Method.hpp"
 #include "Header.hpp"
 
-#include <dirent.h>
 //max body size
 
 class MethodGet : public AMethod
@@ -19,7 +21,11 @@ private:
 	std::string			_body;
 
 public:
-	MethodGet(int &status, RequestData const &data) : AMethod(status, data) {_type = GET; };
+	MethodGet(int &status, RequestData const &data) : AMethod(status, data) {
+		_type = GET;
+		_sentBytesTotal = 0;
+		// _bytesToSend = 0;
+	};
 	~MethodGet();
 	virtual MethodStatus	createHeader();//2
 	virtual MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus);
@@ -29,6 +35,6 @@ public:
 
 	virtual MethodStatus	sendResponse(int socket);
 
-	int						generateIdxPage();
+	void					generateIdxPage();
 	int						generateErrorPage();
 };

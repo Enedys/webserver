@@ -1,40 +1,8 @@
 #include "Header.hpp"
 
-Header::Header(std::string const &path) : _path(path) {};
+Header::Header(std::string const &path, int statusCode) : _path(path), _statusCode(statusCode) {};
 
 Header::~Header(){ delete this; };
-
-static void	ft_ltoa(long int nbr, std::string &res)
-{
-	int		len = 0;
-	int		sign = 1;
-	char	*str;
-	long int nbrcpy = nbr;
-
-	while (nbrcpy <= -10 || nbrcpy >= 10) {
-		nbrcpy /= 10;
-		len++;
-	}
-	if (nbrcpy < 0)
-		len++;
-	str = (char*)malloc(sizeof(*str) * (len + 2));
-	if (nbr < 0){
-		nbr *= -1;
-		sign *= (-1);
-	}
-	if (sign < 0)
-		str[0] = '-';
-	str[len + 1] = '\0';
-	while (len >= 0){
-		str[len] = nbr % 10 + '0';
-		nbr = nbr / 10;
-		len--;
-		if (len == 0 && sign < 0)
-			break ;
-	}
-	res.assign(str);//res = std::string(str);
-	free(str);
-}
 
 std::map<int, std::string> respStatusCodes;
 static struct respStatusCodesInit
@@ -46,7 +14,7 @@ static struct respStatusCodesInit
 		respStatusCodes[202] = "Accepted";
 		respStatusCodes[400] = "Bad Request";
 		respStatusCodes[401] = "Unauthorized";
-		respStatusCodes[403] = "Forbidden";
+		respStatusCodes[403] = "Forbidden";//when autoindex is off and request is a folder
 		respStatusCodes[404] = "Not Found";
 		respStatusCodes[405] = "Method Not Allowed";
 		respStatusCodes[414] = "URI Too Long";
@@ -58,15 +26,24 @@ static struct respStatusCodesInit
 
 void	Header::headersToString(stringMap const &headersMap, int const &statusCode, std::string &output)
 {
-	std::string codeStr;
-	ft_ltoa(statusCode, codeStr);
-	output += "HTTP/1.1 " + codeStr + " " + respStatusCodes[statusCode] + CRLF;
+	std::string statusCodeStr = std::to_string(statusCode);
+	// ft_utoa(statusCode, statusCodeStr);
+	output += "HTTP/1.1 " + statusCodeStr + " " + respStatusCodes[statusCode] + CRLF;
 	for (constMapIter it = headersMap.begin(); it != headersMap.end(); ++it)
 		output += (it->first) + ": " + (it->second) + CRLF;
 	output += CRLF;
 }
 
-void	Header::createGeneralHeaders(stringMap &_headersMap, int &_statusCode)
+void	Header::generateErrorPage(int const &statusCode, std::string &errorPage){
+	errorPage = "<html>\n"
+			"<style> body {background-color: rgb(252, 243, 233);}"
+			"h1 {color: rgb(200, 0, 0);} </style>"
+			"<body> <h1>ERROR ";
+	errorPage += std::to_string(statusCode);
+	errorPage += "</h1>\n</body>\n</html>\n";
+};
+
+void	Header::createGeneralHeaders(stringMap &headersMap, int &statusCode)
 {
 	char			buf1[100];
 	struct timeval	tv;
@@ -76,34 +53,39 @@ void	Header::createGeneralHeaders(stringMap &_headersMap, int &_statusCode)
 	tm1 = gmtime(&tv.tv_sec);
 	strftime(buf1, 100, "%a, %d %b %Y %H:%M:%S GMT", tm1);
 	std::string date = std::string(buf1);
-	_headersMap.insert(std::pair<std::string, std::string>("Server", "nginx/1.2.1"));
-	_headersMap.insert(std::pair<std::string, std::string>("Date", date));
-	_headersMap.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));//_contentType
+	headersMap.insert(std::pair<std::string, std::string>("Server", "Shabillum/1.0.7"));
+	headersMap.insert(std::pair<std::string, std::string>("Date", date));
+	headersMap.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));
 };
 
-void	Header::createEntityHeaders(stringMap &_headersMap, int &_statusCode)
+void	Header::createEntityHeaders(stringMap &headersMap, int &statusCode)
 {//specific for statuses and methods
-	addContentLanguageHeader(_headersMap, _statusCode);
-	addContentLengthHeader(_headersMap, _statusCode);
-	addContentLocationHeader(_headersMap, _statusCode);
-	addContentTypeHeader(_headersMap, _statusCode);
-	addLastModifiedHeader(_headersMap, _statusCode);//if modified
+	addContentLanguageHeader(headersMap, statusCode);
+	addContentLocationHeader(headersMap, statusCode);//redir?
+	addContentTypeHeader(headersMap, statusCode);
+	addLastModifiedHeader(headersMap, statusCode);//if modified
 };
 
-void	Header::addContentLanguageHeader(stringMap &_headersMap, int &_statusCode){
-	_headersMap.insert(std::pair<std::string, std::string>("Content-Language", "en-US"));//can it be specified in request before?
+void	Header::addContentLanguageHeader(stringMap &headersMap, int &statusCode){
+	headersMap.insert(std::pair<std::string, std::string>("Content-Language", "en-US"));//can it be specified in request before?
 };
 
-void	Header::addContentLengthHeader(stringMap &_headersMap, int &_statusCode)
+void	Header::addContentLengthHeader(stringMap &headersMap, int &statusCode, std::string const & body)
 {
+	size_t bodySize;
 	struct stat stat_buf;
-	int rc = stat(_path.c_str(), &stat_buf);
-	long fileSize = rc == 0 ? stat_buf.st_size : -1;
-	if (fileSize < 0)
-		return ;
-	std::string contentLength;
-	ft_ltoa(fileSize, contentLength);
-	_headersMap.insert(std::pair<std::string, std::string>("Content-Length", contentLength));//can it be specified in request before?
+
+	if (body.length())//if autoindex or error -> check _body
+		bodySize = body.length();
+	else {
+		int rc = stat(_path.c_str(), &stat_buf);
+		if (rc == -1)
+			return ;//bodySize = 0; statusCode = 401//
+		bodySize = stat_buf.st_size;
+	}
+	std::string contentLength = std::to_string(bodySize);
+	// ft_utoa(bodySize, contentLength);
+	headersMap.insert(std::pair<std::string, std::string>("Content-Length", contentLength));//can it be specified in request before?
 };
 
 void	Header::addContentLocationHeader(stringMap &_headersMap, int &_statusCode)
@@ -118,28 +100,28 @@ void	Header::addContentTypeHeader(stringMap &_headersMap, int &_statusCode)
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));
 };
 
-void	Header::addLastModifiedHeader(stringMap &_headersMap, int &_statusCode)
+void	Header::addLastModifiedHeader(stringMap &headersMap, int &statusCode)
 {
 	char			buf2[100];
 	struct stat		stats;
 	struct tm		*tm2;
-	std::string		_lastModified;
+	std::string		lastModified;
 
 	if (stat(_path.c_str(), &stats) == 0) {
 		tm2 = gmtime(&stats.st_mtime);
 		strftime(buf2, 100, "%a, %d %b %Y %H:%M:%S GMT", tm2);
-		_lastModified = std::string(buf2);
+		lastModified = std::string(buf2);
 	}
-	_headersMap.insert(std::pair<std::string, std::string>("Last-Modified", _lastModified));
+	headersMap.insert(std::pair<std::string, std::string>("Last-Modified", lastModified));
 }
 
 // This header must be sent if the server responds with a 405 Method Not Allowed status code
 // to indicate which request methods can be used. An empty Allow header indicates that the
 // resource allows no request methods, which might occur temporarily for a given resource, for example.
-void	Header::addAllowHeader(stringMap &_headersMap, int &_statusCode, const t_serv &_config)
+void	Header::addAllowHeader(stringMap &_headersMap, int &statusCode, const t_serv &_config)
 {
-	// int statusCode1 = const_cast<int&>(_statusCode) = 405;
-	if (_statusCode != 405)
+	// int statusCode1 = const_cast<int&>(statusCode) = 405;
+	if (statusCode != 405)
 		return ;
 	std::string allowedMethods = "";
 	if (_config.locs[0].getAvailable)

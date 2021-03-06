@@ -25,7 +25,7 @@ MethodStatus	MethodHead::sendHeader(int socket)
 
 MethodStatus	MethodHead::createHeader()
 {
-	_header = new Header(data.uri.script_name);
+	_header = new Header(data.uri.script_name, _statusCode);
 
 	std::cout << "////\t\t HEAD METHOD, statusCode: " << _statusCode << std::endl;
 
