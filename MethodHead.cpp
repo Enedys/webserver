@@ -3,7 +3,7 @@
 
 # define BUFSIZE 4096
 
-MethodHead::~MethodHead() {};
+MethodHead::~MethodHead() { delete _header; };
 MethodStatus 	MethodHead::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return (ok); };
 MethodStatus	MethodHead::sendResponse(int socket) { return (ok); };
 MethodStatus	MethodHead::sendHeader(int socket) { return (ok); };
@@ -17,9 +17,8 @@ MethodStatus	MethodHead::manageRequest() {
 		_statusCode = notFound;
 		return error;
 	}
-	if (S_ISDIR(st.st_mode) || ((_fd = open(data.uri.script_name.c_str(), O_RDONLY | O_NONBLOCK)) < 0))
-		_statusCode = errorOpeningURL;//403 Forbidden//to make sure it will be opened with get
-
+	if ((_fd = open(data.uri.script_name.c_str(), O_RDONLY | O_NONBLOCK)) < 0)
+		_statusCode = errorOpeningURL;
 	return ok;
 };
 
@@ -30,11 +29,18 @@ MethodStatus	MethodHead::createHeader()
 	std::cout << "////\t\t HEAD METHOD, statusCode: " << _statusCode << std::endl;
 
 	_header->createGeneralHeaders(_headersMap);
-	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206)){
+
+	if (_statusCode < 200 || _statusCode > 206)
+		_header->generateErrorPage(_body);
+	else//if no autoindex
+		_header->addContentLengthHeader(_headersMap, _body);//for GET//body for auto+error//if not dir!
+
+	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206))
 		_header->createEntityHeaders(_headersMap);
-	}
-	_header->addContentLengthHeader(_headersMap, _body);
-	_header->addAllowHeader(_headersMap, *data.serv);
+
+	// _header->addContentLengthHeader(_headersMap, _body);//if not dir!
+	if (_statusCode == 405)
+		_header->addAllowHeader(_headersMap, *data.serv);
 	_header->addLocationHeader(_headersMap);
 	_header->addRetryAfterHeader(_headersMap);
 	// _header->addTransferEncodingHeader(_headersMap, _headersMapRequest);

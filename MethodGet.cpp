@@ -1,7 +1,7 @@
 #include "MethodGet.hpp"
 #include "Header.hpp"
 
-MethodGet::~MethodGet(){ };
+MethodGet::~MethodGet(){ delete _header; };
 
 void			MethodGet::generateIdxPage(){
 
@@ -32,7 +32,7 @@ void			MethodGet::generateIdxPage(){
 		if (strcmp(cur->d_name, ".") == 0)
 			continue ;
 
-		std::string fullPath(data.uri.script_name);
+		std::string fullPath(data.uri.script_name);//add / if not present
 		fullPath += cur->d_name;
 		struct stat	st;
 		char buf[100];
@@ -62,12 +62,12 @@ void			MethodGet::generateIdxPage(){
 
 MethodStatus	MethodGet::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return (ok); };
 
-//what if method is not allowed
+//always allowed. but others...
 MethodStatus	MethodGet::manageRequest(){
 
 	struct stat	st;
 
-	_statusCode = okSuccess;
+	_statusCode = okSuccess;//if not marked before
 
 	// std::cout << "__PATH_NAME: " << data.uri.script_name << std::endl;
 	if (stat(data.uri.script_name.c_str(), &st) == -1){// && errno == ENOENT)
@@ -98,13 +98,13 @@ MethodStatus	MethodGet::createHeader()
 
 	if (_statusCode < 200 || _statusCode > 206)
 		_header->generateErrorPage(_body);
-
-	_header->addContentLengthHeader(_headersMap, _body);//for GET//body for auto+error
+	// else if (_body.length() == 0)///
+	_header->addContentLengthHeader(_headersMap, _body);//for GET//body for auto+error//if not dir!
 
 	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206))
 		_header->createEntityHeaders(_headersMap);
-
-	_header->addAllowHeader(_headersMap, *data.serv);
+	if (_statusCode == 405)
+		_header->addAllowHeader(_headersMap, *data.serv);
 	_header->addLocationHeader(_headersMap);
 	_header->addRetryAfterHeader(_headersMap);
 	// _header->addTransferEncodingHeader(_headersMap, _headersMapRequest);

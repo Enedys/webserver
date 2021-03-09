@@ -12,11 +12,11 @@ class Header
 private:
 	std::string const	&_path;
 	std::string			_errorPage;//body
-	int const			&_statusCode;//&
+	int const			_statusCode;//&
 	// std::string			&_responseHeaders;//response
 	Header();
 public:
-	Header(std::string const &path, int const &statusCode);
+	Header(std::string const &path, int const statusCode);
 	~Header();
 
 	void	createGeneralHeaders(stringMap &_headersMap);

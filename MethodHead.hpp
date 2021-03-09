@@ -9,7 +9,6 @@ private:
 	MethodHead(MethodHead const & src);
 	MethodHead & operator=(MethodHead const & src);
 	Header				*_header;
-	static const size_t	_bs = 4096;
 	std::string			_remainder;
 	std::string			_body;
 

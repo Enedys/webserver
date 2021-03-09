@@ -73,7 +73,7 @@ MethodStatus		Client::analizeHeaders()
 	procData.setData(&_config, &_request.getHeadersMap(), &_request.getStartLine());
 	procData.prepareData(_request.getContentLength(), _clientAddr);
 	MethodStatus	methodStatus = createNewMethod();
-	// std::cout << "HERE\n";git 
+	// std::cout << "HERE\n";git
 	return (methodStatus);
 }
 
@@ -94,7 +94,7 @@ MethodStatus		Client::createNewMethod()
 		_method = new MethodGet(_statusCode, procData);
 	else if (method == "HEAD")
 		_method = new MethodHead(_statusCode, procData);
-	else if (method == "OPTION")
+	else if (method == "OPTIONS")
 		_method = new MethodOption(_statusCode, procData);
 	else if (method == "PUT")
 		_method = new MethodPut(_statusCode, procData);

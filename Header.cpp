@@ -1,8 +1,8 @@
 #include "Header.hpp"
 
-Header::Header(std::string const &path, int const &statusCode) : _path(path), _statusCode(statusCode) {};
+Header::Header(std::string const &path, int const statusCode) : _path(path), _statusCode(statusCode) {};
 
-Header::~Header(){ delete this; };
+Header::~Header(){ };
 
 std::map<int, std::string> respStatusCodes;
 static struct respStatusCodesInit
@@ -34,12 +34,13 @@ void	Header::headersToString(stringMap const &headersMap, std::string &output)
 	output += CRLF;
 }
 
-void	Header::generateErrorPage(std::string &errorPage){
+void	Header::generateErrorPage(std::string &errorPage)
+{
 	errorPage = "<html>\n"
 			"<style> body {background-color: rgb(252, 243, 233);}"
 			"h1 {color: rgb(200, 0, 0);} </style>"
 			"<body> <h1>ERROR ";
-	errorPage += std::to_string(_statusCode);
+	errorPage += std::to_string(_statusCode);//add explanation
 	errorPage += "</h1>\n</body>\n</html>\n";
 };
 
@@ -55,7 +56,6 @@ void	Header::createGeneralHeaders(stringMap &headersMap)
 	std::string date = std::string(buf1);
 	headersMap.insert(std::pair<std::string, std::string>("Server", "Shabillum/1.0.7"));
 	headersMap.insert(std::pair<std::string, std::string>("Date", date));
-	headersMap.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));
 };
 
 void	Header::createEntityHeaders(stringMap &headersMap)
@@ -66,7 +66,8 @@ void	Header::createEntityHeaders(stringMap &headersMap)
 	addLastModifiedHeader(headersMap);//if modified
 };
 
-void	Header::addContentLanguageHeader(stringMap &headersMap){
+void	Header::addContentLanguageHeader(stringMap &headersMap)
+{
 	headersMap.insert(std::pair<std::string, std::string>("Content-Language", "en-US"));//can it be specified in request before?
 };
 
@@ -75,12 +76,12 @@ void	Header::addContentLengthHeader(stringMap &headersMap, std::string const & b
 	size_t bodySize;
 	struct stat stat_buf;
 
-	if (body.length())//if autoindex or error -> check _body
+	if (body.length())
 		bodySize = body.length();
 	else {
 		int rc = stat(_path.c_str(), &stat_buf);
-		if (rc == -1)
-			return ;//bodySize = 0; statusCode = 401//
+		if (rc == -1 || S_ISDIR(stat_buf.st_mode))
+			return ;
 		bodySize = stat_buf.st_size;
 	}
 	std::string contentLength = std::to_string(bodySize);
@@ -120,10 +121,9 @@ void	Header::addLastModifiedHeader(stringMap &headersMap)
 // resource allows no request methods, which might occur temporarily for a given resource, for example.
 void	Header::addAllowHeader(stringMap &_headersMap, const t_serv &_config)
 {
+	std::cout << "////\t\taddAllowHeader" << _statusCode << std::endl;
 	// int statusCode1 = const_cast<int&>(statusCode) = 405;
-	if (_statusCode != 405)
-		return ;
-	std::string allowedMethods = "";
+	std::string allowedMethods;// = "";
 	if (_config.locs[0].getAvailable)
 		allowedMethods += "GET, ";
 	if (_config.locs[0].postAvailable)
@@ -131,7 +131,9 @@ void	Header::addAllowHeader(stringMap &_headersMap, const t_serv &_config)
 	if (_config.locs[0].headAvailable)
 		allowedMethods += "HEAD, ";
 	if (_config.locs[0].putAvailable)
-		allowedMethods += "PUT";
+		allowedMethods += "PUT, ";
+	if (_config.locs[0].optionsAvailable)
+		allowedMethods += "OPTIONS";
 	_headersMap.insert(std::pair<std::string, std::string>("Allow", allowedMethods));
 };
 
