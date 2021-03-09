@@ -16,7 +16,7 @@ private:
 	Header				*_header;
 	size_t				_sentBytesTotal;
 	size_t				_bytesToSend;
-	static const size_t	_bs = 4096;
+	static const size_t	_bs = 4096 * 16;
 	std::string			_remainder;
 	std::string			_body;
 
@@ -36,5 +36,4 @@ public:
 	virtual MethodStatus	sendResponse(int socket);
 
 	void					generateIdxPage();
-	// int						generateErrorPage();
 };

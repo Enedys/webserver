@@ -1,6 +1,6 @@
 #include "Header.hpp"
 
-Header::Header(std::string const &path, int statusCode) : _path(path), _statusCode(statusCode) {};
+Header::Header(std::string const &path, int const &statusCode) : _path(path), _statusCode(statusCode) {};
 
 Header::~Header(){ delete this; };
 
@@ -24,26 +24,26 @@ static struct respStatusCodesInit
 	}
 } respStatusCodesInit;
 
-void	Header::headersToString(stringMap const &headersMap, int const &statusCode, std::string &output)
+void	Header::headersToString(stringMap const &headersMap, std::string &output)
 {
-	std::string statusCodeStr = std::to_string(statusCode);
+	std::string statusCodeStr = std::to_string(_statusCode);
 	// ft_utoa(statusCode, statusCodeStr);
-	output += "HTTP/1.1 " + statusCodeStr + " " + respStatusCodes[statusCode] + CRLF;
+	output += "HTTP/1.1 " + statusCodeStr + " " + respStatusCodes[_statusCode] + CRLF;
 	for (constMapIter it = headersMap.begin(); it != headersMap.end(); ++it)
 		output += (it->first) + ": " + (it->second) + CRLF;
 	output += CRLF;
 }
 
-void	Header::generateErrorPage(int const &statusCode, std::string &errorPage){
+void	Header::generateErrorPage(std::string &errorPage){
 	errorPage = "<html>\n"
 			"<style> body {background-color: rgb(252, 243, 233);}"
 			"h1 {color: rgb(200, 0, 0);} </style>"
 			"<body> <h1>ERROR ";
-	errorPage += std::to_string(statusCode);
+	errorPage += std::to_string(_statusCode);
 	errorPage += "</h1>\n</body>\n</html>\n";
 };
 
-void	Header::createGeneralHeaders(stringMap &headersMap, int &statusCode)
+void	Header::createGeneralHeaders(stringMap &headersMap)
 {
 	char			buf1[100];
 	struct timeval	tv;
@@ -58,19 +58,19 @@ void	Header::createGeneralHeaders(stringMap &headersMap, int &statusCode)
 	headersMap.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));
 };
 
-void	Header::createEntityHeaders(stringMap &headersMap, int &statusCode)
+void	Header::createEntityHeaders(stringMap &headersMap)
 {//specific for statuses and methods
-	addContentLanguageHeader(headersMap, statusCode);
-	addContentLocationHeader(headersMap, statusCode);//redir?
-	addContentTypeHeader(headersMap, statusCode);
-	addLastModifiedHeader(headersMap, statusCode);//if modified
+	addContentLanguageHeader(headersMap);
+	addContentLocationHeader(headersMap);//redir?
+	addContentTypeHeader(headersMap);
+	addLastModifiedHeader(headersMap);//if modified
 };
 
-void	Header::addContentLanguageHeader(stringMap &headersMap, int &statusCode){
+void	Header::addContentLanguageHeader(stringMap &headersMap){
 	headersMap.insert(std::pair<std::string, std::string>("Content-Language", "en-US"));//can it be specified in request before?
 };
 
-void	Header::addContentLengthHeader(stringMap &headersMap, int &statusCode, std::string const & body)
+void	Header::addContentLengthHeader(stringMap &headersMap, std::string const & body)
 {
 	size_t bodySize;
 	struct stat stat_buf;
@@ -88,19 +88,19 @@ void	Header::addContentLengthHeader(stringMap &headersMap, int &statusCode, std:
 	headersMap.insert(std::pair<std::string, std::string>("Content-Length", contentLength));//can it be specified in request before?
 };
 
-void	Header::addContentLocationHeader(stringMap &_headersMap, int &_statusCode)
+void	Header::addContentLocationHeader(stringMap &_headersMap)
 {//if moved
 // Content-Location indicates the direct URL to use to access the resource, without further
 // content negotiation in the future. Location is a header associated with the response,
 //  while Content-Location is associated with the data returned
 };
 
-void	Header::addContentTypeHeader(stringMap &_headersMap, int &_statusCode)
+void	Header::addContentTypeHeader(stringMap &_headersMap)
 {//type from cgi ot rhm/conf
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));
 };
 
-void	Header::addLastModifiedHeader(stringMap &headersMap, int &statusCode)
+void	Header::addLastModifiedHeader(stringMap &headersMap)
 {
 	char			buf2[100];
 	struct stat		stats;
@@ -118,10 +118,10 @@ void	Header::addLastModifiedHeader(stringMap &headersMap, int &statusCode)
 // This header must be sent if the server responds with a 405 Method Not Allowed status code
 // to indicate which request methods can be used. An empty Allow header indicates that the
 // resource allows no request methods, which might occur temporarily for a given resource, for example.
-void	Header::addAllowHeader(stringMap &_headersMap, int &statusCode, const t_serv &_config)
+void	Header::addAllowHeader(stringMap &_headersMap, const t_serv &_config)
 {
 	// int statusCode1 = const_cast<int&>(statusCode) = 405;
-	if (statusCode != 405)
+	if (_statusCode != 405)
 		return ;
 	std::string allowedMethods = "";
 	if (_config.locs[0].getAvailable)
@@ -140,7 +140,7 @@ void	Header::addAllowHeader(stringMap &_headersMap, int &statusCode, const t_ser
 // в случае ошибки пользователь смог сам произвести переход.
 // The principal use is to indicate the URL of a resource transmitted
 // as the result of content negotiation.
-void	Header::addLocationHeader(stringMap &_headersMap, int &_statusCode)
+void	Header::addLocationHeader(stringMap &_headersMap)
 {
 	std::string redirectPath = "/files/test.file";//
 	if (_statusCode == 301 || _statusCode == 302 || _statusCode == 303 || _statusCode == 307 || \
@@ -158,7 +158,7 @@ void	Header::addLocationHeader(stringMap &_headersMap, int &_statusCode)
 // When sent with a 503 (Service Unavailable) response, this indicates how long the service is expected to be unavailable.
 // When sent with a 429 (Too Many Requests) response, this indicates how long to wait before making a new request.
 // When sent with a redirect response, such as 301 (Moved Permanently), this indicates the minimum time that the user agent is asked to wait before issuing the redirected request.
-void	Header::addRetryAfterHeader(stringMap &_headersMap, int &_statusCode)
+void	Header::addRetryAfterHeader(stringMap &_headersMap)
 {
 	if (_statusCode == 503 || _statusCode == 429)// || _statusCode == 301){
 		_headersMap.insert(std::pair<std::string, std::string>("Retry-After", "120"));
@@ -168,7 +168,7 @@ void	Header::addRetryAfterHeader(stringMap &_headersMap, int &_statusCode)
 // When present on a response to a HEAD request that has no body,
 // it indicates the value that would have applied to the corresponding GET message
 // Transfer-Encoding: gzip, chunked //compress/deflate/identity
-void	Header::addTransferEncodingHeader(stringMap &_headersMap, int &_statusCode, stringMap const &_headersMapRequest)
+void	Header::addTransferEncodingHeader(stringMap &_headersMap, stringMap const &_headersMapRequest)
 {
 	constMapIter	itc = _headersMapRequest.begin();
 	while (itc != _headersMapRequest.end())
@@ -187,7 +187,7 @@ void	Header::addTransferEncodingHeader(stringMap &_headersMap, int &_statusCode,
 	}
 }
 
-void	Header::addAuthenticateHeader(stringMap &_headersMap, int &_statusCode)
+void	Header::addAuthenticateHeader(stringMap &_headersMap)
 {
 	if (_statusCode == 401)
 		_headersMap.insert(std::pair<std::string, std::string>("WWW-Authenticate", "Basic realm=\"Access to the staging site\", charset=\"UTF-8\""));

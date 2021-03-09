@@ -12,32 +12,32 @@ class Header
 private:
 	std::string const	&_path;
 	std::string			_errorPage;//body
-	int					_statusCode;//&
+	int const			&_statusCode;//&
 	// std::string			&_responseHeaders;//response
 	Header();
 public:
-	Header(std::string const &path, int statusCode);
+	Header(std::string const &path, int const &statusCode);
 	~Header();
 
-	void	createGeneralHeaders(stringMap &_headersMap, int &_statusCode);
-	void	createEntityHeaders(stringMap &_headersMap, int &_statusCode);
-	void	createOptHeaders(stringMap &_headersMap, int &_statusCode);
+	void	createGeneralHeaders(stringMap &_headersMap);
+	void	createEntityHeaders(stringMap &_headersMap);
+	void	createOptHeaders(stringMap &_headersMap);
 
-	void	addAllowHeader(stringMap &_headersMap, int &_statusCode, const t_serv &_config);
-	void	addContentLanguageHeader(stringMap &_headersMap, int &_statusCode);
-	void	addContentLengthHeader(stringMap &_headersMap, int &_statusCode, std::string const & body);
-	void	addContentLocationHeader(stringMap &_headersMap, int &_statusCode);
-	void	addContentTypeHeader(stringMap &_headersMap, int &_statusCode);
+	void	addAllowHeader(stringMap &_headersMap, const t_serv &_config);
+	void	addContentLanguageHeader(stringMap &_headersMap);
+	void	addContentLengthHeader(stringMap &_headersMap, std::string const & body);
+	void	addContentLocationHeader(stringMap &_headersMap);
+	void	addContentTypeHeader(stringMap &_headersMap);
 
-	void	addLastModifiedHeader(stringMap &_headersMap, int &_statusCode);
-	void	addLocationHeader(stringMap &_headersMap, int &_statusCode);
+	void	addLastModifiedHeader(stringMap &_headersMap);
+	void	addLocationHeader(stringMap &_headersMap);
 
-	void	addRetryAfterHeader(stringMap &_headersMap, int &_statusCode);
-	void	addTransferEncodingHeader(stringMap &_headersMap, int &_statusCode, stringMap const &_headersMapRequest);
-	void	addAuthenticateHeader(stringMap &_headersMap, int &_statusCode);
+	void	addRetryAfterHeader(stringMap &_headersMap);
+	void	addTransferEncodingHeader(stringMap &_headersMap, stringMap const &_headersMapRequest);
+	void	addAuthenticateHeader(stringMap &_headersMap);
 
-	void	headersToString(stringMap const &headersMap, int const &_statusCode, std::string &output);
-	void	generateErrorPage(int const &statusCode, std::string &body);
+	void	headersToString(stringMap const &headersMap, std::string &output);
+	void	generateErrorPage(std::string &body);
 	// std::string		&getErrorPage();//
 	// std::string		&getResponseHeaders();
 };

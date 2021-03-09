@@ -3,23 +3,23 @@
 
 # define BUFSIZE 4096
 
-MethodStatus	MethodHead::manageRequest() { return ok; };
 MethodHead::~MethodHead() {};
 MethodStatus 	MethodHead::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return (ok); };
-MethodStatus	MethodHead::sendBody(int socket) { return (ok); };
+MethodStatus	MethodHead::sendResponse(int socket) { return (ok); };
+MethodStatus	MethodHead::sendHeader(int socket) { return (ok); };
 
-MethodStatus	MethodHead::sendHeader(int socket)
-{
+MethodStatus	MethodHead::manageRequest() {
+
 	struct stat	st;
-	if (stat(data.uri.script_name.c_str(), &st) == -1){// && errno == ENOENT)//lstat?//fstat IS_DIR
+
+	_statusCode = okSuccess;
+	if (stat(data.uri.script_name.c_str(), &st) == -1){// && errno == ENOENT)
 		_statusCode = notFound;
 		return error;
 	}
-	if ((_fd = open(data.uri.script_name.c_str(), O_RDONLY | O_NONBLOCK)) <= 0){//
-		_statusCode = errorOpeningURL;
-		return error;
-	}
-	_statusCode = okSuccess;
+	if (S_ISDIR(st.st_mode) || ((_fd = open(data.uri.script_name.c_str(), O_RDONLY | O_NONBLOCK)) < 0))
+		_statusCode = errorOpeningURL;//403 Forbidden//to make sure it will be opened with get
+
 	return ok;
 };
 
@@ -29,15 +29,16 @@ MethodStatus	MethodHead::createHeader()
 
 	std::cout << "////\t\t HEAD METHOD, statusCode: " << _statusCode << std::endl;
 
-	_header->createGeneralHeaders(_headersMap, _statusCode);
+	_header->createGeneralHeaders(_headersMap);
 	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206)){
-		_header->createEntityHeaders(_headersMap, _statusCode);
+		_header->createEntityHeaders(_headersMap);
 	}
-	_header->addAllowHeader(_headersMap, _statusCode, *data.serv);
-	_header->addLocationHeader(_headersMap, _statusCode);
-	_header->addRetryAfterHeader(_headersMap, _statusCode);
-	// _header->addTransferEncodingHeader(_headersMap, _statusCode, _headersMapRequest);
-	_header->addAuthenticateHeader(_headersMap, _statusCode);
+	_header->addContentLengthHeader(_headersMap, _body);
+	_header->addAllowHeader(_headersMap, *data.serv);
+	_header->addLocationHeader(_headersMap);
+	_header->addRetryAfterHeader(_headersMap);
+	// _header->addTransferEncodingHeader(_headersMap, _headersMapRequest);
+	_header->addAuthenticateHeader(_headersMap);
 
 	return ok;
 };
@@ -62,7 +63,7 @@ MethodStatus	MethodHead::createHeader()
 // 	return ok;
 // }
 
-MethodStatus		MethodHead::sendResponse(int socket)
+MethodStatus		MethodHead::sendBody(int socket)
 {
 	std::string	response;
 	size_t		sentBytes;
@@ -70,8 +71,9 @@ MethodStatus		MethodHead::sendResponse(int socket)
 	if (_remainder.length())
 		response = _remainder;
 	if (_statusCode != okSendingInProgress)
-		_header->headersToString(_headersMap, _statusCode, response);
+		_header->headersToString(_headersMap, response);
 
+std::cout << "__________response: " << response << "\n" << std::endl;
 	sentBytes = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
 	if (sentBytes < 0 || errno == EMSGSIZE){
 		_statusCode = errorSendingResponse;

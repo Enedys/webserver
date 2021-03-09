@@ -11,6 +11,8 @@ private:
 	Header				*_header;
 	static const size_t	_bs = 4096;
 	std::string			_remainder;
+	std::string			_body;
+
 public:
 	MethodHead(int &status, RequestData const &data) :
 		AMethod(status, data) {_type = HEAD;};

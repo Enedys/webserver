@@ -62,6 +62,7 @@ void			MethodGet::generateIdxPage(){
 
 MethodStatus	MethodGet::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return (ok); };
 
+//what if method is not allowed
 MethodStatus	MethodGet::manageRequest(){
 
 	struct stat	st;
@@ -93,21 +94,21 @@ MethodStatus	MethodGet::createHeader()
 
 	std::cout << "\n////\tGET METHOD, statusCode: " << _statusCode << std::endl;
 
-	_header->createGeneralHeaders(_headersMap, _statusCode);
+	_header->createGeneralHeaders(_headersMap);
 
 	if (_statusCode < 200 || _statusCode > 206)
-		_header->generateErrorPage(_statusCode, _body);
+		_header->generateErrorPage(_body);
 
-	_header->addContentLengthHeader(_headersMap, _statusCode, _body);//for GET//body for auto+error
+	_header->addContentLengthHeader(_headersMap, _body);//for GET//body for auto+error
 
 	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206))
-		_header->createEntityHeaders(_headersMap, _statusCode);
+		_header->createEntityHeaders(_headersMap);
 
-	_header->addAllowHeader(_headersMap, _statusCode, *data.serv);
-	_header->addLocationHeader(_headersMap, _statusCode);
-	_header->addRetryAfterHeader(_headersMap, _statusCode);
-	// _header->addTransferEncodingHeader(_headersMap, _statusCode, _headersMapRequest);
-	_header->addAuthenticateHeader(_headersMap, _statusCode);
+	_header->addAllowHeader(_headersMap, *data.serv);
+	_header->addLocationHeader(_headersMap);
+	_header->addRetryAfterHeader(_headersMap);
+	// _header->addTransferEncodingHeader(_headersMap, _headersMapRequest);
+	_header->addAuthenticateHeader(_headersMap);
 
 	return ok;
 };
@@ -128,7 +129,7 @@ MethodStatus		MethodGet::sendBody(int socket)
 
 	memset(buf, 0, _bs);
 	if (_statusCode != okSendingInProgress){
-		_header->headersToString(_headersMap, _statusCode, response);
+		_header->headersToString(_headersMap, response);
 		size_t headersize = response.length();
 
 		if (!_body.empty()){//only for autoindex & error page
@@ -148,7 +149,7 @@ MethodStatus		MethodGet::sendBody(int socket)
 	}
 	if (_body.empty()){//not listing, regular file
 		readBytes = read(_fd, buf, readBuf);
-		std::cout << "_________readBytes: " << readBytes << "\n" << std::endl;
+		// std::cout << "_________readBytes: " << readBytes << "\n" << std::endl;
 		if (readBytes < 0){
 			_statusCode = errorReadingURL;
 			close(_fd);
