@@ -60,9 +60,9 @@ void	Header::createGeneralHeaders(stringMap &headersMap)
 
 void	Header::createEntityHeaders(stringMap &headersMap)
 {//specific for statuses and methods
-	addContentLanguageHeader(headersMap);
+	// addContentLanguageHeader(headersMap);
 	addContentLocationHeader(headersMap);//redir?
-	addContentTypeHeader(headersMap);
+	// addContentTypeHeader(headersMap);
 	addLastModifiedHeader(headersMap);//if modified
 };
 
@@ -133,7 +133,9 @@ void	Header::addAllowHeader(stringMap &_headersMap, const t_serv &_config)
 	if (_config.locs[0].putAvailable)
 		allowedMethods += "PUT, ";
 	if (_config.locs[0].optionsAvailable)
-		allowedMethods += "OPTIONS";
+		allowedMethods += "OPTIONS, ";
+	if (_config.locs[0].deleteAvailable)
+		allowedMethods += "DELETE";
 	_headersMap.insert(std::pair<std::string, std::string>("Allow", allowedMethods));
 };
 

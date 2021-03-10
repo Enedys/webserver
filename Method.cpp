@@ -8,7 +8,7 @@ AMethod::	AMethod(int &status, RequestData const &datas) :
 	_statusCode(status), data(datas) {};
 
 const std::string	AMethod::validMethods[AMethod::methodNums] = {
-"PUT", "POST", "DELETE", "OPTIONS", "GET", "HEAD"
+"PUT", "POST", "DELETE", "OPTIONS", "GET", "HEAD", "DELETE"
 };
 
 bool				AMethod::isValidMethod(std::string const &method)

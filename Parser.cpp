@@ -360,8 +360,10 @@ void Parser::getLocDenyMethod()
 		loc.putAvailable = false;
 	else if (value == "OPTIONS")
 		loc.optionsAvailable = false;
+	else if (value == "DELETE")
+		loc.deleteAvailable = false;
 	else
-		error("expected deny POST | HEAD | PUT | GET | OPTIONS");
+		error("expected deny POST | HEAD | PUT | GET | OPTIONS | DELETE");
 }
 
 
@@ -505,6 +507,7 @@ void Parser::initLoc()
 	loc.postAvailable = true;
 	loc.putAvailable = true;
 	loc.optionsAvailable = true;
+	loc.deleteAvailable = true;
 	loc.path.clear();
 	loc.cgi.clear();
 }

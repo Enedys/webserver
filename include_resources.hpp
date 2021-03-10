@@ -53,7 +53,9 @@ typedef enum
 	accepted = 202,
 	nocontent = 204,
 	notFound = 404,
-	errorOpeningURL = 403//
+	errorOpeningURL = 403,//
+	methodNotAllowed = 405,
+	ImaTeapot = 418
 }		statusCode;
 
 typedef enum

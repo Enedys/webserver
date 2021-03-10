@@ -19,22 +19,18 @@ MethodStatus	MethodOption::createHeader()
 	std::cout << "////\t\t OPTIONS METHOD, statusCode: " << _statusCode << std::endl;
 
 	_header->createGeneralHeaders(_headersMap);
-
 	if (_statusCode < 200 || _statusCode > 206)
 		_header->generateErrorPage(_body);
-	_header->addContentLengthHeader(_headersMap, _body);//no content!
+	_headersMap.insert(std::pair<std::string, std::string>("Content-Length", "0"));
 	_header->addAllowHeader(_headersMap, *data.serv);
 
 	return ok;
 };
 
-MethodStatus	MethodOption::sendHeader(int socket){
-	// return (AMethod::sendHeader(socket));
-	return ok;
-};
+MethodStatus	MethodOption::sendHeader(int socket){ return ok; };
 
 MethodStatus	MethodOption::sendBody(int socket)
-{
+{//send _body (if error?)
 	std::string	response;
 	size_t		sentBytes;
 
@@ -44,7 +40,6 @@ MethodStatus	MethodOption::sendBody(int socket)
 		_header->headersToString(_headersMap, response);
 
 	sentBytes = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
-std::cout << "__________response: " << response << "sentBytes: " << sentBytes << "\nresponse.length(): " << response.length() << "\n" << std::endl;
 	if (sentBytes < 0 || errno == EMSGSIZE){
 		_statusCode = errorSendingResponse;
 		return error;
@@ -55,6 +50,5 @@ std::cout << "__________response: " << response << "sentBytes: " << sentBytes <<
 		return inprogress;
 	};
 	_remainder.clear();
-std::cout << "__________here: " << std::endl;
 	return ok;
 };

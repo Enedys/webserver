@@ -17,8 +17,8 @@ protected:
 public:
 	AMethod(int &status, RequestData const &data);
 	virtual ~AMethod();
-	static const std::string	validMethods[6];
-	static const int			methodNums = 6;
+	static const std::string	validMethods[7];
+	static const int			methodNums = 7;
 	static bool					isValidMethod(std::string const &method);
 
 	virtual MethodStatus	createHeader() = 0;

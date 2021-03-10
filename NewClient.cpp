@@ -100,6 +100,8 @@ MethodStatus		Client::createNewMethod()
 		_method = new MethodPut(_statusCode, procData);
 	else if (method == "POST")
 		_method = new MethodPost(_statusCode, procData);
+	else if (method == "DELETE")
+		_method = new MethodDelete(_statusCode, procData);
 	return (ok);
 }
 

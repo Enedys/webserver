@@ -7,6 +7,7 @@
 #include "MethodPut.hpp"
 #include "MethodPost.hpp"
 #include "MethodOption.hpp"
+#include "MethodDelete.hpp"
 #include "RequestData.hpp"
 
 typedef std::vector<s_loc>::iterator		locIter;
@@ -27,7 +28,7 @@ class Client
 		finalState,
 		sendingErrorState,
 	}			conditionCode;
-	
+
 public:
 	int					getClientSocket() const;
 	bool				isReading() const;

@@ -50,6 +50,7 @@ struct s_loc
 	bool headAvailable;
 	bool putAvailable;
 	bool optionsAvailable;
+	bool deleteAvailable;
 };
 
 typedef	struct s_ext_serv

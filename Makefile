@@ -5,6 +5,7 @@ HEADERS			=	NewClient.hpp \
 					Debugger.hpp \
 					Header.hpp \
 					Method.hpp \
+					MethodDelete.hpp \
 					MethodGet.hpp \
 					MethodHead.hpp \
 					MethodOption.hpp \
@@ -23,6 +24,7 @@ SRC				=	Debugger.cpp \
 					Header.cpp \
 					Method.cpp \
 					MethodGet.cpp \
+					MethodDelete.cpp \
 					MethodHead.cpp \
 					MethodOption.cpp \
 					MethodPost.cpp \

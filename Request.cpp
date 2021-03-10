@@ -1,6 +1,6 @@
 #include "Request.hpp"
 
-Request::Request(int fd, int &statusCode) : 
+Request::Request(int fd, int &statusCode) :
 _socket(fd), _errorCode(statusCode), _bodySize(0), requestStage(firstLine)
 {
 	createErrorCodesMap();
@@ -180,7 +180,7 @@ MethodStatus		Request::parseHeaders()
 }
 
 MethodStatus		Request::validateStartLine()
-{
+{//added delete, check if delete changes smth in current logic
 	if (!AMethod::isValidMethod(startLine["method"]))
 		return (setErrorCode(501));
 	if (startLine["version"] != "HTTP/1.1")

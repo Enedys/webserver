@@ -1,8 +1,6 @@
 #include "MethodHead.hpp"
 #include "Header.hpp"
 
-# define BUFSIZE 4096
-
 MethodHead::~MethodHead() { delete _header; };
 MethodStatus 	MethodHead::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return (ok); };
 MethodStatus	MethodHead::sendResponse(int socket) { return (ok); };
@@ -48,26 +46,6 @@ MethodStatus	MethodHead::createHeader()
 
 	return ok;
 };
-
-// MethodStatus		MethodHead::sendHeader(int socket)
-// {
-// 	std::string headerStr;
-// 	_header->headersToString(_headersMap, _statusCode, headerStr);//// headersToString(_headersMap, &headerStr);//
-// 	if (send(socket, headerStr.c_str(), headerStr.length(), 0) < 0){
-// 		//if ret < length -> loop
-// 		_statusCode = errorSendingResponse;
-// 		return error;
-// 	}
-// 	std::cout << "Response header string: \n" << headerStr <<std::endl;
-// 	return ok;
-// }
-
-// MethodStatus		MethodHead::sendBody(int socket)
-// {
-// 	close(_fd);
-// 	_statusCode = okSuccess;
-// 	return ok;
-// }
 
 MethodStatus		MethodHead::sendBody(int socket)
 {
