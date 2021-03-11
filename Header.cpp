@@ -8,8 +8,7 @@ Header::~Header(){ };
 mapIntStr statusCodes;
 static struct statusCodesInit
 {
-	statusCodesInit()
-	{
+	statusCodesInit(){
 		statusCodes[200] = "OK";
 		statusCodes[201] = "Created";
 		statusCodes[202] = "Accepted";
@@ -37,15 +36,13 @@ static struct statusCodesInit
 	}
 } statusCodesInit;
 
-mapIntStr errorPage;
-static struct errorPageInit
+mapIntStr defaultErrorPages;
+static struct defaultErrorPagesInit
 {
-	errorPageInit()
-	{
-		// errorPage[404] = "/errors/404error.png";
-		errorPage[404] = "/errors/404-error.jpg";
+	defaultErrorPagesInit(){
+		defaultErrorPages[404] = "/errors/404-error.jpg";
 	}
-} errorPageInit;
+} defaultErrorPagesInit;
 
 void	Header::headersToString(stringMap const &headersMap, std::string &output)
 {
@@ -57,33 +54,54 @@ void	Header::headersToString(stringMap const &headersMap, std::string &output)
 	output += CRLF;
 }
 
-void	Header::generateErrorPage(std::string &body)
+int		Header::generateImagePage(std::string &body, std::string &errorurl)
 {
+	size_t len = _root.length();
+	if (_root.back() == '/')
+		len--;
+	std::string path(_root, 0, len);
+	if (*errorurl.begin() != '/')
+		path += '/';
+	path += errorurl;
+	int fd = open(path.c_str(), O_RDONLY);
+	if (fd < 0)
+		return -1;
+	struct stat st;
+	int rc = stat(path.c_str(), &st);
+	if (rc < 0 || !S_ISREG(st.st_mode))
+		return -1;
+	char buf[4096 * 24];
+	int res = read(fd, buf, st.st_size);
+	std::string bufStr(buf, st.st_size);
+	close(fd);
+	body = bufStr;
+	return 0;
+};
+
+void	Header::generateErrorPage(std::string &body, mapIntStr const &error_pages)
+{
+	std::string errorurl;
+	constMapIntStrIter cit;
 	mapIntStrIter it;
-	if ((it = errorPage.find(_statusCode)) != errorPage.end()){
-		size_t len = _root.length();
-		if (_root.back() == '/')
-			len--;
-		std::string path(_root, 0, len);
-		path += errorPage[_statusCode];
-		int fd = open(path.c_str(), O_RDONLY);
-		struct stat st;
-		int rc = stat(path.c_str(), &st);
-		char buf[4096 * 24];
-		int res = read(fd, buf, st.st_size);
-		std::string bufStr(buf, st.st_size);
-		close(fd);
-		body = bufStr;
+	if ((cit = error_pages.find(_statusCode)) != error_pages.end()){
+		std::cout << "custom" << std::endl;
+		errorurl = cit->second;
+		if (generateImagePage(body, errorurl) == 0)
+			return ;
 	}
-	else {
-		body = "<html>"
-				"<style> body {background-color: rgb(252, 243, 233);}"
-				"h1 {color: rgb(200, 0, 0);}"
-				"e1 {color: rgb(100, 0, 0);} </style>"
-				"<body> <h1>ERROR</h1><br><e1>";
-		body += std::to_string(_statusCode) + " " + statusCodes[_statusCode];//add explanation
-		body += "</e1></body></html>";
+	if ((it = defaultErrorPages.find(_statusCode)) != defaultErrorPages.end()){
+		std::cout << "default" << std::endl;
+		errorurl = it->second;
+		if (generateImagePage(body, errorurl) == 0)
+			return ;
 	}
+	body = "<html>"
+		"<style> body {background-color: rgb(252, 243, 233);}"
+		"h1 {color: rgb(200, 0, 0);}"
+		"e1 {color: rgb(100, 0, 0);} </style>"
+		"<body> <h1>ERROR</h1><br><e1>";
+	body += std::to_string(_statusCode) + " " + statusCodes[_statusCode];//add explanation
+	body += "</e1></body></html>\n";
 };
 
 void	Header::createGeneralHeaders(stringMap &headersMap)

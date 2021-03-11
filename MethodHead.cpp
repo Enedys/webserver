@@ -30,7 +30,7 @@ MethodStatus	MethodHead::createHeader()
 	_header->createGeneralHeaders(_headersMap);
 
 	if (_statusCode < 200 || _statusCode > 206)
-		_header->generateErrorPage(_body);
+		_header->generateErrorPage(_body, data.serv->error_pages);
 	else//if no autoindex
 		_header->addContentLengthHeader(_headersMap, _body);//for GET//body for auto+error//if not dir!
 

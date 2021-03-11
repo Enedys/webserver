@@ -74,6 +74,7 @@ typedef std::map<std::string, std::string>::const_iterator	constMapIter;
 
 typedef std::map<int, std::string>							mapIntStr;
 typedef std::map<int, std::string>::iterator				mapIntStrIter;
+typedef std::map<int, std::string>::const_iterator			constMapIntStrIter;
 
 int			string2Size(const std::string &str, int base=16);
 std::string	size2Hex(size_t num, int base = 16);

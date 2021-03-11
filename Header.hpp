@@ -12,9 +12,7 @@ class Header
 private:
 	std::string const	&_path;
 	std::string const	&_root;
-	std::string			_errorPage;//body
-	int const			_statusCode;//&
-	// std::string			&_responseHeaders;//response
+	int const			_statusCode;
 	Header();
 public:
 	Header(std::string const &path, std::string const &root, int const statusCode);
@@ -38,7 +36,6 @@ public:
 	void	addAuthenticateHeader(stringMap &_headersMap);
 
 	void	headersToString(stringMap const &headersMap, std::string &output);
-	void	generateErrorPage(std::string &body);
-	// std::string		&getErrorPage();//
-	// std::string		&getResponseHeaders();
+	void	generateErrorPage(std::string &body, mapIntStr const &error_pages);
+	int		generateImagePage(std::string &body, std::string &errorurl);
 };
