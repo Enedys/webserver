@@ -1,47 +1,89 @@
 #include "Header.hpp"
 
-Header::Header(std::string const &path, int const statusCode) : _path(path), _statusCode(statusCode) {};
+Header::Header(std::string const &path, std::string const &root, int const statusCode)
+	: _path(path), _root(root), _statusCode(statusCode) {};
 
 Header::~Header(){ };
 
-std::map<int, std::string> respStatusCodes;
-static struct respStatusCodesInit
+mapIntStr statusCodes;
+static struct statusCodesInit
 {
-	respStatusCodesInit()
+	statusCodesInit()
 	{
-		respStatusCodes[200] = "OK";
-		respStatusCodes[201] = "Created";
-		respStatusCodes[202] = "Accepted";
-		respStatusCodes[400] = "Bad Request";
-		respStatusCodes[401] = "Unauthorized";
-		respStatusCodes[403] = "Forbidden";//when autoindex is off and request is a folder
-		respStatusCodes[404] = "Not Found";
-		respStatusCodes[405] = "Method Not Allowed";
-		respStatusCodes[414] = "URI Too Long";
-		respStatusCodes[429] = "Too Many Requests";
-		respStatusCodes[503] = "Service Unavailable";//перегрузка сервера
-		respStatusCodes[505] = "HTTP Version Not Supported";
+		statusCodes[200] = "OK";
+		statusCodes[201] = "Created";
+		statusCodes[202] = "Accepted";
+		statusCodes[400] = "Bad Request";
+		statusCodes[401] = "Unauthorized";
+		statusCodes[403] = "Forbidden";//when autoindex is off and request is a folder
+		statusCodes[404] = "Not Found";
+		statusCodes[405] = "Method Not Allowed";
+		statusCodes[406] = "Not Acceptable";
+		statusCodes[408] = "Request Timeout";
+		statusCodes[411] = "Length Required";
+		statusCodes[414] = "URI Too Long";
+		statusCodes[415] = "Unsupported Media Type";
+		statusCodes[418] = "I'm a teapot";
+		statusCodes[421] = "Misdirected Request";
+		statusCodes[422] = "Unprocessable Entity";
+		statusCodes[429] = "Too Many Requests";
+		statusCodes[431] = "Request Header Fields Too Large";
+		statusCodes[449] = "Retry With";
+		statusCodes[499] = "Client Closed Request";
+		statusCodes[500] = "Internal Server Error";
+		statusCodes[501] = "Not Implemented";
+		statusCodes[503] = "Service Unavailable";//перегрузка сервера
+		statusCodes[505] = "HTTP Version Not Supported";
 	}
-} respStatusCodesInit;
+} statusCodesInit;
+
+mapIntStr errorPage;
+static struct errorPageInit
+{
+	errorPageInit()
+	{
+		// errorPage[404] = "/errors/404error.png";
+		errorPage[404] = "/errors/404-error.jpg";
+	}
+} errorPageInit;
 
 void	Header::headersToString(stringMap const &headersMap, std::string &output)
 {
 	std::string statusCodeStr = std::to_string(_statusCode);
 	// ft_utoa(statusCode, statusCodeStr);
-	output += "HTTP/1.1 " + statusCodeStr + " " + respStatusCodes[_statusCode] + CRLF;
+	output += "HTTP/1.1 " + statusCodeStr + " " + statusCodes[_statusCode] + CRLF;
 	for (constMapIter it = headersMap.begin(); it != headersMap.end(); ++it)
 		output += (it->first) + ": " + (it->second) + CRLF;
 	output += CRLF;
 }
 
-void	Header::generateErrorPage(std::string &errorPage)
+void	Header::generateErrorPage(std::string &body)
 {
-	errorPage = "<html>\n"
-			"<style> body {background-color: rgb(252, 243, 233);}"
-			"h1 {color: rgb(200, 0, 0);} </style>"
-			"<body> <h1>ERROR ";
-	errorPage += std::to_string(_statusCode);//add explanation
-	errorPage += "</h1>\n</body>\n</html>\n";
+	mapIntStrIter it;
+	if ((it = errorPage.find(_statusCode)) != errorPage.end()){
+		size_t len = _root.length();
+		if (_root.back() == '/')
+			len--;
+		std::string path(_root, 0, len);
+		path += errorPage[_statusCode];
+		int fd = open(path.c_str(), O_RDONLY);
+		struct stat st;
+		int rc = stat(path.c_str(), &st);
+		char buf[4096 * 24];
+		int res = read(fd, buf, st.st_size);
+		std::string bufStr(buf, st.st_size);
+		close(fd);
+		body = bufStr;
+	}
+	else {
+		body = "<html>"
+				"<style> body {background-color: rgb(252, 243, 233);}"
+				"h1 {color: rgb(200, 0, 0);}"
+				"e1 {color: rgb(100, 0, 0);} </style>"
+				"<body> <h1>ERROR</h1><br><e1>";
+		body += std::to_string(_statusCode) + " " + statusCodes[_statusCode];//add explanation
+		body += "</e1></body></html>";
+	}
 };
 
 void	Header::createGeneralHeaders(stringMap &headersMap)

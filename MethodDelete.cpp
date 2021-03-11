@@ -62,7 +62,8 @@ MethodStatus	MethodDelete::manageRequest()
 
 MethodStatus	MethodDelete::createHeader()
 {
-	_header = new Header(data.uri.script_name, _statusCode);
+	// _header = new Header(data.uri.script_name, _statusCode);
+	_header = new Header(data.uri.script_name, data.location->root, _statusCode);
 	std::cout << "////\t\t DELETE METHOD, statusCode: " << _statusCode << std::endl;
 
 	_header->createGeneralHeaders(_headersMap);

@@ -2,6 +2,8 @@
 #include "Header.hpp"
 
 MethodGet::~MethodGet(){ delete _header; };
+MethodStatus		MethodGet::sendResponse(int socket) { return ok; };
+MethodStatus		MethodGet::sendHeader(int socket) { return ok; };
 
 void			MethodGet::generateIdxPage(){
 
@@ -44,17 +46,13 @@ void			MethodGet::generateIdxPage(){
 		std::string fileSize = std::to_string(size);//
 		if (S_ISDIR(st.st_mode))
 			fileSize = "-";
-
-		_body += "<tr><td><a href=\"/" + fname;
-		_body += cur->d_name;
+		_body += "<tr><td><a href=\"/" + fname + cur->d_name;
 		if (S_ISDIR(st.st_mode))
 			_body += "/";
-		_body += "\">";
-		_body += cur->d_name;
+		_body += "\">" + std::string(cur->d_name);
 		if (S_ISDIR(st.st_mode))
 			_body += "/";
-		_body += "</a></td>";
-		_body += "<td><small>" + lastModified + "</small></td><td><small>" + fileSize + "</small></td></tr><br>";
+		_body += "</a></td><td><small>" + lastModified + "</small></td><td><small>" + fileSize + "</small></td></tr><br>";
 	}
 	_body += "</body>\n</html>\n";
 	closedir(dir);
@@ -63,13 +61,13 @@ void			MethodGet::generateIdxPage(){
 MethodStatus	MethodGet::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return (ok); };
 
 //always allowed. but others...
-MethodStatus	MethodGet::manageRequest(){
+MethodStatus	MethodGet::manageRequest()
+{
+	if (_statusCode != 0)
+		return ok;
 
 	struct stat	st;
-
-	_statusCode = okSuccess;//if not marked before
-
-	// std::cout << "__PATH_NAME: " << data.uri.script_name << std::endl;
+	_statusCode = okSuccess;
 	if (stat(data.uri.script_name.c_str(), &st) == -1){// && errno == ENOENT)
 		_statusCode = notFound;
 		return error;
@@ -90,7 +88,7 @@ MethodStatus	MethodGet::manageRequest(){
 
 MethodStatus	MethodGet::createHeader()
 {
-	_header = new Header(data.uri.script_name, _statusCode);
+	_header = new Header(data.uri.script_name, data.location->root, _statusCode);
 
 	std::cout << "\n////\tGET METHOD, statusCode: " << _statusCode << std::endl;
 
@@ -105,17 +103,11 @@ MethodStatus	MethodGet::createHeader()
 		_header->createEntityHeaders(_headersMap);
 	if (_statusCode == 405)
 		_header->addAllowHeader(_headersMap, *data.serv);
-	_header->addLocationHeader(_headersMap);
-	_header->addRetryAfterHeader(_headersMap);
+	_header->addLocationHeader(_headersMap);//if redirect
+	_header->addRetryAfterHeader(_headersMap);//503 429
 	// _header->addTransferEncodingHeader(_headersMap, _headersMapRequest);
 	_header->addAuthenticateHeader(_headersMap);
 
-	return ok;
-};
-
-MethodStatus		MethodGet::sendResponse(int socket) { return ok; };
-
-MethodStatus		MethodGet::sendHeader(int socket) {
 	return ok;
 };
 
