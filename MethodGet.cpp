@@ -19,7 +19,7 @@ void			MethodGet::generateIdxPage(){
 					body {background-color: rgb(252, 243, 233);}\
 					h1   {color: lightseagreen;}\
 					td   {color: rgb(75, 8, 23);}\
-					a    {color: rgba(255, 99, 71, 0.95);}\
+					a    {color: rgba(255, 99, 71, 1);}\
 			</style></head><body>"
 			"<h1>Directory index</h1><table style=\"width:30%\">";
 
