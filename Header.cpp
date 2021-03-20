@@ -46,8 +46,7 @@ static struct defaultErrorPagesInit
 
 void	Header::headersToString(stringMap const &headersMap, std::string &output)
 {
-	std::string statusCodeStr = std::to_string(_statusCode);
-	// ft_utoa(statusCode, statusCodeStr);
+	std::string statusCodeStr = size2Dec(_statusCode);
 	output += "HTTP/1.1 " + statusCodeStr + " " + statusCodes[_statusCode] + CRLF;
 	for (constMapIter it = headersMap.begin(); it != headersMap.end(); ++it)
 		output += (it->first) + ": " + (it->second) + CRLF;
@@ -100,7 +99,7 @@ void	Header::generateErrorPage(std::string &body, mapIntStr const &error_pages)
 		"h1 {color: rgb(200, 0, 0);}"
 		"e1 {color: rgb(100, 0, 0);} </style>"
 		"<body> <h1>ERROR</h1><br><e1>";
-	body += std::to_string(_statusCode) + " " + statusCodes[_statusCode];//add explanation
+	body += size2Dec(_statusCode) + " " + statusCodes[_statusCode];//add explanation
 	body += "</e1></body></html>\n";
 };
 
@@ -144,8 +143,7 @@ void	Header::addContentLengthHeader(stringMap &headersMap, std::string const & b
 			return ;
 		bodySize = stat_buf.st_size;
 	}
-	std::string contentLength = std::to_string(bodySize);
-	// ft_utoa(bodySize, contentLength);
+	std::string contentLength = size2Dec(bodySize);
 	headersMap.insert(std::pair<std::string, std::string>("Content-Length", contentLength));//can it be specified in request before?
 };
 

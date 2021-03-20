@@ -14,7 +14,7 @@ private:
 
 public:
 	MethodHead(int &status, RequestData const &data) :
-		AMethod(status, data) {_type = HEAD;};
+		AMethod(status, data) { _type = HEAD;};
 	~MethodHead();
 	virtual MethodStatus	createHeader();
 	virtual MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus);

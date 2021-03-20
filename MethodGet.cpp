@@ -43,7 +43,7 @@ void			MethodGet::generateIdxPage(){
 		strftime(buf, 100, "%d-%b-%Y %H:%M\n", tm2);
 		std::string lastModified(buf);
 		size_t size = st.st_size;
-		std::string fileSize = std::to_string(size);//
+		std::string fileSize = size2Dec(size);
 		if (S_ISDIR(st.st_mode))
 			fileSize = "-";
 		_body += "<tr><td><a href=\"/" + fname + cur->d_name;

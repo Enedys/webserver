@@ -44,6 +44,7 @@ typedef enum
 {
 	errorReadingURL = 1,	//may be replaced
 	errorSocket = 1,		//may be replaced
+	internalError = 1,
 
 	errorSendingResponse = 1,	//may be replaced
 	okWaitingMoreChunks = 1,//222 wtf
@@ -78,4 +79,5 @@ typedef std::map<int, std::string>::const_iterator			constMapIntStrIter;
 
 int			string2Size(const std::string &str, int base=16);
 std::string	size2Hex(size_t num, int base = 16);
+std::string	size2Dec(size_t num, int base = 10);
 void		stringToLower(std::string &s);

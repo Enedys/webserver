@@ -47,6 +47,21 @@ std::string	size2Hex(size_t num, int base = 16)
 	return (res);
 }
 
+std::string	size2Dec(size_t num, int base = 10)
+{
+	const char		*dict = "0123456789";
+
+	if (num == 0)
+		return (std::string("0"));
+	std::string res;
+	while (num)
+	{
+		res.insert(res.begin(), dict[num % base]);
+		num /= base;
+	}
+	return (res);
+}
+
 void		stringToLower(std::string &s)
 {
 	for (int i = 0; i < s.length(); i++)
