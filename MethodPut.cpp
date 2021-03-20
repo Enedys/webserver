@@ -21,12 +21,14 @@ MethodStatus	MethodPut::createHeader()
 };
 
 MethodStatus	MethodPut::processBody(const std::string &requestBody, MethodStatus bodyStatus) {
-
+ //if status == ok, write return ok
 	// if (bodyStatus == inprogress){ //max_body
+		// receive more body in the next iteration
 		// _statusCode = ///;//
-		// return (); }
+		//}
 
-	if (!data.serv->locs[0].optionsAvailable)//locs[i]
+	// if (!data.serv->locs[0].optionsAvailable)//locs[i]
+	if (!data.location->optionsAvailable)
 		_statusCode = methodNotAllowed;
 
 	struct stat	st;
@@ -49,9 +51,11 @@ MethodStatus	MethodPut::processBody(const std::string &requestBody, MethodStatus
 
 	// if ((fd = open(data.uri.script_name.c_str(), O_RDONLY | O_NONBLOCK)) < 0)
 	// // 	_statusCode = errorOpeningURL;
-	close(_fd);
+	
+	
+	// if status == ok or later close(_fd);//if not in progress
 	_statusCode = created;//201
-	return (ok);
+	return (ok);//or inprogress
 };
 
 MethodStatus	MethodPut::manageRequest() { return (ok); };

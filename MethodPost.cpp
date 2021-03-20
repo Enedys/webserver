@@ -21,7 +21,7 @@ MethodStatus	MethodPost::createHeader()
 	cgi.setEnv(NULL);
 	cgi.setExecpath((char *)bin.c_str());
 	cgi.setArgs(args);
-	cgi.init();
+	cgi.init();//checks
 	std::cout << "create header!\n";
 	return (ok);
 };

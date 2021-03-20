@@ -60,11 +60,17 @@ void			MethodGet::generateIdxPage(){
 
 MethodStatus	MethodGet::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return (ok); };
 
+// POST || .php .py (cgi in config) || GET HEAD + no autoindex + IS_DIR + stat(index.php) in config - manageRequest
+//is error and error_page is set ad cgi extension - create header
+
 //always allowed. but others...
 MethodStatus	MethodGet::manageRequest()
 {
+	
 	if (_statusCode != 0)
 		return ok;
+	
+	// если файл сжи 
 
 	struct stat	st;
 	_statusCode = okSuccess;
@@ -76,8 +82,12 @@ MethodStatus	MethodGet::manageRequest()
 	if (S_ISDIR(st.st_mode)){
 		if (data.location->autoindex)
 			generateIdxPage();
-		else
+		else {
 			_statusCode = errorOpeningURL;//403 Forbidden
+			// check index pages. 
+			//   - взять первый файл если сжи то 
+			//   - если есть ехе файлы  
+		}
 	}
 
 	// else if (S_ISREG(st.st_mode) && (_fd = open(data.uri.script_name.c_str(), O_RDONLY | O_NONBLOCK)) < 0){// else S_ISFIFO S_ISLNK /// O_DIRECTORY

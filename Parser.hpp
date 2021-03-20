@@ -37,7 +37,7 @@ typedef struct s_serv
 struct s_loc
 {
 	std::string path; // rename to locPath?
-	std::string root;
+	std::string root;////////error page
 	std::string fileRequestIsDir;
 	std::map<std::string, std::string> cgi;
 	std::string auth;

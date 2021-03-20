@@ -59,9 +59,9 @@ CGI::CGI(char *execpath, char **args, char **env)
 void CGI::input(const std::string &str) // inputting body
 {
 	int r;
-	if (inputBuf.empty() && str.empty())
+	if (inputBuf.empty() && str.empty())///status check // status == ok
 	{
-		close(pipein[1]);
+		close(pipein[1]);//return
 	}
 	if (inputBuf.empty())
 	{
