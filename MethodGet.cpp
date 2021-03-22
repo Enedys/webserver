@@ -21,20 +21,20 @@ void			MethodGet::generateIdxPage(){
 					td   {color: rgb(75, 8, 23);}\
 					a    {color: rgba(255, 99, 71, 1);}\
 			</style></head><body>"
-			"<h1>Directory index</h1><table style=\"width:30%\">";
+			"<h1>Directory index</h1><table style=\"width:80%\">";
 
-	std::string fname = data.uri.script_name.substr(data.location->root.length(), data.uri.script_name.length());
-	size_t fin = fname.find_last_of("/");
-	if (fin != fname.length() - 1)
-		fname += "/";
-	std::cout << "fname: " << fname << std::endl;
+	std::string fname(data.uri.request_uri);
+	if (fname.at(fname.length() - 1) != '/')
+		fname.push_back('/');
 
 	errno = 0;
-	while ((cur = readdir(dir)) != NULL && errno == 0){
+	while ((cur = readdir(dir)) != NULL){//) && errno == 0){
 		if (strcmp(cur->d_name, ".") == 0)
 			continue ;
 
-		std::string fullPath(data.uri.script_name);//add / if not present
+		std::string fullPath(data.uri.script_name);
+		if (fullPath.at(fullPath.length() - 1) != '/')
+			fullPath.push_back('/');
 		fullPath += cur->d_name;
 		struct stat	st;
 		char buf[100];
@@ -46,7 +46,9 @@ void			MethodGet::generateIdxPage(){
 		std::string fileSize = size2Dec(size);
 		if (S_ISDIR(st.st_mode))
 			fileSize = "-";
-		_body += "<tr><td><a href=\"/" + fname + cur->d_name;
+
+		_body += "<tr><td><a href=\"" + fname + cur->d_name;
+		std::cout << "_body: " << _body << std::endl;
 		if (S_ISDIR(st.st_mode))
 			_body += "/";
 		_body += "\">" + std::string(cur->d_name);
@@ -66,11 +68,21 @@ MethodStatus	MethodGet::processBody(const std::string &requestBody, MethodStatus
 //always allowed. but others...
 MethodStatus	MethodGet::manageRequest()
 {
-	
+
 	if (_statusCode != 0)
 		return ok;
-	
-	// если файл сжи 
+
+	// если файл сжи
+
+std::cout << "data.location->root: " << data.location->root <<
+			"\ndata.uri.script_name: " << data.uri.script_name <<
+			"\ndata.uri.request_uri: " << data.uri.request_uri <<//
+			"\ndata.uri.raw_path: " << data.uri.raw_path <<
+			"\ndata.uri.query_string: " << data.uri.query_string <<
+			"\ndata.uri.fragment_string: " << data.uri.fragment_string <<
+			"\ndata.uri.path_info: " << data.uri.path_info <<
+			"\ndata.uri.path_translated: " << data.uri.path_translated <<
+			"\ndata.uri.extension: " << data.uri.extension <<std::endl;
 
 	struct stat	st;
 	_statusCode = okSuccess;
@@ -84,9 +96,9 @@ MethodStatus	MethodGet::manageRequest()
 			generateIdxPage();
 		else {
 			_statusCode = errorOpeningURL;//403 Forbidden
-			// check index pages. 
-			//   - взять первый файл если сжи то 
-			//   - если есть ехе файлы  
+			// check index pages.
+			//   - взять первый файл если сжи то
+			//   - если есть ехе файлы
 		}
 	}
 
@@ -155,7 +167,7 @@ MethodStatus		MethodGet::sendBody(int socket)
 		if (readBytes < 0){
 			_statusCode = errorReadingURL;
 			close(_fd);
-			return error;
+			return error;//what happens after, above?
 		}
 		buf[readBuf] = '\0';
 		std::string bufStr(buf, readBytes);
@@ -181,7 +193,7 @@ MethodStatus		MethodGet::sendBody(int socket)
 		return inprogress;
 	}
 
-	close(_fd);//do not need if error occured
+	close(_fd);
 	_body.clear();
 	return ok;
 }

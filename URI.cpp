@@ -117,7 +117,7 @@ std::string	URI::normalizeURI(std::string const &s)
 	return (normUri);
 }
 
-std::pair<std::string, std::string>	
+std::pair<std::string, std::string>
 			URI::parseRawPath(std::string const &s)
 {
 	std::pair<std::string, std::string>	script_info;
@@ -166,7 +166,7 @@ bool		URI::setTranslatedPath(s_loc const *locs)
 		return (false);
 	size_t	root_len = locs->root.length();
 	std::string	root_name;
-	if (locs->root.back() == '/')
+	if (locs->root.back() == '/')//c++11 extension, can be replaced: if (locs->root.at(locs->root.length() - 1) == '/')
 		root_name = locs->root.substr(0, root_len - 1);
 	else
 		root_name = locs->root;

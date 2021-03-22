@@ -56,7 +56,7 @@ void	Header::headersToString(stringMap const &headersMap, std::string &output)
 int		Header::generateImagePage(std::string &body, std::string &errorurl)
 {
 	size_t len = _root.length();
-	if (_root.back() == '/')
+	if (_root.at(_root.length() - 1) == '/')
 		len--;
 	std::string path(_root, 0, len);
 	if (*errorurl.begin() != '/')
