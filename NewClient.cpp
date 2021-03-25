@@ -117,14 +117,14 @@ MethodStatus		Client::requestInterraction()
 	if (_state == analizeHeader)
 		_state = getNextState(analizeHeaders());
 
+	if (_state == manageRequest)
+		_state = getNextState(_method->manageRequest());
+
 	if (_state == readingBody) 
 		_state = getNextState(_request.getRequestBody(_method));
 	else if (_request.getRequestState() == Request::body)	// cgi case, when we send answer,
 		if (_request.getRequestBody(_method) == error)		//  before read all request bodey
 			_state = sendingErrorState;
-
-	if (_state == manageRequest)
-		_state = getNextState(_method->manageRequest());
 
 	if (_state == createHeaders)
 		_state = getNextState(_method->createHeader());

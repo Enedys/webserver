@@ -57,7 +57,8 @@ MethodStatus		Request::setErrorCode(int code)
 
 MethodStatus		Request::getRequestHead()
 {
-	std::cout << "\033[32m Into getRequestHead: " << requestStage << " IN BUFFER: " << getBufferResidual() << "\033[0m "<< std::endl;
+	std::cout << "\033[32m Into getRequestHead: " << requestStage << " IN BUFFER: "\
+			<< getBufferResidual() << "\033[0m "<< std::endl;
 	if (requestStage < body && _buffer.length() > MAX_REQUEST_SIZE)
 		return (setErrorCode(400));
 	size_t posCRLF = _buffer.find(CRLF);
@@ -234,9 +235,9 @@ MethodStatus		Request::getRequestBody(AMethod *method)
 		rbodyStatus = getTrEncodedMsg(reqBody);
 	if (rbodyStatus == error)
 		return (error);
+	if (rbodyStatus == ok) 		// What reason to change requestStage?
+		requestStage = init; 	// Answer: stop transfering to pipe after end of the msg bodey
 	rbodyStatus = method->processBody(reqBody, rbodyStatus);
-	if (rbodyStatus == ok)
-		requestStage = init;
 	return (rbodyStatus);
 }
 
@@ -269,6 +270,7 @@ MethodStatus	Request::getTrEncodedMsg(std::string &dest)
 			return (error);
 		pullBytes += (posCRLF - pullBytes + 2);
 	}
+	// CLION: impossible to reach this statement
 	_buffer.erase(0, pullBytes);
 	chunkSize = 0;
 	return (ok);

@@ -20,14 +20,23 @@ class Client
 		defaultState,
 		readingHeader,
 		analizeHeader,
-		readingBody,
 		manageRequest,
+		readingBody,
 		createHeaders,
 		sendindHeader,
 		sendingBody,
 		finalState,
 		sendingErrorState,
 	}			conditionCode;
+
+	typedef		enum
+	{
+		bodyIsAutoindex,
+		bodyIsFile,
+		bodyIsCGI,
+		bodyIsTextErrorPage,
+		bodyIsEmpty
+	}			bodyType;
 
 public:
 	int					getClientSocket() const;
