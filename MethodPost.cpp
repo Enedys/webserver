@@ -1,5 +1,5 @@
 #include "MethodPost.hpp"
-
+// manage request, process_body, create_header, send header, send body
 MethodPost::~MethodPost()
 {
 
@@ -13,10 +13,23 @@ MethodStatus	MethodPost::createHeader()
 	args[2] = 0;
 
 
-	std::string ext = data.uri.script_name.substr(data.uri.script_name.find_last_of('.') + 1, data.uri.script_name.size());
-	std::string bin = data.location->cgi.find(ext)->second;
+//	std::string ext = data.uri.script_name.substr(data.uri.script_name.find_last_of('.') + 1, data.uri.script_name.size());
+//	ext = data.uri.extension;
+//	std::string bin = data.location->cgi.find(ext)->second; // todo: not found cgi path;
+//	if (bin.empty())
+//	{
+//		// todo: error..
+//		std::string _body;
+//		_statusCode = 405;
+//		_header = new Header(data.uri.script_name, data.location->root, _statusCode);
+//		_header->createGeneralHeaders(_headersMap);
+//		_header->generateErrorPage(_body, data.serv->error_pages);
+////		if (_statusCode == 405)
+////			_header->addAllowHeader(_headersMap, *data.serv);
+//		return(error);
+//	}
 	args[0] = (char *)bin.c_str();
-	args[1] = (char *)data.uri.script_name.c_str();
+	args[1] = (char *)data.uri.script_name.c_str(); // todo: check, no script found
 	cgi.setEnv(data.cgi_conf);
 	cgi.setEnv(NULL);
 	cgi.setExecpath((char *)bin.c_str());
@@ -28,14 +41,37 @@ MethodStatus	MethodPost::createHeader()
 
 MethodStatus MethodPost::processBody(const std::string &requestBody, MethodStatus bodyStatus)
 {
+	// todo: bodystartus - ok, end of input;
 	cgi.input(requestBody);
+	//	todo: update _statusCode according to cgi output status
 	return (ok);
 };
 
 MethodStatus	MethodPost::manageRequest()
 {
+	std::string ext = data.uri.script_name.substr(data.uri.script_name.find_last_of('.') + 1, data.uri.script_name.size());
+	ext = data.uri.extension;
+	std::string bin = data.location->cgi.find(ext)->second; // todo: not found cgi path;
+	if (bin.empty())
+	{
+		_statusCode = 405;
+		return(error); // if error jumps to create header;
+	}
+
 	return (ok);
 };
+
+MethodStatus	MethodPost::createHeader()
+{
+
+	_header = new Header(data.uri.script_name, data.location->root, _statusCode);
+	_header->createGeneralHeaders(_headersMap);
+	if (_statusCode < 200 || _statusCode > 206)
+		_header->generateErrorPage(_body, data.serv->error_pages);
+//		if (_statusCode == 405)
+//			_header->addAllowHeader(_headersMap, *data.serv);
+	return(ok);
+}
 
 MethodStatus	MethodPost::sendBody(int socket)
 {
@@ -47,7 +83,7 @@ MethodStatus	MethodPost::sendBody(int socket)
 	{
 		std::cout << "I'VE GOT THAT!\n";
 		// std::cout << str;
-		std::string num = size2Hex(str.length());
+		std::string num = size2Hex(str.length()); // todo: chunk create in cgi ouptut encoded
 		num = num + "\r\n";
 		send(socket, num.c_str(), num.length(), MSG_DONTWAIT);
 		send(socket, str.c_str(), str.length(), MSG_DONTWAIT); // TODO buffer!!

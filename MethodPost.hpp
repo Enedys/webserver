@@ -1,6 +1,7 @@
 #pragma once
 #include "Method.hpp"
 #include "CGI.hpp"
+#include "Header.hpp"
 // Class RequestData:
 // char **cgi_conf;
 // std::string - pathToFile;
@@ -21,7 +22,9 @@ private:
     /* data */
     MethodPost(/* args */);
     CGI cgi;
+	Header				*_header;
     std::string outputString;
+	std::string			_body;//ololo
     // RequestData const &reqData;
 
 public:
