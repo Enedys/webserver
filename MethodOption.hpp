@@ -1,6 +1,5 @@
 #pragma once
 #include "Method.hpp"
-#include "Header.hpp"
 
 class MethodOption : public AMethod
 {
@@ -8,7 +7,6 @@ private:
 	MethodOption();
 	MethodOption(MethodOption const & src);
 	MethodOption & operator=(MethodOption const & src);
-	Header				*_header;
 	std::string			_remainder;
 	std::string			_body;//if autoindex, if Options will be not allowed by config
 

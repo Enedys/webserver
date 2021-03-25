@@ -1,9 +1,7 @@
 #pragma once
 #include <dirent.h>
 #include <iostream>
-
 #include "Method.hpp"
-#include "Header.hpp"
 
 //max body size
 
@@ -13,7 +11,6 @@ private:
 	MethodGet();
 	MethodGet(MethodGet const & src);
 	MethodGet & operator=(MethodGet const & src);
-	Header				*_header;
 	size_t				_sentBytesTotal;
 	size_t				_bytesToSend;
 	static const size_t	_bs = 4096 * 16;

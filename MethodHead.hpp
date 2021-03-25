@@ -1,6 +1,5 @@
 #pragma once
 #include "Method.hpp"
-#include "Header.hpp"
 
 class MethodHead : public AMethod
 {
@@ -8,7 +7,6 @@ private:
 	MethodHead();
 	MethodHead(MethodHead const & src);
 	MethodHead & operator=(MethodHead const & src);
-	Header				*_header;
 	std::string			_remainder;
 	std::string			_body;
 

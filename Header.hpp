@@ -5,7 +5,8 @@
 # include <time.h>
 # include <sys/time.h>
 
-#include "Method.hpp"
+#include "RequestData.hpp"
+#include "include_resources.hpp"
 
 class Header
 {

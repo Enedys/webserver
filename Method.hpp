@@ -2,12 +2,16 @@
 #include "include_resources.hpp"
 #include "RequestData.hpp"
 #include "Parser.hpp"
+#include "Header.hpp"
+#include "CGI.hpp"
 
 class AMethod
 {
 protected:
 	int					&_statusCode;
 	RequestData	const	&data;
+	Header				*_header;
+	CGI					cgi;
 
 	int					_fd;
 	stringMap			_headersMap;

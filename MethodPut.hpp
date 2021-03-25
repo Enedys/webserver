@@ -1,6 +1,5 @@
 #pragma once
 #include "Method.hpp"
-#include "Header.hpp"
 
 class MethodPut : public AMethod
 {
@@ -8,7 +7,6 @@ private:
 	MethodPut();
 	MethodPut(MethodPut const & src);
 	MethodPut & operator=(MethodPut const & src);
-	Header				*_header;
 	std::string			_remainder;
 	std::string			_body;
 
