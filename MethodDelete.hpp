@@ -1,7 +1,6 @@
 #pragma once
 #include <dirent.h>
 #include "Method.hpp"
-#include "Header.hpp"
 
 class MethodDelete : public AMethod
 {
@@ -9,7 +8,6 @@ private:
 	MethodDelete();
 	MethodDelete(MethodDelete const & src);
 	MethodDelete & operator=(MethodDelete const & src);
-	Header				*_header;
 	std::string			_remainder;
 	std::string			_body;//if autoindex, if Options will be not allowed by config
 

@@ -27,7 +27,6 @@ MethodStatus	MethodPut::processBody(const std::string &requestBody, MethodStatus
 		// _statusCode = ///;//
 		//}
 
-	// if (!data.serv->locs[0].optionsAvailable)//locs[i]
 	if (!data.location->optionsAvailable)
 		_statusCode = methodNotAllowed;
 

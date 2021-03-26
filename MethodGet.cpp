@@ -74,16 +74,6 @@ MethodStatus	MethodGet::manageRequest()
 
 	// если файл сжи
 
-std::cout << "data.location->root: " << data.location->root <<
-			"\ndata.uri.script_name: " << data.uri.script_name <<
-			"\ndata.uri.request_uri: " << data.uri.request_uri <<//
-			"\ndata.uri.raw_path: " << data.uri.raw_path <<
-			"\ndata.uri.query_string: " << data.uri.query_string <<
-			"\ndata.uri.fragment_string: " << data.uri.fragment_string <<
-			"\ndata.uri.path_info: " << data.uri.path_info <<
-			"\ndata.uri.path_translated: " << data.uri.path_translated <<
-			"\ndata.uri.extension: " << data.uri.extension <<std::endl;
-
 	struct stat	st;
 	_statusCode = okSuccess;
 	if (stat(data.uri.script_name.c_str(), &st) == -1){// && errno == ENOENT)
@@ -96,7 +86,7 @@ std::cout << "data.location->root: " << data.location->root <<
 			generateIdxPage();
 		else {
 			_statusCode = errorOpeningURL;//403 Forbidden
-			// check index pages.
+			// check index pages. 
 			//   - взять первый файл если сжи то
 			//   - если есть ехе файлы
 		}
