@@ -40,6 +40,7 @@ struct s_loc
 	std::string root;////////error page
 	std::string fileRequestIsDir;
 	std::map<std::string, std::string> cgi;
+	std::vector<std::string> index;
 	std::string auth;
 	std::string authLogPass;
 	bool uploadPass;
@@ -127,6 +128,7 @@ class Parser
 		void	getLocLogPass();
 		void	getLocUploadPass();
 		void 	getLocUploadStore();
+		void	getLocIndex();
 		void 	initServ();
 		void 	initLoc();
 

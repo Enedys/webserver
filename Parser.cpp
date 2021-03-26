@@ -392,7 +392,12 @@ void Parser::getLocUploadPass()
 
 void Parser::getLocUploadStore()
 {
-	loc.uploadStore = getValue("location: upload_store"); // TODO: put returns 500, if no subdirectory!
+	loc.uploadStore = getValue("location: upload_store: "); // TODO: put returns 500, if no subdirectory!
+}
+
+void Parser::getLocIndex()
+{
+	loc.index = getVectorValues("location: index: ");
 }
 
 void Parser::parseLocValues()
@@ -424,6 +429,8 @@ void Parser::parseLocValues()
 		getLocUploadPass();
 	else if (value == "upload_store")
 		getLocUploadStore();
+	else if (value == "index")
+		getLocIndex();
 	else
 		error("Location: invalid token");
 }
@@ -510,6 +517,7 @@ void Parser::initLoc()
 	loc.deleteAvailable = true;
 	loc.path.clear();
 	loc.cgi.clear();
+	loc.index.clear();
 }
 
 void Parser::validateErrorStr(const std::vector<std::string> &v)
@@ -579,5 +587,7 @@ void Parser::makeServExt()
 	}
 	servers_ext.push_back(newStruct);
 }
+
+
 
 
