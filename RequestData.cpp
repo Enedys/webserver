@@ -2,15 +2,25 @@
 
 RequestData::RequestData(t_ext_serv const *s,\
 						stringMap const *rHs,\
-						stringMap const *rFl) :
-	_servsList(s), _reqHeads(rHs), errorMask(0), in(0)
+						stringMap const *rFl, \
+						sockaddr_in adr, int errorCode) :
+	_servsList(s), _reqHeads(rHs), errorMask(0), in(0), _addr(adr)
 {
-	_uri = &rFl->find("uri")->second;
-	_method = &rFl->find("method")->second;
+	if (rFl->find("uri") != rFl->end())
+	{
+		_uri = &rFl->find("uri")->second;
+		_method = &rFl->find("method")->second;
+	}
+	else
+	{
+		_uri = NULL;
+		_method = NULL;
+	}
 	serv = NULL;
 	location = NULL;
 	cgi_conf = NULL;
 	badalloc_index = -1;
+	error_code = errorCode;
 };
 
 RequestData::RequestData()
@@ -33,19 +43,31 @@ void		RequestData::cleanData()
 	contentLanguage.clear();	contentType.clear();
 	errorMask = 0;	in = 0;	error_code = 0;
 	uri.cleanData();
-	cleanCGIenv();
+	if (cgi_conf)
+		cleanCGIenv();
 	badalloc_index = -1;
 	cgi_conf = NULL;
 }
 
 void		RequestData::setData(t_ext_serv const *s,\
 									stringMap const *rHs,\
-									stringMap const *rFl)
+									stringMap const *rFl, \
+									sockaddr_in addr, int errorCode)
 {
 	_servsList = s;
 	_reqHeads = rHs;
-	_uri = &rFl->find("uri")->second;
-	_method = &rFl->find("method")->second;
+		if (rFl->find("uri") != rFl->end())
+	{
+		_uri = &rFl->find("uri")->second;
+		_method = &rFl->find("method")->second;
+	}
+	else
+	{
+		_uri = NULL;
+		_method = NULL;
+	}
+	_addr = addr;
+	error_code = errorCode;
 }
 
 RequestData::~RequestData() {cleanCGIenv();};
@@ -53,7 +75,7 @@ RequestData::~RequestData() {cleanCGIenv();};
 void		RequestData::setHeaderState(headerNum hN, bool error)
 {
 	in |= hN;
-	errorMask |= ((error != true) ? hN : 0);
+	errorMask |= ((error == false) ? hN : 0);
 }
 
 void		RequestData::procQualityHeaders()
@@ -425,6 +447,8 @@ void	RequestData::procServer()
 
 void	RequestData::procUri()
 {
+	if (error_code != 0)
+		return ;
 	if (!uri.procUri(*_uri))
 	{
 		setHeaderState(e_uri, false);
@@ -497,65 +521,83 @@ void			RequestData::cleanCGIenv()
 			break ;
 		free(cgi_conf[i++]);
 	}
+	free(cgi_conf);
+	badalloc_index = -1;
 }
 
-void		RequestData::procCGI(size_t contLen, sockaddr_in addr)
+void		RequestData::createCGIEnv(size_t contLen)
 {
-	if (!serv || !location || (errorMask & e_uri))
-		return (setHeaderState(e_cgi, false));
-	if (location->cgi.find(uri.extension) == location->cgi.end())
-		return ;
-	setHeaderState(e_cgi, true);
-	if (!(cgi_conf = (char **)malloc(envCgiSize * sizeof(char *))))
-		setHeaderState(e_cgi, false);
+	// constMapIter cgi_ext_it = location->cgi.find(uri.extension);
+	// if (cgi_ext_it == location->cgi.end())
+	// 	return ;
+	// cgi_bin = (*cgi_ext_it).second;
 	int	i = 0;
-	if ((in & e_auth) && !(errorMask & e_auth))
-		addCgiVar(i++, "AUTH_TYPE=Basic");
+	if (cgi_conf)
+		cleanCGIenv();
+	if (!(cgi_conf = (char **)malloc(envCgiSize * sizeof(char *))))
+		return ;
 	addCgiVar(i++, "GATEWAY_INTERFACE=CGI/1.1");
 	addCgiVar(i++, "SERVER_PROTOCOL=HTTP/1.1");
 	addCgiVar(i++, "SERVER_SOFTWARE=BSHABILLUM/1.1");
 	addCgiVar(i++, "SERVER_NAME=" + serv->serverName);
 	addCgiVar(i++, "SERVER_PORT=" + size2Hex(serv->port, 10));
-	if (!uri.query_string.empty())
-		addCgiVar(i++, "QUERY_STRING=" + uri.query_string);
+	addCgiVar(i++, "QUERY_STRING=" + uri.query_string);
 	addCgiVar(i++, "REQUEST_URI=" + uri.request_uri);
-	if (!uri.path_info.empty())
-	{
-		addCgiVar(i++, "PATH_INFO=" + uri.path_info);
-		addCgiVar(i++, "PATH_TRANSLATED=" + uri.path_translated);
-	}
+	addCgiVar(i++, "PATH_INFO=" + uri.path_info);
+	addCgiVar(i++, "PATH_TRANSLATED=" + uri.path_translated);
 	addCgiVar(i++, "SCRIPT_NAME=" + uri.script_name);
-	if ((in & e_contType) && !(errorMask & e_contType))
-		addCgiVar(i++, "CONTENT_TYPE=" + contentType["type"]);
-	if (contLen > 0)
-		addCgiVar(i++, "CONTENT_LENGTH=" + size2Hex(contLen, 10));
-	addCgiVar(i++, "REMOTE_ADDR=" + getClientIp(addr.sin_addr.s_addr));
-	addCgiVar(i++, "REQUEST_METHOD=" + *_method);
-	if ((in & e_auth) && !(errorMask & e_auth))
+	addCgiVar(i++, "REMOTE_ADDR=" + getClientIp(_addr.sin_addr.s_addr));
+	if (error_code != 0)
 	{
-		std::string	username = location->authLogPass.substr(0,\
-								location->authLogPass.find_first_of(':'));
-		addCgiVar(i++, "REMOTE_IDENT=" + username + '.' + hostName);
-		addCgiVar(i++, "REMOTE_USER=" + username);
+		addCgiVar(i++, "AUTH_TYPE=");
+		addCgiVar(i++, "CONTENT_TYPE=text/plain");
+		addCgiVar(i++, "CONTENT_LENGTH=" + size2Hex(contLen, 10));
+		addCgiVar(i++, "REQUEST_METHOD=GET");
+		addCgiVar(i++, "REMOTE_IDENT=");
+		addCgiVar(i++, "REMOTE_USER=");
+	}
+	else
+	{
+		if ((in & e_auth) && !(errorMask & e_auth))
+			addCgiVar(i++, "AUTH_TYPE=Basic");
+		if ((in & e_contType) && !(errorMask & e_contType))
+			addCgiVar(i++, "CONTENT_TYPE=" + contentType["type"]);
+		if (contLen > 0)
+			addCgiVar(i++, "CONTENT_LENGTH=" + size2Hex(contLen, 10));
+		addCgiVar(i++, "REQUEST_METHOD=" + *_method);
+		if ((in & e_auth) && !(errorMask & e_auth))
+		{
+			std::string	username = location->authLogPass.substr(0,\
+									location->authLogPass.find_first_of(':'));
+			addCgiVar(i++, "REMOTE_IDENT=" + username + '.' + hostName);
+			addCgiVar(i++, "REMOTE_USER=" + username);
+		}
 	}
 	cgi_conf[i] = NULL;
 	if (badalloc_index != -1)
-		{cleanCGIenv(); return ;}
+	{
+		cleanCGIenv();
+		return ;
+	}
 	for (int k = 0; k < i; k++)
 		std::cout << cgi_conf[k] << std::endl;
 }
 
-void		RequestData::prepareData(size_t contLen, sockaddr_in addr)
+void		RequestData::prepareData(size_t contLen)
 {
-	procHost();
-	procQualityHeaders();
-	procUserAgent();
-	procContentType();
-	procServer();
-	procUri();
-	procAuthorization();
-	procCGI(contLen, addr);
-	std::cout << "LOCATION_ROOT: " << location->root << std::endl;
+	if (error_code == 0)
+	{
+		procHost();
+		procQualityHeaders();
+		procUserAgent();
+		procContentType();
+		procServer();
+		procUri();
+		procAuthorization();
+	}
+	else
+		serv = &(_servsList->servs.at(0));
+	if (error_code == 0)
+		std::cout << "LOCATION_ROOT: " << location->root << std::endl;
 	// std::cout << "CGI_ROOT: " << location->cgi.find(uri.extension) << std::endl;
-
 }

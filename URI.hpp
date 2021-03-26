@@ -1,6 +1,6 @@
+#pragma once
 #include "include_resources.hpp"
 #include "Parser.hpp"
-
 class URI
 {
 
@@ -36,10 +36,11 @@ public:
 
 	bool			procUri(std::string const &uri);
 	bool			setTranslatedPath(s_loc const *locs);
+	bool			setTranslatedPath(std::string const &root);
 	bool			getEnvVarVector();
 	void			cleanData();
 
-
+	URI				&operator=(URI const &other);
 	URI();
 	~URI();
 };

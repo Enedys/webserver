@@ -29,37 +29,27 @@ class Client
 		sendingErrorState,
 	}			conditionCode;
 
-	typedef		enum
-	{
-		bodyIsAutoindex,
-		bodyIsFile,
-		bodyIsCGI,
-		bodyIsTextErrorPage,
-		bodyIsEmpty
-	}			bodyType;
-
 public:
 	int					getClientSocket() const;
+	int					readyToSend() const;
 	bool				isReading() const;
-	bool				readyToSend() const;
 	MethodStatus		interract(int newData, int allow2Write);
-
 
 	Client(int socket, sockaddr_in adr, t_ext_serv const &config);
 	~Client();
 
 private:
 	Client();
-	conditionCode		_state;
-	sockaddr_in			_clientAddr;
 	Request				_request;
 	AMethod				*_method;
-	int					_statusCode;
-	int					_socket;
-	t_ext_serv const	&_config;
 	RequestData			procData;
 
+	t_ext_serv const	&_config;
+	sockaddr_in			_clientAddr;
+	int					_socket;
 
+	conditionCode		_state;
+	int					_statusCode;
 
 	conditionCode		getNextState(MethodStatus status);
 	MethodStatus		requestInterraction();
@@ -67,7 +57,4 @@ private:
 	MethodStatus		refreshClient();
 	MethodStatus		createNewMethod();
 	MethodStatus		analizeHeaders();
-
-	t_serv const		*determineServer();
-	std::string			getRequestPath(std::string const &uri);
 };

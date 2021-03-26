@@ -2,7 +2,7 @@
 
 Client::Client(int socket, sockaddr_in adr, t_ext_serv const &config) :
 	_socket(socket), _clientAddr(adr), _statusCode(0), _request(socket, _statusCode),\
-	_config(config), _method(NULL), _state(defaultState)
+	_config(config), _method(NULL), _state(defaultState), procData()
 {
 }
 
@@ -12,7 +12,7 @@ Client::~Client()
 	close(_socket);
 }
 
-int					Client::getClientSocket() const
+int			 		Client::getClientSocket() const
 {
 	return _socket;
 };
@@ -26,11 +26,11 @@ bool				Client::isReading() const
 	return (false);
 }
 
-bool				Client::readyToSend() const
+int				Client::readyToSend() const
 {
 	if (_state == sendingBody || _state == sendindHeader)
-		return (true);
-	return (false);
+		return (1);
+	return (0);
 }
 
 MethodStatus		Client::refreshClient()
@@ -39,6 +39,7 @@ MethodStatus		Client::refreshClient()
 	_method = NULL;
 	_statusCode = 0;
 	_request.cleanRequest();
+	procData.cleanData();
 	if ((_request.getRequestState() == Request::firstLine) &&\
 		_request.getBufferResidual() > 0)
 		return (requestInterraction());
@@ -56,8 +57,8 @@ Client::conditionCode	Client::getNextState(MethodStatus status)
 		return (sendingErrorState);
 	if (status == error)
 	{
-		if (_state <= analizeHeader)
-			createNewMethod();
+		if (_state < analizeHeader)
+			return (analizeHeader);
 		return (createHeaders);
 	}
 	else if (status == ok)
@@ -68,12 +69,14 @@ Client::conditionCode	Client::getNextState(MethodStatus status)
 
 MethodStatus		Client::analizeHeaders()
 {
-	if (_statusCode)
-		return (createNewMethod());
-	procData.setData(&_config, &_request.getHeadersMap(), &_request.getStartLine());
-	procData.prepareData(_request.getContentLength(), _clientAddr);
+	// if (_statusCode)
+	// 	return (createNewMethod());
+	procData.setData(&_config, &_request.getHeadersMap(),\
+					&_request.getStartLine(), _clientAddr, _statusCode);
+	procData.prepareData(_request.getContentLength());
+	if (_statusCode == 0 && procData.error_code)
+		_statusCode = procData.error_code;
 	MethodStatus	methodStatus = createNewMethod();
-	// std::cout << "HERE\n";git
 	return (methodStatus);
 }
 
@@ -84,11 +87,8 @@ MethodStatus		Client::createNewMethod()
 	if (_statusCode)
 	{
 		_method = new MethodGet(_statusCode, procData);
-		_state = createHeaders;
-		return (ok);
+		return (error);
 	}
-	if (_state != analizeHeader)
-		return (logicError);
 	const std::string method = _request.getStartLine().find("method")->second;
 	if (method == "GET")
 		_method = new MethodGet(_statusCode, procData);
@@ -155,7 +155,7 @@ MethodStatus		Client::responseInterraction()
 MethodStatus		Client::interract(int newData, int allow2Write)
 {
 	MethodStatus	returnStatus;
-	bool			ready2Send = readyToSend();
+	bool			ready2Send = (readyToSend() && allow2Write);
 	if (newData)
 		_state = getNextState(_request.readFromSocket());
 	if (isReading())
