@@ -31,6 +31,8 @@ typedef struct s_serv
 	std::map<int, std::string> error_pages;
 	std::string serverName;
 	int 		bodySizeLimit;
+	std::string root;
+	std::map<std::string, std::string> cgi;
 	std::vector<struct s_loc> locs;
 } t_serv;
 
@@ -116,6 +118,7 @@ class Parser
 		void 	parseLocation();
 		void 	getRoot();
 		void 	getHost();
+		void 	getCgi();
 		void 	getServerName();
 		void 	getErrorPage();
 		void 	getPageSize();
