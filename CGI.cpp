@@ -12,7 +12,7 @@ void CGI::initPipes()
 		close(pipein[1]);
 		throw CGI::pipeFailed();
 	}
-	status = 0;
+	processStatus = 0;
 	/*
 	 * next we need to set fd as unblockable, so we won't hang at write function. Write will return -1 if pipe is full;
  	 */
@@ -56,10 +56,10 @@ CGI::CGI(char *execpath, char **args, char **env)
 	headersNotFoundProcessExited = false;
 }
 
-void CGI::input(const std::string &str) // inputting body
+void CGI::input(const std::string &str, MethodStatus mStatus) // inputting body
 {
 	int r;
-	if (inputBuf.empty() && str.empty())///status check // status == ok
+	if (inputBuf.empty() && mStatus == ok)///status check // status == ok
 	{
 		close(pipein[1]);//return
 	}
@@ -144,8 +144,8 @@ MethodStatus CGI::output(std::string &str) // mb gonna change it later. Read and
 	r = read(pipeout[0], buf, BUFSIZ); // read < 0 = pipe is empty..
 	if (r < 0)
 	{
-		int wp = waitpid(pid, &status, WNOHANG); // returns > 0 if process stopped;
-		if (status == 1024)
+		int wp = waitpid(pid, &processStatus, WNOHANG); // returns > 0 if process stopped;
+		if (processStatus == 1024)
 		{
 			freeMem();
 			return (error); // execve failed;
@@ -262,6 +262,11 @@ bool CGI::isHeadersDone() const
 bool CGI::isHeadersNotFound() const
 {
 	return (this->headersNotFound || this->headersNotFoundProcessExited);
+}
+
+cgiStatus CGI::getStatus() const
+{
+	return status;
 }
 
 const char *CGI::forkFailed::what() const throw()

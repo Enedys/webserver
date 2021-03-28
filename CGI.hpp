@@ -14,12 +14,20 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+enum cgiStatus
+{
+	not_started,
+	running,
+	done,
+	failed
+};
+
 class CGI
 {
 	private:
 		int pipein[2], pipeout[2]; // 2 pipes
 		int pid; // fork id
-		int status;
+		int processStatus;
 		bool headersDone;
 		bool headersNotFound;
 		bool headersNotFoundProcessExited;
@@ -28,25 +36,27 @@ class CGI
 		const char *execpath; // remove const?
 		char **args;
 		char **env;
-	public:
-		bool isHeadersNotFound() const;
-
-	private:
 		void parseHeaders(std::string str);
 		void inputFromBuf();
 		void freeMem();
 		void initPipes();
 		void initFork();
+		cgiStatus status;
+	public:
+		cgiStatus getStatus() const;
+
 	public:
 		CGI();
 		CGI(char *execpath, char **args, char **env); // prepare cgi process, prepare forks, etc
 		void init(); // if default constructor, this func need to be called;
-		void input(const std::string &str); // ready to input;
+		void input(const std::string &str, MethodStatus mStatus); // ready to input;
 		MethodStatus output(std::string &str); // ready to output
 		void setExecpath(const char *execpat);
 		void setArgs(char **args);
 		bool isHeadersDone() const;
 		void setEnv(char **env);
+		bool isHeadersNotFound() const;
+
 		~CGI();
 		class pipeFailed: public std::exception
 		{
