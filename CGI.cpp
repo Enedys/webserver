@@ -269,6 +269,84 @@ cgiStatus CGI::getStatus() const
 	return status;
 }
 
+MethodStatus CGI::getHeaders()
+{
+	char buf[BUFSIZ];
+	bzero(buf, BUFSIZ);
+	std::string str;
+	size_t find;
+	int r;
+	r = read(pipeout[0], buf, BUFSIZ); // read < 0 = pipe is empty..
+	if (r < 0)
+	{
+		int wp = waitpid(pid, &processStatus, WNOHANG); // returns > 0 if process stopped;
+		if (processStatus == 1024)
+		{
+			freeMem();
+			return (error); // execve failed;
+		}
+		if (wp > 0 || headersNotFoundProcessExited) // 2 times WNOHANG = wp = -1; TODO: test || headersNotFound
+		{
+//			freeMem();
+			if (!headersDone) // means, headers not found, just output as it is
+			{
+				headersDone = true;
+				headersNotFoundProcessExited = true;
+			}
+			else
+			{
+				str = outputBuf; // TODO: just save it for later
+				freeMem();
+			}
+			return (ok);
+		}
+		else
+			return (inprogress);
+	}
+	if (!headersDone) // headers ready for parser
+	{
+		str = outputBuf + buf;
+		if ((find = str.find("\r\n\r\n")) != std::string::npos)
+		{
+			parseHeaders(str.substr(0, find + 2)); // todo: test how it works
+			str = str.substr(find + 4, str.size());
+			outputBuf.clear();
+			headersDone = true;
+			outputBuf = str;
+			inputFromBuf(); // todo: need?
+			return ok;
+		}
+		else if (str.size() > 16000) // todo: CLARIFY
+		{
+			headersDone = true;
+			headersNotFound = true;
+		}
+		outputBuf = str;
+	}
+	inputFromBuf();
+	return inprogress;
+}
+
+MethodStatus CGI::outputChunked()
+{
+	return ok;
+}
+
+MethodStatus CGI::outputContentLength()
+{
+	return ok;
+}
+
+void CGI::concatHeaders()
+{
+
+}
+
+MethodStatus CGI::cleverOutput()
+{
+	return ok;
+}
+
 const char *CGI::forkFailed::what() const throw()
 {
 	return ("Fork failed!");
