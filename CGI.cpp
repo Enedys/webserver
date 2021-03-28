@@ -54,6 +54,7 @@ CGI::CGI(char *execpath, char **args, char **env)
 	headersDone = false;
 	headersNotFound = false;
 	headersNotFoundProcessExited = false;
+	httpStatus = -1;
 }
 
 void CGI::input(const std::string &str, MethodStatus mStatus) // inputting body
@@ -216,9 +217,15 @@ void CGI::parseHeaders(std::string str)
 		key = str.substr(0, str.find(':'));
 		for (int i = 0; i < key.length(); i++)
 			key.at(i) = std::tolower(key.at(i));
-		value = str.substr(str.find(':') + 1, str.find('\n'));
+		value = str.substr(str.find(':') + 1, str.find('\n') - (str.find(':') + 1)); // todo: test
 		value = value.substr(value.find_first_not_of(" \v\t"), value.size()); // test ' '
 		str = str.substr(str.find("\r\n") + 2, str.size());
+		if (key == "status")
+		{
+			value = value.substr(0, 3);
+			httpStatus = std::atoi(value.c_str());
+			continue;
+		}
 		_headersMap.insert(std::pair<std::string, std::string>(key, value));
 	}
 }
@@ -252,6 +259,7 @@ void CGI::init()
 	headersDone = false;
 	headersNotFound = false;
 	headersNotFoundProcessExited = false;
+	httpStatus = -1;
 }
 
 bool CGI::isHeadersDone() const
@@ -314,6 +322,8 @@ MethodStatus CGI::getHeaders()
 			headersDone = true;
 			outputBuf = str;
 			inputFromBuf(); // todo: need?
+			if (httpStatus < 0)
+				httpStatus = 200; // if parseHeaders did not update http status, set it to 200;
 			return ok;
 		}
 		else if (str.size() > 16000) // todo: CLARIFY
@@ -345,6 +355,11 @@ void CGI::concatHeaders()
 MethodStatus CGI::cleverOutput()
 {
 	return ok;
+}
+
+int CGI::getStatusFromHeaders()
+{
+	return 0;
 }
 
 const char *CGI::forkFailed::what() const throw()

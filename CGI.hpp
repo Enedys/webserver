@@ -36,15 +36,13 @@ class CGI
 		const char *execpath; // remove const?
 		char **args;
 		char **env;
+		cgiStatus status;
 		void parseHeaders(std::string str);
 		void inputFromBuf();
 		void freeMem();
 		void initPipes();
 		void initFork();
-		cgiStatus status;
-	public:
-		cgiStatus getStatus() const;
-
+		int getStatusFromHeaders();
 	public:
 		CGI();
 		CGI(char *execpath, char **args, char **env); // prepare cgi process, prepare forks, etc
@@ -61,6 +59,7 @@ class CGI
 		bool isHeadersDone() const;
 		void setEnv(char **env);
 		bool isHeadersNotFound() const;
+		cgiStatus getStatus() const;
 
 		~CGI();
 		class pipeFailed: public std::exception
@@ -76,6 +75,7 @@ class CGI
 				virtual const char *what() const throw();
 		};
 		stringMap _headersMap;
+		int httpStatus;
 };
 
 
