@@ -377,30 +377,42 @@ MethodStatus CGI::outputContentLengthFromBuf(std::string &str)
 		outputBuf = outputBuf.substr(maxContentLengthOutput, outputBuf.length());
 		return inprogress;
 	}
+	str = outputBuf;
+	outputBuf.clear();
 	return ok;
 }
-
-
-MethodStatus CGI::outputChunked(std::string &str)
+MethodStatus CGI::readFromProcess(std::string &str)
 {
 	char buf[BUFSIZ + 1];
 	bzero(buf, BUFSIZ + 1);
 	int r;
-	if (!outputBuf.empty())
-	{
-		outputChunkedFromBuf(str);
-		return inprogress;
-	}
 	r = read(pipeout[0], buf, BUFSIZ);
 	if (r < 0)
 	{
 		str.clear();
 		return cgiStatus();
 	}
-	std::string kekw;
-	kekw = buf;
-	str = size2Hex(kekw.length()) + "\r\n" + kekw + "\r\n";
+	if (!contentLength)
+	{
+		std::string kekw;
+		kekw = buf;
+		str = size2Hex(kekw.length()) + "\r\n" + kekw + "\r\n";
+	}
+	else
+		str = buf;
+	inputFromBuf(); // TODO: insert it SOMEWHERE;
 	return inprogress;
+}
+
+
+MethodStatus CGI::outputChunked(std::string &str)
+{
+	if (!outputBuf.empty())
+	{
+		outputChunkedFromBuf(str);
+		return inprogress;
+	}
+	return readFromProcess(str);
 }
 
 MethodStatus CGI::outputContentLength(std::string &str)
@@ -410,9 +422,7 @@ MethodStatus CGI::outputContentLength(std::string &str)
 		outputContentLength(str);
 		return inprogress;
 	}
-	str = outputBuf;
-	inputFromBuf();
-	return ok;
+	return readFromProcess(str);
 }
 
 void CGI::concatHeaders()
@@ -469,7 +479,7 @@ MethodStatus CGI::superSmartOutput(int socket)
 	}
 	if (!sendBuf.empty())
 	{
-		if (sendOutput(sendBuf, socket) == ok && cgiDone == ok)
+		if (sendOutput(sendBuf, socket) == ok && cgiDone == ok && !contentLength)
 			return (ok);
 		return inprogress;
 	}
@@ -506,6 +516,7 @@ void CGI::setRoot(const std::string &root)
 {
 	CGI::root = root;
 }
+
 
 
 const char *CGI::forkFailed::what() const throw()

@@ -46,6 +46,7 @@ class CGI
 		void freeMem();
 		void initPipes();
 		void initFork();
+		MethodStatus readFromProcess(std::string &str);
 		MethodStatus sendOutput(std::string &output, int socket);
 		MethodStatus outputChunkedFromBuf(std::string &str);
 		MethodStatus outputContentLengthFromBuf(std::string &str);
