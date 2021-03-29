@@ -11,16 +11,25 @@ MethodStatus	MethodPost::manageRequest()
 	args = (char **)malloc(sizeof(char *) * 3); // todo: free
 	std::string ext = data.uri.script_name.substr(data.uri.script_name.find_last_of('.') + 1, data.uri.script_name.size());
 	ext = data.uri.extension;
-	std::string bin = data.location->cgi.find(ext)->second; // todo: not found cgi path;
-	args[0] = (char *)bin.c_str();
-	args[1] = (char *)data.uri.script_name.c_str(); // todo: check, no script found
-	args[2] = 0;
+	auto it = data.location->cgi.find(ext); // todo !!
+	//std::map<std::string, std::string> kekw;
+	std::string bin;
+	if (it != data.location->cgi.end())
+		bin = it->second; // todo: not found cgi path;
 	_statusCode = 200;
 	if (bin.empty())
 	{
 		_statusCode = 405;
-		return(error); // if error jumps to create header;
+		return (error); // if error jumps to create header;
 	}
+	if (!fileExists((char *)data.uri.script_name.c_str()))
+	{
+		_statusCode = 404;
+		return (error);
+	}
+	args[0] = (char *)bin.c_str();
+	args[1] = (char *)data.uri.script_name.c_str(); // todo: check, no script found
+	args[2] = 0;
 	cgi.setEnv(data.cgi_conf);
 	cgi.setEnv(NULL);
 	cgi.setExecpath((char *)bin.c_str());
@@ -40,11 +49,16 @@ MethodStatus MethodPost::processBody(const std::string &requestBody, MethodStatu
 
 MethodStatus	MethodPost::createHeader()
 {
+//	std::cerr << "\n\nCREATE HEADER!!!!!!!\n\n";
 	if (_statusCode < 200 || _statusCode > 206)
 	{
-		_header->generateErrorPage(_body, data.serv->error_pages);
+		std::string str;
 		_header = new Header(data.uri.script_name, data.location->root, _statusCode);
+		_header->generateErrorPage(str, data.serv->error_pages);
 		_header->createGeneralHeaders(_headersMap);
+		_header->addContentLengthHeader(_headersMap, str);
+		_header->headersToString(_headersMap, _body);
+		_body = _body + str;
 	}
 //		if (_statusCode == 405)
 //			_header->addAllowHeader(_headersMap, *data.serv);
@@ -85,4 +99,10 @@ MethodStatus MethodPost::sendError(int socket)
 		return inprogress;
 	}
 	return ok;
+}
+
+bool MethodPost::fileExists(char *filename)
+{
+	struct stat   buffer;
+	return (stat(filename, &buffer) == 0);
 }

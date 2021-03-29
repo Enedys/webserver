@@ -26,7 +26,9 @@ private:
     std::string 		outputBuf;
 	std::string			_body;//ololo
 	MethodStatus	sendError(int socket);
-    // RequestData const &reqData;
+	bool fileExists (char *filename);
+
+		// RequestData const &reqData;
 
 public:
 	MethodPost(int &status, RequestData const &data) :
