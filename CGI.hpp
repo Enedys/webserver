@@ -11,6 +11,7 @@
 #ifndef CGI_HPP
 #define CGI_HPP
 #include "include_resources.hpp"
+#include "Header.hpp"
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -31,7 +32,10 @@ class CGI
 		bool headersDone;
 		bool headersNotFound;
 		bool headersNotFoundProcessExited;
+		bool contentLength;
+		bool headersSent;
 		std::string inputBuf;
+		std::string sendBuf;
 		std::string outputBuf; // Smaller string, just to get data to send;
 		const char *execpath; // remove const?
 		char **args;
@@ -42,7 +46,12 @@ class CGI
 		void freeMem();
 		void initPipes();
 		void initFork();
-		int getStatusFromHeaders();
+		MethodStatus sendOutput(std::string &output, int socket);
+		static const int maxChunkSize = 8192;
+		static const int maxContentLengthOutput = 8192;
+		std::string script_name;
+		std::string root;
+		Header *_header;
 	public:
 		CGI();
 		CGI(char *execpath, char **args, char **env); // prepare cgi process, prepare forks, etc
@@ -50,9 +59,10 @@ class CGI
 		void input(const std::string &str, MethodStatus mStatus); // ready to input;
 		MethodStatus output(std::string &str); // ready to output
 		MethodStatus getHeaders();
-		MethodStatus outputChunked();
-		MethodStatus outputContentLength();
-		MethodStatus cleverOutput();
+		MethodStatus outputChunked(std::string &);
+		MethodStatus outputContentLength(std::string &);
+		MethodStatus smartOutput(std::string &str);
+		MethodStatus superSmartOutput(int socket);
 		void concatHeaders();
 		void setExecpath(const char *execpat);
 		void setArgs(char **args);

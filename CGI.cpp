@@ -55,6 +55,8 @@ CGI::CGI(char *execpath, char **args, char **env)
 	headersNotFound = false;
 	headersNotFoundProcessExited = false;
 	httpStatus = -1;
+	contentLength = false;
+	headersSent = false;
 }
 
 void CGI::input(const std::string &str, MethodStatus mStatus) // inputting body
@@ -259,6 +261,8 @@ void CGI::init()
 	headersDone = false;
 	headersNotFound = false;
 	headersNotFoundProcessExited = false;
+	contentLength = false;
+	headersSent = false;
 	httpStatus = -1;
 }
 
@@ -272,7 +276,7 @@ bool CGI::isHeadersNotFound() const
 	return (this->headersNotFound || this->headersNotFoundProcessExited);
 }
 
-cgiStatus CGI::getStatus() const
+cgiStatus CGI::getStatus() const // depricated
 {
 	return status;
 }
@@ -324,6 +328,7 @@ MethodStatus CGI::getHeaders()
 			inputFromBuf(); // todo: need?
 			if (httpStatus < 0)
 				httpStatus = 200; // if parseHeaders did not update http status, set it to 200;
+			concatHeaders();
 			return ok;
 		}
 		else if (str.size() > 16000) // todo: CLARIFY
@@ -337,30 +342,110 @@ MethodStatus CGI::getHeaders()
 	return inprogress;
 }
 
-MethodStatus CGI::outputChunked()
+MethodStatus CGI::outputChunked(std::string &str)
 {
-	return ok;
+	std::string buf;
+	if (outputBuf.length() > maxChunkSize)
+	{
+		buf = outputBuf.substr(0, maxChunkSize); // todo: clarify for special characters
+		outputBuf = outputBuf.substr(maxChunkSize, outputBuf.length());
+		str = size2Hex(buf.length()) + "\r\n" + buf + "\r\n";
+		return inprogress;
+	}
+	else
+	{
+		str = size2Hex(outputBuf.length()) + "\r\n" + outputBuf + "\r\n";
+		return ok; // TODO: process can be still working, add inputfrombuf;
+	}
 }
 
-MethodStatus CGI::outputContentLength()
+MethodStatus CGI::outputContentLength(std::string &str)
 {
+	if (outputBuf.length() > maxContentLengthOutput)
+	{
+		str = outputBuf.substr(0, maxContentLengthOutput);
+		outputBuf = outputBuf.substr(maxContentLengthOutput, outputBuf.length());
+		return inprogress;
+
+	}
+	str = outputBuf;
 	return ok;
 }
 
 void CGI::concatHeaders()
 {
+	stringMap headersMapCommon;
+	_header = new Header(script_name, root, httpStatus);
+	_header->createGeneralHeaders(headersMapCommon);
+	std::map<std::string, std::string>::iterator itCommon;
+	std::map<std::string, std::string>::iterator it;
+	for (itCommon = headersMapCommon.begin(); itCommon != headersMapCommon.end(); itCommon++)
+	{
+		it = _headersMap.find(itCommon->first);
+		if (it != _headersMap.end())
+		{
+			_headersMap.insert(std::pair<std::string, std::string>(itCommon->first, itCommon->second));
+		}
+	}
+	if (_headersMap.find("content-length") != _headersMap.end())
+		contentLength = true;
 
 }
 
-MethodStatus CGI::cleverOutput()
+MethodStatus CGI::smartOutput(std::string &str)
 {
+	if (!headersDone)
+	{
+		return (getHeaders());
+		str.clear();
+	}
+}
+
+MethodStatus CGI::sendOutput(std::string &output, int socket)
+{
+	int r;
+	r = send(socket, output.c_str(), output.length(), MSG_DONTWAIT);
+	if (r < output.length())
+	{
+		sendBuf = output.substr(r, output.length());
+		return inprogress;
+	}
+	sendBuf.clear();
 	return ok;
 }
 
-int CGI::getStatusFromHeaders()
+MethodStatus CGI::superSmartOutput(int socket)
 {
-	return 0;
+	std::string str;
+	int r;
+	MethodStatus mStatus;
+	if (!headersDone)
+	{
+		return getHeaders();
+	}
+	if (!sendBuf.empty())
+	{
+		sendOutput(sendBuf, socket);
+		return inprogress;
+	}
+	if (!headersSent)
+	{
+		_header->headersToString(_headersMap, str);
+		headersSent = true;
+		sendOutput(str, socket);
+		return inprogress;
+	}
+	if (contentLength)
+		mStatus = outputContentLength(str);
+	else
+		mStatus = outputChunked(str);
+	if (sendOutput(str, socket) == ok)
+		return mStatus;
+	else
+		return inprogress;
 }
+
+
 
 const char *CGI::forkFailed::what() const throw()
 {
