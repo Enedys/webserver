@@ -23,7 +23,7 @@ public:
 	void	createEntityHeaders(stringMap &_headersMap);
 	void	createOptHeaders(stringMap &_headersMap);
 
-	void	addAllowHeader(stringMap &_headersMap, const t_serv &_config);
+	void	addAllowHeader(stringMap &_headersMap, const s_loc &location);
 	void	addContentLanguageHeader(stringMap &_headersMap);
 	void	addContentLengthHeader(stringMap &_headersMap, std::string const & body);
 	void	addContentLocationHeader(stringMap &_headersMap);

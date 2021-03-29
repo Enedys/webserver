@@ -86,7 +86,7 @@ MethodStatus	MethodGet::manageRequest()
 			generateIdxPage();
 		else {
 			_statusCode = errorOpeningURL;//403 Forbidden
-			// check index pages. 
+			// check index pages.
 			//   - взять первый файл если сжи то
 			//   - если есть ехе файлы
 		}
@@ -114,7 +114,7 @@ MethodStatus	MethodGet::createHeader()
 	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206))
 		_header->createEntityHeaders(_headersMap);
 	if (_statusCode == 405)
-		_header->addAllowHeader(_headersMap, *data.serv);
+		_header->addAllowHeader(_headersMap, *data.location);
 	_header->addLocationHeader(_headersMap);//if redirect
 	_header->addRetryAfterHeader(_headersMap);//503 429
 	// _header->addTransferEncodingHeader(_headersMap, _headersMapRequest);

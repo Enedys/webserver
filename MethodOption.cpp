@@ -23,7 +23,7 @@ MethodStatus	MethodOption::createHeader()
 	if (_statusCode < 200 || _statusCode > 206)
 		_header->generateErrorPage(_body, data.serv->error_pages);
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Length", "0"));
-	_header->addAllowHeader(_headersMap, *data.serv);
+	_header->addAllowHeader(_headersMap, *data.location);
 
 	return ok;
 };

@@ -71,8 +71,7 @@ MethodStatus	MethodDelete::createHeader()
 	// 	_header->generateErrorPage(_body, data.serv->error_pages);
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Length", "0"));//
 	if (_statusCode == methodNotAllowed)
-		_header->addAllowHeader(_headersMap, *data.serv);
-
+		_header->addAllowHeader(_headersMap, *data.location);
 	return ok;
 };
 

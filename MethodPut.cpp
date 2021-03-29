@@ -16,7 +16,7 @@ MethodStatus	MethodPut::createHeader()
 	// 	_header->addContentLengthHeader(_headersMap, _body);
 	_headersMap.insert(std::pair<std::string, std::string>("Content-Length", "0"));
 	// if (_statusCode == 405)
-	// 	_header->addAllowHeader(_headersMap, *data.serv);
+		// _header->addAllowHeader(_headersMap, *data.location);
 	return ok;
 };
 
@@ -50,8 +50,8 @@ MethodStatus	MethodPut::processBody(const std::string &requestBody, MethodStatus
 
 	// if ((fd = open(data.uri.script_name.c_str(), O_RDONLY | O_NONBLOCK)) < 0)
 	// // 	_statusCode = errorOpeningURL;
-	
-	
+
+
 	// if status == ok or later close(_fd);//if not in progress
 	_statusCode = created;//201
 	return (ok);//or inprogress

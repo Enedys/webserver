@@ -177,23 +177,25 @@ void	Header::addLastModifiedHeader(stringMap &headersMap)
 // This header must be sent if the server responds with a 405 Method Not Allowed status code
 // to indicate which request methods can be used. An empty Allow header indicates that the
 // resource allows no request methods, which might occur temporarily for a given resource, for example.
-void	Header::addAllowHeader(stringMap &_headersMap, const t_serv &_config)
+void	Header::addAllowHeader(stringMap &_headersMap, const s_loc &location)
 {
 	std::cout << "////\t\taddAllowHeader" << _statusCode << std::endl;
 	// int statusCode1 = const_cast<int&>(statusCode) = 405;
 	std::string allowedMethods;// = "";
-	if (_config.locs[0].getAvailable)
+	if (location.getAvailable)
 		allowedMethods += "GET, ";
-	if (_config.locs[0].postAvailable)
-		allowedMethods += "POST, ";
-	if (_config.locs[0].headAvailable)
+	if (location.headAvailable)
 		allowedMethods += "HEAD, ";
-	if (_config.locs[0].putAvailable)
+	if (location.postAvailable)
+		allowedMethods += "POST, ";
+	if (location.putAvailable)
 		allowedMethods += "PUT, ";
-	if (_config.locs[0].optionsAvailable)
+	if (location.optionsAvailable)
 		allowedMethods += "OPTIONS, ";
-	if (_config.locs[0].deleteAvailable)
+	if (location.deleteAvailable)
 		allowedMethods += "DELETE";
+	if (allowedMethods.at(allowedMethods.length() - 1) == ' ')
+		allowedMethods.resize(allowedMethods.length() - 2);
 	_headersMap.insert(std::pair<std::string, std::string>("Allow", allowedMethods));
 };
 

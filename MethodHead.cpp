@@ -39,7 +39,7 @@ MethodStatus	MethodHead::createHeader()
 
 	// _header->addContentLengthHeader(_headersMap, _body);//if not dir!
 	if (_statusCode == 405)
-		_header->addAllowHeader(_headersMap, *data.serv);
+		_header->addAllowHeader(_headersMap, *data.location);
 	_header->addLocationHeader(_headersMap);
 	_header->addRetryAfterHeader(_headersMap);
 	// _header->addTransferEncodingHeader(_headersMap, _headersMapRequest);
