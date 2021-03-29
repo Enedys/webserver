@@ -23,8 +23,9 @@ private:
     MethodPost(/* args */);
     CGI cgi;
 	Header				*_header;
-    std::string outputString;
+    std::string 		outputBuf;
 	std::string			_body;//ololo
+	MethodStatus	sendError(int socket);
     // RequestData const &reqData;
 
 public:

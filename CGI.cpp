@@ -57,6 +57,7 @@ CGI::CGI(char *execpath, char **args, char **env)
 	httpStatus = -1;
 	contentLength = false;
 	headersSent = false;
+	cgiDone = inprogress;
 }
 
 void CGI::input(const std::string &str, MethodStatus mStatus) // inputting body
@@ -137,6 +138,35 @@ void CGI::inputFromBuf()
 //	inputFromBuf();
 //	return (inprogress);
 //}
+
+
+MethodStatus CGI::cgiStatus()
+{
+	std::string str;
+	int wp = waitpid(pid, &processStatus, WNOHANG); // returns > 0 if process stopped;
+	if (processStatus == 1024)
+	{
+		freeMem();
+		return (error); // execve failed;
+	}
+	if (wp > 0 || headersNotFoundProcessExited) // 2 times WNOHANG = wp = -1; TODO: test || headersNotFound
+	{
+//			freeMem();
+		if (!headersDone) // means, headers not found, just output as it is
+		{
+			headersDone = true;
+			headersNotFoundProcessExited = true;
+		}
+		else
+		{
+			str = outputBuf; // todo: !!!!!!!
+			freeMem();
+		}
+		return (ok);
+	}
+	else
+		return (inprogress);
+}
 
 MethodStatus CGI::output(std::string &str) // mb gonna change it later. Read and write into pipes and outputting. Less memory usage
 {
@@ -219,7 +249,7 @@ void CGI::parseHeaders(std::string str)
 		key = str.substr(0, str.find(':'));
 		for (int i = 0; i < key.length(); i++)
 			key.at(i) = std::tolower(key.at(i));
-		value = str.substr(str.find(':') + 1, str.find('\n') - (str.find(':') + 1)); // todo: test
+		value = str.substr(str.find(':') + 1, str.find("\r\n") - (str.find(':') + 1)); // todo: test; upd: looks, like works
 		value = value.substr(value.find_first_not_of(" \v\t"), value.size()); // test ' '
 		str = str.substr(str.find("\r\n") + 2, str.size());
 		if (key == "status")
@@ -263,6 +293,7 @@ void CGI::init()
 	headersNotFoundProcessExited = false;
 	contentLength = false;
 	headersSent = false;
+	cgiDone = inprogress;
 	httpStatus = -1;
 }
 
@@ -276,45 +307,21 @@ bool CGI::isHeadersNotFound() const
 	return (this->headersNotFound || this->headersNotFoundProcessExited);
 }
 
-cgiStatus CGI::getStatus() const // depricated
-{
-	return status;
-}
+//cgiStatus CGI::getStatus() const // depricated
+//{
+//	return status;
+//}
 
 MethodStatus CGI::getHeaders()
 {
-	char buf[BUFSIZ];
-	bzero(buf, BUFSIZ);
+	char buf[BUFSIZ + 1];
+	bzero(buf, BUFSIZ + 1);
 	std::string str;
 	size_t find;
 	int r;
 	r = read(pipeout[0], buf, BUFSIZ); // read < 0 = pipe is empty..
 	if (r < 0)
-	{
-		int wp = waitpid(pid, &processStatus, WNOHANG); // returns > 0 if process stopped;
-		if (processStatus == 1024)
-		{
-			freeMem();
-			return (error); // execve failed;
-		}
-		if (wp > 0 || headersNotFoundProcessExited) // 2 times WNOHANG = wp = -1; TODO: test || headersNotFound
-		{
-//			freeMem();
-			if (!headersDone) // means, headers not found, just output as it is
-			{
-				headersDone = true;
-				headersNotFoundProcessExited = true;
-			}
-			else
-			{
-				str = outputBuf; // TODO: just save it for later
-				freeMem();
-			}
-			return (ok);
-		}
-		else
-			return (inprogress);
-	}
+		return cgiStatus();
 	if (!headersDone) // headers ready for parser
 	{
 		str = outputBuf + buf;
@@ -327,7 +334,9 @@ MethodStatus CGI::getHeaders()
 			outputBuf = str;
 			inputFromBuf(); // todo: need?
 			if (httpStatus < 0)
+			{
 				httpStatus = 200; // if parseHeaders did not update http status, set it to 200;
+			}
 			concatHeaders();
 			return ok;
 		}
@@ -342,7 +351,7 @@ MethodStatus CGI::getHeaders()
 	return inprogress;
 }
 
-MethodStatus CGI::outputChunked(std::string &str)
+MethodStatus CGI::outputChunkedFromBuf(std::string &str)
 {
 	std::string buf;
 	if (outputBuf.length() > maxChunkSize)
@@ -355,20 +364,54 @@ MethodStatus CGI::outputChunked(std::string &str)
 	else
 	{
 		str = size2Hex(outputBuf.length()) + "\r\n" + outputBuf + "\r\n";
+		outputBuf.clear();
 		return ok; // TODO: process can be still working, add inputfrombuf;
 	}
 }
 
-MethodStatus CGI::outputContentLength(std::string &str)
+MethodStatus CGI::outputContentLengthFromBuf(std::string &str)
 {
 	if (outputBuf.length() > maxContentLengthOutput)
 	{
 		str = outputBuf.substr(0, maxContentLengthOutput);
 		outputBuf = outputBuf.substr(maxContentLengthOutput, outputBuf.length());
 		return inprogress;
+	}
+	return ok;
+}
 
+
+MethodStatus CGI::outputChunked(std::string &str)
+{
+	char buf[BUFSIZ + 1];
+	bzero(buf, BUFSIZ + 1);
+	int r;
+	if (!outputBuf.empty())
+	{
+		outputChunkedFromBuf(str);
+		return inprogress;
+	}
+	r = read(pipeout[0], buf, BUFSIZ);
+	if (r < 0)
+	{
+		str.clear();
+		return cgiStatus();
+	}
+	std::string kekw;
+	kekw = buf;
+	str = size2Hex(kekw.length()) + "\r\n" + kekw + "\r\n";
+	return inprogress;
+}
+
+MethodStatus CGI::outputContentLength(std::string &str)
+{
+	if (!outputBuf.empty())
+	{
+		outputContentLength(str);
+		return inprogress;
 	}
 	str = outputBuf;
+	inputFromBuf();
 	return ok;
 }
 
@@ -383,13 +426,12 @@ void CGI::concatHeaders()
 	{
 		it = _headersMap.find(itCommon->first);
 		if (it != _headersMap.end())
-		{
 			_headersMap.insert(std::pair<std::string, std::string>(itCommon->first, itCommon->second));
-		}
 	}
 	if (_headersMap.find("content-length") != _headersMap.end())
 		contentLength = true;
-
+	else if (_headersMap.find("transfer-encoding") == _headersMap.end())
+		_headersMap.insert(std::pair<std::string, std::string>("transfer-encoding", "chunked"));
 }
 
 MethodStatus CGI::smartOutput(std::string &str)
@@ -399,6 +441,7 @@ MethodStatus CGI::smartOutput(std::string &str)
 		return (getHeaders());
 		str.clear();
 	}
+	return ok;
 }
 
 MethodStatus CGI::sendOutput(std::string &output, int socket)
@@ -421,11 +464,13 @@ MethodStatus CGI::superSmartOutput(int socket)
 	MethodStatus mStatus;
 	if (!headersDone)
 	{
-		return getHeaders();
+		getHeaders();
+		return inprogress;
 	}
 	if (!sendBuf.empty())
 	{
-		sendOutput(sendBuf, socket);
+		if (sendOutput(sendBuf, socket) == ok && cgiDone == ok)
+			return (ok);
 		return inprogress;
 	}
 	if (!headersSent)
@@ -439,12 +484,28 @@ MethodStatus CGI::superSmartOutput(int socket)
 		mStatus = outputContentLength(str);
 	else
 		mStatus = outputChunked(str);
-	if (sendOutput(str, socket) == ok)
-		return mStatus;
-	else
-		return inprogress;
+	if (str.empty() && mStatus == ok && !contentLength)
+	{
+		str = "0\r\n\r\n";
+		cgiDone = ok;
+		return sendOutput(str, socket);
+	}
+//	if (sendOutput(str, socket) == ok)
+//		return mStatus;
+//	else
+	sendOutput(str, socket);
+	return inprogress;
 }
 
+void CGI::setScriptName(const std::string &scriptName)
+{
+	script_name = scriptName;
+}
+
+void CGI::setRoot(const std::string &root)
+{
+	CGI::root = root;
+}
 
 
 const char *CGI::forkFailed::what() const throw()
