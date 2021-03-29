@@ -53,6 +53,17 @@ void	Header::headersToString(stringMap const &headersMap, std::string &output)
 	output += CRLF;
 }
 
+std::string const & Header::headersToString(stringMap const &headersMap)
+{
+	std::string output;
+	std::string statusCodeStr = size2Dec(_statusCode);
+	output += "HTTP/1.1 " + statusCodeStr + " " + statusCodes[_statusCode] + CRLF;
+	for (constMapIter it = headersMap.begin(); it != headersMap.end(); ++it)
+		output += (it->first) + ": " + (it->second) + CRLF;
+	output += CRLF;
+	return output;
+};
+
 int		Header::generateImagePage(std::string &body, std::string &errorurl)
 {
 	size_t len = _root.length();

@@ -1,5 +1,6 @@
 #include "MethodGet.hpp"
 #include "Header.hpp"
+#include "OutputConfigurator.hpp"
 
 MethodGet::~MethodGet(){ delete _header; };
 MethodStatus		MethodGet::sendResponse(int socket) { return ok; };
@@ -125,6 +126,8 @@ MethodStatus	MethodGet::createHeader()
 
 MethodStatus		MethodGet::sendBody(int socket)
 {
+	OutputConfigurator	cfg(data, cgi, _statusCode, flags);
+
 	std::string	response;
 	size_t		readBytes;
 	size_t		sentBytes;
@@ -133,12 +136,16 @@ MethodStatus		MethodGet::sendBody(int socket)
 
 	memset(buf, 0, _bs);
 	if (_statusCode != okSendingInProgress){
-		_header->headersToString(_headersMap, response);
+		response = _header->headersToString(_headersMap);
 		size_t headersize = response.length();
 
-		if (!_body.empty()){//only for autoindex & error page
-			response += _body;
+		if (cfg.getBodyType() == bodyIsAutoindex ||
+			cfg.getBodyType() == bodyIsTextErrorPage){
+			response += cfg.getOutputPage();
 			_bytesToSend = response.length();
+		}
+		else if (cfg.getBodyType() == bodyIsCGI){
+			_bytesToSend = cfg.getCGIResponseLength();//total length of all chunks from header//or one chunk length & flag
 		}
 		else {
 			struct stat sbuf;
@@ -151,10 +158,11 @@ MethodStatus		MethodGet::sendBody(int socket)
 		readBuf = _bs - _remainder.length();
 		response = _remainder;
 	}
-	if (_body.empty()){//not listing, regular file
-		readBytes = read(_fd, buf, readBuf);
-		// std::cout << "_________readBytes: " << readBytes << "\n" << std::endl;
-		if (readBytes < 0){
+	if (cfg.getBodyType() == bodyIsFile ||
+		cfg.getBodyType() == bodyIsCGI)
+	{
+		readBytes = read(_fd, buf, readBuf);//configure _fd before!
+		if (readBytes < 0){//what means if reading < 0 from cgi?
 			_statusCode = errorReadingURL;
 			close(_fd);
 			return error;//what happens after, above?
@@ -184,6 +192,5 @@ MethodStatus		MethodGet::sendBody(int socket)
 	}
 
 	close(_fd);
-	_body.clear();
 	return ok;
 }
