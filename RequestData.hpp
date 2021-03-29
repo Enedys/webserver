@@ -13,7 +13,8 @@ typedef std::pair<bool, stringMap>			contTypeMap;
 class RequestData
 {	
 	public:
-		RequestData(t_ext_serv const *s, stringMap const *rHs, stringMap const *rFl);
+		RequestData(t_ext_serv const *s, stringMap const *rHs, \
+					stringMap const *rFl, sockaddr_in addr, int errorCode);
 		RequestData();
 		~RequestData();
 		typedef enum
@@ -41,20 +42,25 @@ class RequestData
 		s2IntMap		acceptLanguage;
 		s2IntMap		contentLanguage;
 		stringMap		contentType;
+		std::string		cgi_bin;
 
 		int				in;
 		int				errorMask;
 		int				error_code;
-		void			prepareData(size_t contLen, sockaddr_in addr);
+		void			prepareData(size_t contLen);
 		void			cleanData();
 		void			setData(t_ext_serv const *s, stringMap const *rHs,\
-													stringMap const *rFl);
+								stringMap const *rFl, sockaddr_in addr, int errorcode);
+		std::string const
+						&getMethod() const;
+		void			createCGIEnv(size_t contLen);
 	
 	private:
 		t_ext_serv const	*_servsList;
 		stringMap const		*_reqHeads;
 		std::string	const	*_uri;
 		std::string	const	*_method;
+		sockaddr_in 		_addr;
 		int					badalloc_index;
 
 		bool			isValidHost(std::string const &s, size_t port);
@@ -72,7 +78,6 @@ class RequestData
 		void			procServer();
 		void			procUri();
 		void			procAuthorization();
-		void			procCGI(size_t contLen, sockaddr_in addr);
 		void			addCgiVar(int i, std::string const &s);
 		void			cleanCGIenv();
 };

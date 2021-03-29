@@ -2,6 +2,22 @@
 
 URI::URI() {};
 URI::~URI() {};
+URI				&URI::operator=(URI const &other)
+{
+	if (this == &other)
+		return (*this);
+	request_uri = other.request_uri;
+	raw_path = other.raw_path;
+	query_string = other.query_string;
+	fragment_string = other.fragment_string;
+	script_name = other.script_name;
+	path_info = other.path_info;
+	path_translated = other.path_translated;
+	extension = other.extension;
+	queryEnv = other.queryEnv;
+	return (*this);
+}
+
 
 int			URI::isValidQuerySymbol(int c)
 {
@@ -160,6 +176,8 @@ bool		URI::procUri(std::string const &uri)
 	return (true);
 }
 
+
+
 bool		URI::setTranslatedPath(s_loc const *locs)
 {
 	if (!locs)
@@ -170,6 +188,20 @@ bool		URI::setTranslatedPath(s_loc const *locs)
 		root_name = locs->root.substr(0, root_len - 1);
 	else
 		root_name = locs->root;
+	script_name = root_name + script_name;
+	if (!path_info.empty())
+		path_translated = root_name + path_info;
+	return (true);
+}
+
+bool		URI::setTranslatedPath(std::string const &root)
+{
+	size_t	root_len = root.length();
+	std::string	root_name;
+	if (root.back() == '/')//c++11 extension, can be replaced: if (locs->root.at(locs->root.length() - 1) == '/')
+		root_name = root.substr(0, root_len - 1);
+	else
+		root_name = root;
 	script_name = root_name + script_name;
 	if (!path_info.empty())
 		path_translated = root_name + path_info;
