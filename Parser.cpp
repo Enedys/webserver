@@ -1,3 +1,5 @@
+//todo: add index.php index2.php, etc
+
 #include "Parser.hpp"
 #include <cstdlib>
 Parser::Parser()
