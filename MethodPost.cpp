@@ -59,6 +59,7 @@ MethodStatus	MethodPost::createHeader()
 		_header->addContentLengthHeader(_headersMap, str);
 		_header->headersToString(_headersMap, _body);
 		_body = _body + str;
+		delete _header;
 	}
 //		if (_statusCode == 405)
 //			_header->addAllowHeader(_headersMap, *data.serv);
@@ -72,12 +73,8 @@ MethodStatus	MethodPost::sendHeader(int socket)
 
 MethodStatus	MethodPost::sendBody(int socket)
 {
-	MethodStatus debug;
 	if (_statusCode == 200)
-	{
-		debug = cgi.superSmartOutput(socket);
-		return debug;
-	}
+		return cgi.superSmartOutput(socket);
 	else
 		return sendError(socket);
 

@@ -57,7 +57,27 @@ CGI::CGI(char *execpath, char **args, char **env)
 	httpStatus = -1;
 	contentLength = false;
 	headersSent = false;
+	inputBuf.clear();
+	outputBuf.clear();
+	sendBuf.clear();
 	cgiDone = inprogress;
+}
+
+
+void CGI::init()
+{
+	initPipes();
+	initFork();
+	headersDone = false;
+	headersNotFound = false;
+	headersNotFoundProcessExited = false;
+	contentLength = false;
+	headersSent = false;
+	cgiDone = inprogress;
+	inputBuf.clear();
+	outputBuf.clear();
+	sendBuf.clear();
+	httpStatus = -1;
 }
 
 void CGI::input(const std::string &str, MethodStatus mStatus) // inputting body
@@ -231,7 +251,10 @@ MethodStatus CGI::output(std::string &str) // mb gonna change it later. Read and
 
 CGI::CGI()
 {
-
+	pipein[0] = -1;
+	pipein[1] = -1;
+	pipeout[0] = -1;
+	pipeout[1] = -1;
 }
 
 CGI::~CGI()
@@ -270,6 +293,9 @@ void CGI::freeMem()
 	close(pipeout[0]);
 	inputBuf.clear();
 	outputBuf.clear();
+	if (!args)
+		free(args);
+	args = NULL;
 }
 
 void CGI::setExecpath(const char *expath) {
@@ -284,18 +310,6 @@ void CGI::setEnv(char **argve) {
 	CGI::env = argve;
 }
 
-void CGI::init()
-{
-	initPipes();
-	initFork();
-	headersDone = false;
-	headersNotFound = false;
-	headersNotFoundProcessExited = false;
-	contentLength = false;
-	headersSent = false;
-	cgiDone = inprogress;
-	httpStatus = -1;
-}
 
 bool CGI::isHeadersDone() const
 {
@@ -419,7 +433,7 @@ MethodStatus CGI::outputContentLength(std::string &str)
 {
 	if (!outputBuf.empty())
 	{
-		outputContentLength(str);
+		outputContentLengthFromBuf(str);
 		return inprogress;
 	}
 	return readFromProcess(str);
@@ -442,6 +456,7 @@ void CGI::concatHeaders()
 		contentLength = true;
 	else if (_headersMap.find("transfer-encoding") == _headersMap.end())
 		_headersMap.insert(std::pair<std::string, std::string>("transfer-encoding", "chunked"));
+	delete (_header);
 }
 
 MethodStatus CGI::smartOutput(std::string &str)
@@ -470,7 +485,6 @@ MethodStatus CGI::sendOutput(std::string &output, int socket)
 MethodStatus CGI::superSmartOutput(int socket)
 {
 	std::string str;
-	int r;
 	MethodStatus mStatus;
 	if (!headersDone)
 	{
