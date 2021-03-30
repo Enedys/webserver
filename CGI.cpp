@@ -4,10 +4,12 @@ void CGI::initPipes()
 {
 	if (pipe(pipein) < 0)
 	{
+		status = failed;
 		throw CGI::pipeFailed();
 	}
 	if (pipe(pipeout) < 0)
 	{
+		status = failed;
 		close(pipein[0]);
 		close(pipein[1]);
 		throw CGI::pipeFailed();
@@ -19,11 +21,13 @@ void CGI::initPipes()
 	if (fcntl(pipein[1], F_SETFL, O_NONBLOCK) < 0)
 	{
 		freeMem();
+		status = failed;
 		throw CGI::lockCanNotSet();
 	}
 	if (fcntl(pipeout[0], F_SETFL, O_NONBLOCK) < 0)
 	{
 		freeMem();
+		status = failed;
 		throw CGI::lockCanNotSet();
 	}
 }
@@ -33,6 +37,7 @@ void CGI::initFork()
 	if ((pid = fork()) < 0)
 	{
 		freeMem();
+		status = failed;
 		throw CGI::forkFailed();
 	}
 	status = running;
@@ -521,7 +526,6 @@ MethodStatus CGI::smartOutput(std::string &str)
 }
 
 
-// todo: headers not found and process exited;
 // todo: test headers not found and process exited;
 
 MethodStatus CGI::superSmartOutput(int socket)

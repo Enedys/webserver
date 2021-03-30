@@ -56,14 +56,10 @@ class CGI
 		MethodStatus cgiDone;
 		std::string script_name;
 		std::string root;
-	public:
-		void setScriptName(const std::string &scriptName);
-
-		void setRoot(const std::string &root);
-
-	private:
 		Header *_header;
 	public:
+		void setScriptName(const std::string &scriptName);
+		void setRoot(const std::string &root);
 		CGI();
 		CGI(char *execpath, char **args, char **env); // prepare cgi process, prepare forks, etc
 		void init(); // if default constructor, this func need to be called;
