@@ -344,7 +344,15 @@ MethodStatus CGI::getHeaders()
 	int r;
 	r = read(pipeout[0], buf, BUFSIZ); // read < 0 = pipe is empty..
 	if (r < 0)
-		return cgiProcessStatus();
+	{
+		MethodStatus st = cgiProcessStatus();
+		if (headersNotFoundProcessExited)
+		{
+			httpStatus = 200;
+			concatHeaders();
+		}
+		return st;
+	}
 	if (!headersDone) // headers ready for parser
 	{
 		str = outputBuf + buf;
@@ -367,6 +375,10 @@ MethodStatus CGI::getHeaders()
 		{
 			headersDone = true;
 			headersNotFound = true;
+			httpStatus = 200;
+			outputBuf = str;
+			concatHeaders();
+			return ok;
 		}
 		outputBuf = str;
 	}
@@ -457,8 +469,11 @@ void CGI::concatHeaders()
 	std::map<std::string, std::string>::iterator it;
 	for (itCommon = headersMapCommon.begin(); itCommon != headersMapCommon.end(); itCommon++)
 	{
-		it = _headersMap.find(itCommon->first);
-		if (it != _headersMap.end())
+		std::string key = itCommon->first;
+		for (int i = 0; i < key.length(); i++)
+			key.at(i) = std::tolower(key.at(i)); // todo: temporary
+		it = _headersMap.find(key);
+		if (it == _headersMap.end())
 			_headersMap.insert(std::pair<std::string, std::string>(itCommon->first, itCommon->second));
 	}
 	if (_headersMap.find("content-length") != _headersMap.end())
@@ -501,11 +516,13 @@ MethodStatus CGI::smartOutput(std::string &str)
 	else
 		mStatus = outputChunked(str);
 	if (str.empty() && mStatus == ok && !contentLength)
-	{
 		str = "0\r\n\r\n";
-	}
 	return mStatus;
 }
+
+
+// todo: headers not found and process exited;
+// todo: test headers not found and process exited;
 
 MethodStatus CGI::superSmartOutput(int socket)
 {
