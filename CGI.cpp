@@ -34,23 +34,33 @@ void CGI::initPipes()
 
 void CGI::initFork()
 {
+	status = running;
 	if ((pid = fork()) < 0)
 	{
 		freeMem();
 		status = failed;
 		throw CGI::forkFailed();
 	}
-	status = running;
 	if (pid == 0)
 	{
 		dup2(pipein[0], 0);
 		close(pipein[0]);
+		close(pipein[1]);
 		dup2(pipeout[1], 1);
 		close(pipeout[1]);
+		close(pipeout[0]);
 		execve(execpath, args, env);
 		std::cout << "ALARM! EXECVE FAILED!\n"; // what to do?
 		exit(4);
 	}
+	else
+	{
+//		close(pipein[0]);
+//		pipein[0] = -1;
+//		close(pipeout[1]);
+//		pipeout[1] = -1;
+	}
+
 }
 
 CGI::CGI(char *execpath, char **args, char **env)
@@ -85,7 +95,7 @@ void CGI::init()
 	contentLength = false;
 	headersSent = false;
 	cgiDone = inprogress;
-	inputBuf.clear();
+	//inputBuf.clear();
 	outputBuf.clear();
 	sendBuf.clear();
 	httpStatus = -1;
@@ -95,9 +105,10 @@ void CGI::init()
 void CGI::input(const std::string &str, MethodStatus mStatus) // inputting body
 {
 	int r;
-	if (inputBuf.empty() && mStatus == ok)///status check // status == ok
+	if (str.empty() && inputBuf.empty() && mStatus == ok)
 	{
 		close(pipein[1]);//return
+		return ;
 	}
 	if (inputBuf.empty())
 	{
@@ -121,9 +132,14 @@ void CGI::inputFromBuf()
 	if (!inputBuf.empty())
 	{
 		int r;
-		r = write(pipein[1], inputBuf.c_str(), 8192); // TODO: set bufsize
+		r = write(pipein[1], inputBuf.c_str(), inputBuf.size()); // TODO: set bufsize
 		if (r > 0 && r < inputBuf.size())
 			inputBuf = inputBuf.substr(r, inputBuf.size());
+		if (r == inputBuf.size())
+		{
+			inputBuf.clear();
+			close(pipein[1]); // todo: SIMPLIFY IFS?
+		}
 	}
 }
 
@@ -347,6 +363,7 @@ MethodStatus CGI::getHeaders()
 	std::string str;
 	size_t find;
 	int r;
+	inputFromBuf(); // todo: temporary
 	r = read(pipeout[0], buf, BUFSIZ); // read < 0 = pipe is empty..
 	if (r < 0)
 	{
@@ -500,7 +517,7 @@ MethodStatus CGI::sendOutput(std::string &output, int socket)
 	sendBuf.clear();
 	return ok;
 }
-
+// TODO: GET HTTP_STATUS WITHOUT STRING;
 MethodStatus CGI::smartOutput(std::string &str)
 {
 	MethodStatus mStatus;
@@ -580,6 +597,16 @@ void CGI::setRoot(const std::string &root)
 cgiStatus CGI::getStatus() const
 {
 	return status;
+}
+
+MethodStatus CGI::getHttpStatus()
+{
+	if (!headersDone)
+	{
+		getHeaders();
+		return inprogress;
+	}
+	return ok;
 }
 
 

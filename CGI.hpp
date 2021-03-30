@@ -68,6 +68,7 @@ class CGI
 		MethodStatus getHeaders();
 		MethodStatus outputChunked(std::string &);
 		MethodStatus outputContentLength(std::string &);
+		MethodStatus getHttpStatus();
 		MethodStatus smartOutput(std::string &str);
 		MethodStatus superSmartOutput(int socket);
 		void concatHeaders();

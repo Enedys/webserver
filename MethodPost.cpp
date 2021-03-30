@@ -31,11 +31,17 @@ MethodStatus	MethodPost::manageRequest()
 	args[1] = (char *)data.uri.script_name.c_str(); // todo: check, no script found
 	args[2] = 0;
 	cgi.setEnv(data.cgi_conf);
-	cgi.setEnv(NULL);
+	int i = 0;
+	std::cout << "\n------\n";
+	while (*(data.cgi_conf + i))
+		std::cout << *(data.cgi_conf + i++)<< std::endl;
+	std::cout << "\n------\n";
+//	sleep(600);
+//	cgi.setEnv(NULL);
 	cgi.setExecpath((char *)bin.c_str());
 	cgi.setArgs(args);
 	cgi.init();//checks
-	std::cout << "create header!\n";
+	std::cout << "\n\ncreate header!!\n\n";
 	return (ok);
 };
 
@@ -43,6 +49,8 @@ MethodStatus MethodPost::processBody(const std::string &requestBody, MethodStatu
 {
 	// todo: bodystartus - ok, end of input;
 	cgi.input(requestBody, bodyStatus);
+	std::cout << "\n\nbody\n\n";
+
 	//	todo: update _statusCode according to cgi output status
 	return (bodyStatus);
 };
@@ -73,8 +81,14 @@ MethodStatus	MethodPost::sendHeader(int socket)
 
 MethodStatus	MethodPost::sendBody(int socket)
 {
+	MethodStatus debug;
 	if (_statusCode == 200)
-		return cgi.superSmartOutput(socket);
+	{
+		debug = cgi.superSmartOutput(socket);
+		if (debug == inprogress)
+			std::cerr << "IN _ P R O G R E S S \n";
+		return debug;
+	}
 	else
 		return sendError(socket);
 
