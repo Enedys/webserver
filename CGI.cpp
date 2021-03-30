@@ -35,6 +35,7 @@ void CGI::initFork()
 		freeMem();
 		throw CGI::forkFailed();
 	}
+	status = running;
 	if (pid == 0)
 	{
 		dup2(pipein[0], 0);
@@ -61,11 +62,16 @@ CGI::CGI(char *execpath, char **args, char **env)
 	outputBuf.clear();
 	sendBuf.clear();
 	cgiDone = inprogress;
+	status = not_started;
 }
 
 
 void CGI::init()
 {
+	pipein[0] = -1;
+	pipein[1] = -1;
+	pipeout[0] = -1;
+	pipeout[1] = -1;
 	initPipes();
 	initFork();
 	headersDone = false;
@@ -78,6 +84,7 @@ void CGI::init()
 	outputBuf.clear();
 	sendBuf.clear();
 	httpStatus = -1;
+	status = not_started;
 }
 
 void CGI::input(const std::string &str, MethodStatus mStatus) // inputting body
@@ -160,13 +167,14 @@ void CGI::inputFromBuf()
 //}
 
 
-MethodStatus CGI::cgiStatus()
+MethodStatus CGI::cgiProcessStatus()
 {
 	std::string str;
 	int wp = waitpid(pid, &processStatus, WNOHANG); // returns > 0 if process stopped;
 	if (processStatus == 1024)
 	{
 		freeMem();
+		status = failed;
 		return (error); // execve failed;
 	}
 	if (wp > 0 || headersNotFoundProcessExited) // 2 times WNOHANG = wp = -1; TODO: test || headersNotFound
@@ -182,6 +190,7 @@ MethodStatus CGI::cgiStatus()
 			str = outputBuf; // todo: !!!!!!!
 			freeMem();
 		}
+		status = done;
 		return (ok);
 	}
 	else
@@ -335,7 +344,7 @@ MethodStatus CGI::getHeaders()
 	int r;
 	r = read(pipeout[0], buf, BUFSIZ); // read < 0 = pipe is empty..
 	if (r < 0)
-		return cgiStatus();
+		return cgiProcessStatus();
 	if (!headersDone) // headers ready for parser
 	{
 		str = outputBuf + buf;
@@ -404,7 +413,7 @@ MethodStatus CGI::readFromProcess(std::string &str)
 	if (r < 0)
 	{
 		str.clear();
-		return cgiStatus();
+		return cgiProcessStatus();
 	}
 	if (!contentLength)
 	{
@@ -497,6 +506,7 @@ MethodStatus CGI::smartOutput(std::string &str)
 	}
 	return mStatus;
 }
+
 MethodStatus CGI::superSmartOutput(int socket)
 {
 	std::string str;
@@ -546,6 +556,10 @@ void CGI::setRoot(const std::string &root)
 	CGI::root = root;
 }
 
+cgiStatus CGI::getStatus() const
+{
+	return status;
+}
 
 
 const char *CGI::forkFailed::what() const throw()

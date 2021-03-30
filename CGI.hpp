@@ -50,7 +50,7 @@ class CGI
 		MethodStatus sendOutput(std::string &output, int socket);
 		MethodStatus outputChunkedFromBuf(std::string &str);
 		MethodStatus outputContentLengthFromBuf(std::string &str);
-		MethodStatus cgiStatus();
+		MethodStatus cgiProcessStatus();
 		static const int maxChunkSize = 8192;
 		static const int maxContentLengthOutput = 8192;
 		MethodStatus cgiDone;
@@ -80,7 +80,7 @@ class CGI
 		bool isHeadersDone() const;
 		void setEnv(char **env);
 		bool isHeadersNotFound() const;
-//		cgiStatus getStatus() const;
+		cgiStatus getStatus() const;
 
 		~CGI();
 		class pipeFailed: public std::exception
