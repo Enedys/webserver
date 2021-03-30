@@ -456,17 +456,7 @@ void CGI::concatHeaders()
 		contentLength = true;
 	else if (_headersMap.find("transfer-encoding") == _headersMap.end())
 		_headersMap.insert(std::pair<std::string, std::string>("transfer-encoding", "chunked"));
-	delete (_header);
-}
-
-MethodStatus CGI::smartOutput(std::string &str)
-{
-	if (!headersDone)
-	{
-		return (getHeaders());
-		str.clear();
-	}
-	return ok;
+	//delete (_header);
 }
 
 MethodStatus CGI::sendOutput(std::string &output, int socket)
@@ -482,6 +472,31 @@ MethodStatus CGI::sendOutput(std::string &output, int socket)
 	return ok;
 }
 
+MethodStatus CGI::smartOutput(std::string &str)
+{
+	MethodStatus mStatus;
+	if (!headersDone)
+	{
+		getHeaders();
+		str.clear();
+		return inprogress;
+	}
+	if (!headersSent)
+	{
+		_header->headersToString(_headersMap, str);
+		headersSent = true;
+		return inprogress;
+	}
+	if (contentLength)
+		mStatus = outputContentLength(str);
+	else
+		mStatus = outputChunked(str);
+	if (str.empty() && mStatus == ok && !contentLength)
+	{
+		str = "0\r\n\r\n";
+	}
+	return mStatus;
+}
 MethodStatus CGI::superSmartOutput(int socket)
 {
 	std::string str;
