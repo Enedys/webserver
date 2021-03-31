@@ -7,42 +7,54 @@ MethodPost::~MethodPost()
 
 MethodStatus	MethodPost::manageRequest()
 {
-	char **args;
-	args = (char **)malloc(sizeof(char *) * 3); // todo: free
-	std::string ext = data.uri.script_name.substr(data.uri.script_name.find_last_of('.') + 1, data.uri.script_name.size());
-	ext = data.uri.extension;
-	auto it = data.location->cgi.find(ext); // todo !!
-	//std::map<std::string, std::string> kekw;
-	std::string bin;
-	if (it != data.location->cgi.end())
-		bin = it->second; // todo: not found cgi path;
-	_statusCode = 200;
-	if (bin.empty())
-	{
-		_statusCode = 405;
-		return (error); // if error jumps to create header;
-	}
-	if (!fileExists((char *)data.uri.script_name.c_str()))
-	{
-		_statusCode = 404;
-		return (error);
-	}
-	args[0] = (char *)bin.c_str();
-	args[1] = (char *)data.uri.script_name.c_str(); // todo: check, no script found
-	args[2] = 0;
-	cgi.setEnv(data.cgi_conf);
-	cgi.setEnv(NULL);
-	cgi.setExecpath((char *)bin.c_str());
-	cgi.setArgs(args);
-	cgi.init();//checks
-	std::cout << "create header!\n";
-	return (ok);
+//	char **args;
+//	args = (char **)malloc(sizeof(char *) * 3); // todo: free
+//	std::string ext = data.uri.script_name.substr(data.uri.script_name.find_last_of('.') + 1, data.uri.script_name.size());
+//	ext = data.uri.extension;
+//	auto it = data.location->cgi.find(ext); // todo !!
+//	//std::map<std::string, std::string> kekw;
+//	std::string bin;
+//	if (it != data.location->cgi.end())
+//		bin = it->second; // todo: not found cgi path;
+//	_statusCode = 200;
+//	if (bin.empty())
+//	{
+//		_statusCode = 405;
+//		return (error); // if error jumps to create header;
+//	}
+//	if (!fileExists((char *)data.uri.script_name.c_str()))
+//	{
+//		_statusCode = 404;
+//		return (error);
+//	}
+//	args[0] = (char *)bin.c_str();
+//	args[1] = (char *)data.uri.script_name.c_str(); // todo: check, no script found
+//	args[2] = 0;
+//	cgi.setEnv(data.cgi_conf);
+//	int i = 0;
+//	std::cout << "\n------\n";
+//	while (*(data.cgi_conf + i))
+//		std::cout << *(data.cgi_conf + i++)<< std::endl;
+//	std::cout << "\n------\n";
+////	sleep(600);
+////	cgi.setEnv(NULL);
+//	cgi.setExecpath((char *)bin.c_str());
+//	cgi.setArgs(args);
+//	cgi.init();//checks
+//	std::cout << "\n\ncreate header!!\n\n";
+//	return (ok);
+	_statusCode = cgi.init(data);
+	if (_statusCode < 200 || _statusCode > 206)
+		return error;
+	return ok;
 };
 
 MethodStatus MethodPost::processBody(const std::string &requestBody, MethodStatus bodyStatus)
 {
 	// todo: bodystartus - ok, end of input;
 	cgi.input(requestBody, bodyStatus);
+	std::cout << "\n\nbody\n\n";
+
 	//	todo: update _statusCode according to cgi output status
 	return (bodyStatus);
 };
@@ -73,8 +85,14 @@ MethodStatus	MethodPost::sendHeader(int socket)
 
 MethodStatus	MethodPost::sendBody(int socket)
 {
+	MethodStatus debug;
 	if (_statusCode == 200)
-		return cgi.superSmartOutput(socket);
+	{
+		debug = cgi.superSmartOutput(socket);
+		if (debug == inprogress)
+			std::cerr << "IN _ P R O G R E S S \n";
+		return debug;
+	}
 	else
 		return sendError(socket);
 

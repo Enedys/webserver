@@ -51,6 +51,7 @@ class CGI
 		MethodStatus outputChunkedFromBuf(std::string &str);
 		MethodStatus outputContentLengthFromBuf(std::string &str);
 		MethodStatus cgiProcessStatus();
+		bool fileExists(char *filename);
 		static const int maxChunkSize = 8192;
 		static const int maxContentLengthOutput = 8192;
 		MethodStatus cgiDone;
@@ -65,9 +66,11 @@ class CGI
 		void init(); // if default constructor, this func need to be called;
 		void input(const std::string &str, MethodStatus mStatus); // ready to input;
 		MethodStatus output(std::string &str); // ready to output
+		int init(RequestData const &data);
 		MethodStatus getHeaders();
 		MethodStatus outputChunked(std::string &);
 		MethodStatus outputContentLength(std::string &);
+		MethodStatus getHttpStatus();
 		MethodStatus smartOutput(std::string &str);
 		MethodStatus superSmartOutput(int socket);
 		void concatHeaders();

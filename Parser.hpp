@@ -33,6 +33,8 @@ typedef struct s_serv
 	std::map<int, std::string> error_pages;
 	std::string serverName;
 	int 		bodySizeLimit;
+	std::string root;
+	std::map<std::string, std::string> cgi;
 	std::vector<struct s_loc> locs;
 } t_serv;
 
@@ -42,6 +44,7 @@ struct s_loc
 	std::string root;////////error page
 	std::string fileRequestIsDir;
 	std::map<std::string, std::string> cgi;
+	std::vector<std::string> index;
 	std::string auth;
 	std::string authLogPass;
 	bool uploadPass;
@@ -117,6 +120,7 @@ class Parser
 		void 	parseLocation();
 		void 	getRoot();
 		void 	getHost();
+		void 	getCgi();
 		void 	getServerName();
 		void 	getErrorPage();
 		void 	getPageSize();
@@ -129,6 +133,7 @@ class Parser
 		void	getLocLogPass();
 		void	getLocUploadPass();
 		void 	getLocUploadStore();
+		void	getLocIndex();
 		void 	initServ();
 		void 	initLoc();
 
