@@ -68,6 +68,16 @@ typedef enum
 	OPTION,
 }		methodType;
 
+typedef enum
+{
+	bodyNotDefined,
+	bodyIsEmpty,
+	bodyIsAutoindex,		// text
+	bodyIsTextErrorPage,	// text
+	bodyIsFile,				// file: regularFile, indexFile, errorFile
+	bodyIsCGI				// cgi
+}		bodyType;
+
 /* Typedefs */
 typedef std::map<std::string, std::string>					stringMap;
 typedef std::map<std::string, std::string>::iterator		mapIter;

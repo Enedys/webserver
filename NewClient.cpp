@@ -2,7 +2,7 @@
 
 Client::Client(int socket, sockaddr_in adr, t_ext_serv const &config) :
 	_socket(socket), _clientAddr(adr), _statusCode(0), _request(socket, _statusCode),\
-	_config(config), _method(NULL), _state(defaultState), procData()
+	_config(config), _method(NULL), _state(defaultState), procData(config, adr, _statusCode)
 {
 }
 
@@ -69,13 +69,10 @@ Client::conditionCode	Client::getNextState(MethodStatus status)
 
 MethodStatus		Client::analizeHeaders()
 {
-	// if (_statusCode)
-	// 	return (createNewMethod());
-	procData.setData(&_config, &_request.getHeadersMap(),\
-					&_request.getStartLine(), _clientAddr, _statusCode);
-	procData.prepareData(_request.getContentLength());
-	if (_statusCode == 0 && procData.error_code)
-		_statusCode = procData.error_code;
+	procData.setData(&_request.getHeadersMap(),\
+						&_request.getStartLine(),\
+							_request.getContentLength());
+	procData.prepareData();
 	MethodStatus	methodStatus = createNewMethod();
 	return (methodStatus);
 }

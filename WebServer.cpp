@@ -112,7 +112,7 @@ int						WebServer::acceptNewConnections()
 	return (0);
 }
 
-int						WebServer::clientIsReady(client cli)
+int						WebServer::	clientIsReady(client cli)
 {
 	if (!(*cli))
 		return (0);
