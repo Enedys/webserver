@@ -611,22 +611,11 @@ MethodStatus CGI::getHttpStatus()
 
 int CGI::init(const RequestData &data)
 {
-	args = (char **)malloc(sizeof(char *) * 3); // todo: free
-	std::string ext = data.uri.script_name.substr(data.uri.script_name.find_last_of('.') + 1, data.uri.script_name.size());
-	ext = data.uri.extension;
-	auto it = data.location->cgi.find(ext);
-	//std::map<std::string, std::string> kekw;
-	std::string bin;
-	if (it != data.location->cgi.end())
-		bin = it->second;
-	if (bin.empty())
-		return 405;
-	if (!fileExists((char *)data.uri.script_name.c_str()))
-		return 404;
-	args[0] = (char *)bin.c_str();
+	args = (char **)malloc(sizeof(char *) * 3);	
+	args[0] = (char *)data.cgi_bin.c_str();
 	args[1] = (char *)data.uri.script_name.c_str();
-	args[2] = 0;
-	setExecpath((char *)bin.c_str());
+	args[2] = NULL;
+	setExecpath(args[0]);
 	setRoot(data.location->root); // todo: need?
 	setScriptName(data.uri.script_name); // todo: need?
 	setEnv(data.cgi_conf);

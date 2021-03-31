@@ -51,7 +51,7 @@ class RequestData
 		void			cleanData();
 		void			createCGIEnv();
 		std::string const
-						&getMethod() const;
+						*getMethod() const;
 	
 	private:
 		RequestData();

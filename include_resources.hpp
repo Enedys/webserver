@@ -66,6 +66,7 @@ typedef enum
 	POST,
 	PUT,
 	OPTION,
+	DELETE,
 }		methodType;
 
 typedef enum

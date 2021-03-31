@@ -32,7 +32,7 @@ void		RequestData::setData(stringMap const *rHs, stringMap const *rFl, int contL
 {
 	contentLength = contLen;
 	_reqHeads = rHs;
-	if (rFl->find("uri") != rFl->end())
+	if (!error_code)
 	{
 		_uri = &rFl->find("uri")->second;
 		_method = &rFl->find("method")->second;
@@ -45,6 +45,12 @@ void		RequestData::setData(stringMap const *rHs, stringMap const *rFl, int contL
 }
 
 RequestData::~RequestData() {cleanCGIenv();};
+
+std::string const
+			*RequestData::getMethod() const
+{
+	return (_method);
+}
 
 void		RequestData::setHeaderState(headerNum hN, bool error)
 {

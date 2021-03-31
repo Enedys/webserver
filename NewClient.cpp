@@ -59,7 +59,7 @@ Client::conditionCode	Client::getNextState(MethodStatus status)
 	{
 		if (_state < analizeHeader)
 			return (analizeHeader);
-		return (createHeaders);
+		return (configureOut);
 	}
 	else if (status == ok)
 		return (static_cast<Client::conditionCode>\
@@ -102,6 +102,23 @@ MethodStatus		Client::createNewMethod()
 	return (ok);
 }
 
+MethodStatus		Client::configureOutput()
+{
+	OutputConfigurator	outConf(procData, _method->getCGI(),\
+						_statusCode, _method->getBodyType());
+	if (outConf.configurate() == inprogress)
+		return (inprogress);
+	if (_method->getBodyType() == bodyIsFile)
+		outConf.setFd(_method->getFd());
+	return (ok);
+}
+
+MethodStatus		Client::configureInput()
+{
+	// Olyas code
+	return (ok);
+}
+
 MethodStatus		Client::requestInterraction()
 {
 	conditionCode	stateBefore = _state;
@@ -114,6 +131,9 @@ MethodStatus		Client::requestInterraction()
 	if (_state == analizeHeader)
 		_state = getNextState(analizeHeaders());
 
+	if (_state == configureIn)
+		_state = getNextState(configureInput());
+
 	if (_state == manageRequest)
 		_state = getNextState(_method->manageRequest());
 
@@ -122,6 +142,9 @@ MethodStatus		Client::requestInterraction()
 	else if (_request.getRequestState() == Request::body)	// cgi case, when we send answer,
 		if (_request.getRequestBody(_method) == error)		//  before read all request bodey
 			_state = sendingErrorState;
+
+	if (_state == configureOut)
+		_state = getNextState(configureOutput());
 
 	if (_state == createHeaders)
 		_state = getNextState(_method->createHeader());

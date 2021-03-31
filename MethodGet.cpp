@@ -86,6 +86,7 @@ MethodStatus	MethodGet::manageRequest()
 			generateIdxPage();
 		else {
 			_statusCode = errorOpeningURL;//403 Forbidden
+			return error;
 			// check index pages. 
 			//   - взять первый файл если сжи то
 			//   - если есть ехе файлы
@@ -94,7 +95,10 @@ MethodStatus	MethodGet::manageRequest()
 
 	// else if (S_ISREG(st.st_mode) && (_fd = open(data.uri.script_name.c_str(), O_RDONLY | O_NONBLOCK)) < 0){// else S_ISFIFO S_ISLNK /// O_DIRECTORY
 	else if ((_fd = open(data.uri.script_name.c_str(), O_RDONLY | O_NONBLOCK)) < 0)
+	{
 		_statusCode = errorOpeningURL;
+		return (error);
+	}
 	return ok;
 };
 

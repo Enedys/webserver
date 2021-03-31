@@ -28,8 +28,6 @@ typedef struct s_serv
 {
 	std::string host;
 	int			port;
-	std::string root;
-	std::map<std::string, std::string> cgi;
 	std::map<int, std::string> error_pages;
 	std::string serverName;
 	int 		bodySizeLimit;
@@ -147,5 +145,4 @@ class Parser
 
 		void makeServExt();
 };
-
 #endif
