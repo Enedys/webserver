@@ -218,6 +218,7 @@ std::vector<std::string> Parser::getVectorValues(const std::string &section)
 void Parser::getRoot()
 {
 	root = getValue("server: root: ");
+	serv.root = root;
 }
 
 void Parser::getHost()
@@ -257,6 +258,14 @@ void Parser::getPageSize()
 	serv.bodySizeLimit = num;
 }
 
+
+void Parser::getCgi()
+{
+	std::vector<std::string> vecValues = getVectorValues("server: cgi: "); // TODO: error management .php .py
+	for (unsigned int i = 0; i < vecValues.size() - 1; i++)
+		serv.cgi.insert(std::pair<std::string, std::string>(vecValues[i], vecValues[vecValues.size() - 1]));
+}
+
 void Parser::parseValues()
 {
 	std::string value;
@@ -282,6 +291,8 @@ void Parser::parseValues()
 			getServerName();
 		else if (value == "page_size")
 			getPageSize();
+		else if (value == "cgi")
+			getCgi();
 		else
 			error ("Server: invalid token " + value);
 	}
@@ -394,7 +405,12 @@ void Parser::getLocUploadPass()
 
 void Parser::getLocUploadStore()
 {
-	loc.uploadStore = getValue("location: upload_store"); // TODO: put returns 500, if no subdirectory!
+	loc.uploadStore = getValue("location: upload_store: "); // TODO: put returns 500, if no subdirectory!
+}
+
+void Parser::getLocIndex()
+{
+	loc.index = getVectorValues("location: index: ");
 }
 
 void Parser::parseLocValues()
@@ -426,6 +442,8 @@ void Parser::parseLocValues()
 		getLocUploadPass();
 	else if (value == "upload_store")
 		getLocUploadStore();
+	else if (value == "index")
+		getLocIndex();
 	else
 		error("Location: invalid token");
 }
@@ -493,6 +511,8 @@ void Parser::initServ()
 	serv.serverName.clear();
 	serv.host.clear();
 	serv.locs.clear();
+	serv.root.clear();
+	serv.cgi.clear();
 }
 
 void Parser::initLoc()
@@ -512,6 +532,7 @@ void Parser::initLoc()
 	loc.deleteAvailable = true;
 	loc.path.clear();
 	loc.cgi.clear();
+	loc.index.clear();
 }
 
 void Parser::validateErrorStr(const std::vector<std::string> &v)
@@ -535,6 +556,11 @@ void Parser::fillRootLoc() // todo: not only fill root loc, probably rename
 			if (root.empty())
 				error("location has no root. Can't resolve");
 			serv.locs[i].root = root;
+		}
+		if (!serv.cgi.empty())
+		{
+			if (serv.locs[i].cgi.empty())
+				serv.locs[i].cgi = serv.cgi; // todo: reference?
 		}
 	}
 	for (unsigned int i = 0; i < serv.locs.size(); i++)
@@ -581,5 +607,3 @@ void Parser::makeServExt()
 	}
 	servers_ext.push_back(newStruct);
 }
-
-
