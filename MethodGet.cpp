@@ -101,6 +101,14 @@ MethodStatus	MethodGet::manageRequest()
 
 MethodStatus	MethodGet::createHeader()
 {
+
+	// std::string output;//getOutput();
+	// if (_bodyType == bodyIsTextErrorPage)
+	// 	output = generateErrorPage(_statusCode);
+	// if (_bodyType == bodyIsAutoindex)
+	// 	output = generateIndexPage(_statusCode);
+
+
 	_header = new Header(data.uri.script_name, data.location->root, _statusCode);
 
 	std::cout << "\n////\tGET METHOD, statusCode: " << _statusCode << std::endl;

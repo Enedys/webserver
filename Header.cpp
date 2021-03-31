@@ -124,7 +124,7 @@ void	Header::createGeneralHeaders(stringMap &headersMap)
 	tm1 = gmtime(&tv.tv_sec);
 	strftime(buf1, 100, "%a, %d %b %Y %H:%M:%S GMT", tm1);
 	std::string date = std::string(buf1);
-	headersMap.insert(std::pair<std::string, std::string>("Server", "Shabillum/1.0.7"));
+	headersMap.insert(std::pair<std::string, std::string>("Server", "Bshabillum/1.0.7"));
 	headersMap.insert(std::pair<std::string, std::string>("Date", date));
 };
 

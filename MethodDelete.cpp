@@ -39,7 +39,7 @@ int				MethodDelete::deleteDirectory(std::string const &path)
 
 MethodStatus	MethodDelete::manageRequest()
 {
-	if (!data.serv->locs[0].deleteAvailable
+	if (!data.location->deleteAvailable
 	|| data.uri.script_name.length() >= PATH_MAX - 1)//
 	{
 		_statusCode = methodNotAllowed;

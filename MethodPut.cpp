@@ -27,7 +27,7 @@ MethodStatus	MethodPut::processBody(const std::string &requestBody, MethodStatus
 		// _statusCode = ///;//
 		//}
 
-	if (!data.location->optionsAvailable)
+	if (!data.location->putAvailable)
 		_statusCode = methodNotAllowed;
 
 	struct stat	st;

@@ -71,6 +71,7 @@ typedef enum
 typedef enum
 {
 	bodyIsEmpty,
+	bodyIsError,
 	bodyIsAutoindex,		// text
 	bodyIsTextErrorPage,	// text
 	bodyIsFile,				// file: regularFile, indexFile, errorFile

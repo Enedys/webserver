@@ -6,7 +6,7 @@ MethodStatus	MethodOption::processBody(const std::string &requestBody, MethodSta
 MethodStatus	MethodOption::sendResponse(int socket) { return ok; }
 MethodStatus	MethodOption::manageRequest()
 {
-	if (!data.serv->locs[0].optionsAvailable)
+	if (!data.location->optionsAvailable)
 		_statusCode = methodNotAllowed;
 	else
 		_statusCode = okSuccess;
