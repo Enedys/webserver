@@ -2,7 +2,7 @@
 
 Client::Client(int socket, sockaddr_in adr, t_ext_serv const &config) :
 	_socket(socket), _clientAddr(adr), _statusCode(0), _request(socket, _statusCode),\
-	_config(config), _method(NULL), _state(defaultState), procData()
+	_config(config), _method(NULL), _state(defaultState), procData(config, adr, _statusCode)
 {
 }
 
@@ -59,7 +59,7 @@ Client::conditionCode	Client::getNextState(MethodStatus status)
 	{
 		if (_state < analizeHeader)
 			return (analizeHeader);
-		return (createHeaders);
+		return (configureOut);
 	}
 	else if (status == ok)
 		return (static_cast<Client::conditionCode>\
@@ -69,13 +69,10 @@ Client::conditionCode	Client::getNextState(MethodStatus status)
 
 MethodStatus		Client::analizeHeaders()
 {
-	// if (_statusCode)
-	// 	return (createNewMethod());
-	procData.setData(&_config, &_request.getHeadersMap(),\
-					&_request.getStartLine(), _clientAddr, _statusCode);
-	procData.prepareData(_request.getContentLength());
-	if (_statusCode == 0 && procData.error_code)
-		_statusCode = procData.error_code;
+	procData.setData(&_request.getHeadersMap(),\
+						&_request.getStartLine(),\
+							_request.getContentLength());
+	procData.prepareData();
 	MethodStatus	methodStatus = createNewMethod();
 	return (methodStatus);
 }
@@ -105,6 +102,23 @@ MethodStatus		Client::createNewMethod()
 	return (ok);
 }
 
+MethodStatus		Client::configureOutput()
+{
+	OutputConfigurator	outConf(procData, _method->getCGI(),\
+						_statusCode, _method->getBodyType());
+	if (outConf.configurate() == inprogress)
+		return (inprogress);
+	if (_method->getBodyType() == bodyIsFile)
+		outConf.setFd(_method->getFd());
+	return (ok);
+}
+
+MethodStatus		Client::configureInput()
+{
+	// Olyas code
+	return (ok);
+}
+
 MethodStatus		Client::requestInterraction()
 {
 	conditionCode	stateBefore = _state;
@@ -117,6 +131,9 @@ MethodStatus		Client::requestInterraction()
 	if (_state == analizeHeader)
 		_state = getNextState(analizeHeaders());
 
+	if (_state == configureIn)
+		_state = getNextState(configureInput());
+
 	if (_state == manageRequest)
 		_state = getNextState(_method->manageRequest());
 
@@ -125,6 +142,9 @@ MethodStatus		Client::requestInterraction()
 	else if (_request.getRequestState() == Request::body)	// cgi case, when we send answer,
 		if (_request.getRequestBody(_method) == error)		//  before read all request bodey
 			_state = sendingErrorState;
+
+	if (_state == configureOut)
+		_state = getNextState(configureOutput());
 
 	if (_state == createHeaders)
 		_state = getNextState(_method->createHeader());

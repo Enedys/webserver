@@ -1,5 +1,7 @@
 #pragma once
 #include "Method.hpp"
+#include "CGI.hpp"
+#include "Header.hpp"
 // Class RequestData:
 // char **cgi_conf;
 // std::string - pathToFile;
@@ -19,8 +21,14 @@ class MethodPost : public AMethod
 private:
     /* data */
     MethodPost(/* args */);
-    std::string outputString;
-    // RequestData const &reqData;
+    CGI cgi;
+	Header				*_header;
+    std::string 		outputBuf;
+	std::string			_body;//ololo
+	MethodStatus	sendError(int socket);
+	bool fileExists (char *filename);
+
+		// RequestData const &reqData;
 
 public:
 	MethodPost(int &status, RequestData const &data) :

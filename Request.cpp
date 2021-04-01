@@ -11,7 +11,8 @@ size_t				Request::getBufferResidual()
 	return (_buffer.length());
 }
 
-Request::requestStatus		Request::getRequestState() const
+Request::requestStatus		
+					Request::getRequestState() const
 {
 	return (requestStage);
 }

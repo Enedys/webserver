@@ -1,47 +1,26 @@
 #include "RequestData.hpp"
 
-RequestData::RequestData(t_ext_serv const *s,\
-						stringMap const *rHs,\
-						stringMap const *rFl, \
-						sockaddr_in adr, int errorCode) :
-	_servsList(s), _reqHeads(rHs), errorMask(0), in(0), _addr(adr)
-{
-	if (rFl->find("uri") != rFl->end())
-	{
-		_uri = &rFl->find("uri")->second;
-		_method = &rFl->find("method")->second;
-	}
-	else
-	{
-		_uri = NULL;
-		_method = NULL;
-	}
-	serv = NULL;
-	location = NULL;
-	cgi_conf = NULL;
-	badalloc_index = -1;
-	error_code = errorCode;
-};
-
-RequestData::RequestData()
+RequestData::RequestData(t_ext_serv const &s, sockaddr_in &adr, int &errorCode) :
+	_addr(adr), error_code(errorCode), _servsList(s)
 {
 	location = NULL;	serv = NULL;
-	_servsList = NULL;	_uri = NULL;
-	_reqHeads = NULL;	_method = NULL;
-	cgi_conf = NULL;
-	error_code = 0;	errorMask = 0;	in = 0;
+	_uri = NULL;		_reqHeads = NULL;
+	_method = NULL;		cgi_conf = NULL;
+	errorMask = 0;	in = 0;
 	badalloc_index = -1;
-}
+	error_code = errorCode;
+	contentLength = 0;
+};
 
 void		RequestData::cleanData()
 {
 	location = NULL;	serv = NULL;
-	_servsList = NULL;	_uri = NULL;
 	_reqHeads = NULL;	_method = NULL;
+	_uri = NULL;
 	hostName = "";
 	acceptLanguage.clear();		acceptCharset.clear();
 	contentLanguage.clear();	contentType.clear();
-	errorMask = 0;	in = 0;	error_code = 0;
+	errorMask = 0;	in = 0;		contentLength = 0;
 	uri.cleanData();
 	if (cgi_conf)
 		cleanCGIenv();
@@ -49,14 +28,11 @@ void		RequestData::cleanData()
 	cgi_conf = NULL;
 }
 
-void		RequestData::setData(t_ext_serv const *s,\
-									stringMap const *rHs,\
-									stringMap const *rFl, \
-									sockaddr_in addr, int errorCode)
+void		RequestData::setData(stringMap const *rHs, stringMap const *rFl, int contLen)
 {
-	_servsList = s;
+	contentLength = contLen;
 	_reqHeads = rHs;
-		if (rFl->find("uri") != rFl->end())
+	if (!error_code)
 	{
 		_uri = &rFl->find("uri")->second;
 		_method = &rFl->find("method")->second;
@@ -66,11 +42,15 @@ void		RequestData::setData(t_ext_serv const *s,\
 		_uri = NULL;
 		_method = NULL;
 	}
-	_addr = addr;
-	error_code = errorCode;
 }
 
 RequestData::~RequestData() {cleanCGIenv();};
+
+std::string const
+			*RequestData::getMethod() const
+{
+	return (_method);
+}
 
 void		RequestData::setHeaderState(headerNum hN, bool error)
 {
@@ -130,7 +110,7 @@ void		RequestData::procHost()
 {
 	bool			var;
 	hostName = _reqHeads->find("host")->second;
-	var = isValidHost(hostName, _servsList->port);
+	var = isValidHost(hostName, _servsList.port);
 	setHeaderState(e_host, var);
 }
 
@@ -525,12 +505,8 @@ void			RequestData::cleanCGIenv()
 	badalloc_index = -1;
 }
 
-void		RequestData::createCGIEnv(size_t contLen)
+void		RequestData::createCGIEnv()
 {
-	// constMapIter cgi_ext_it = location->cgi.find(uri.extension);
-	// if (cgi_ext_it == location->cgi.end())
-	// 	return ;
-	// cgi_bin = (*cgi_ext_it).second;
 	int	i = 0;
 	if (cgi_conf)
 		cleanCGIenv();
@@ -545,13 +521,13 @@ void		RequestData::createCGIEnv(size_t contLen)
 	addCgiVar(i++, "REQUEST_URI=" + uri.request_uri);
 	addCgiVar(i++, "PATH_INFO=" + uri.path_info);
 	addCgiVar(i++, "PATH_TRANSLATED=" + uri.path_translated);
-	addCgiVar(i++, "SCRIPT_NAME=" + uri.script_name);
+	addCgiVar(i++, "SCRIPT_FILENAME=" + uri.script_name);
 	addCgiVar(i++, "REMOTE_ADDR=" + getClientIp(_addr.sin_addr.s_addr));
 	if (error_code != 0)
 	{
 		addCgiVar(i++, "AUTH_TYPE=");
 		addCgiVar(i++, "CONTENT_TYPE=text/plain");
-		addCgiVar(i++, "CONTENT_LENGTH=" + size2Hex(contLen, 10));
+		addCgiVar(i++, "CONTENT_LENGTH=" + size2Hex(0, 10));
 		addCgiVar(i++, "REQUEST_METHOD=GET");
 		addCgiVar(i++, "REMOTE_IDENT=");
 		addCgiVar(i++, "REMOTE_USER=");
@@ -562,8 +538,8 @@ void		RequestData::createCGIEnv(size_t contLen)
 			addCgiVar(i++, "AUTH_TYPE=Basic");
 		if ((in & e_contType) && !(errorMask & e_contType))
 			addCgiVar(i++, "CONTENT_TYPE=" + contentType["type"]);
-		if (contLen > 0)
-			addCgiVar(i++, "CONTENT_LENGTH=" + size2Hex(contLen, 10));
+		if (contentLength >= 0)
+			addCgiVar(i++, "CONTENT_LENGTH=" + size2Hex(contentLength, 10));
 		addCgiVar(i++, "REQUEST_METHOD=" + *_method);
 		if ((in & e_auth) && !(errorMask & e_auth))
 		{
@@ -583,21 +559,19 @@ void		RequestData::createCGIEnv(size_t contLen)
 		std::cout << cgi_conf[k] << std::endl;
 }
 
-void		RequestData::prepareData(size_t contLen)
+void		RequestData::prepareData()
 {
-	if (error_code == 0)
+	if (error_code)
 	{
-		procHost();
-		procQualityHeaders();
-		procUserAgent();
-		procContentType();
-		procServer();
-		procUri();
-		procAuthorization();
+		serv = &(_servsList.servs.at(0));
+		return ;
 	}
-	else
-		serv = &(_servsList->servs.at(0));
-	if (error_code == 0)
-		std::cout << "LOCATION_ROOT: " << location->root << std::endl;
-	// std::cout << "CGI_ROOT: " << location->cgi.find(uri.extension) << std::endl;
+	procHost();
+	procQualityHeaders();
+	procUserAgent();
+	procContentType();
+	procServer();
+	procUri();
+	procAuthorization();
+	std::cout << "LOCATION_ROOT: " << location->root << std::endl;
 }

@@ -9,6 +9,7 @@
 #include "MethodOption.hpp"
 #include "MethodDelete.hpp"
 #include "RequestData.hpp"
+#include "OutputConfigurator.hpp"
 
 typedef std::vector<s_loc>::iterator		locIter;
 typedef std::vector<s_loc>::const_iterator	constLocIter;
@@ -20,8 +21,10 @@ class Client
 		defaultState,
 		readingHeader,
 		analizeHeader,
+		configureIn,
 		manageRequest,
 		readingBody,
+		configureOut,
 		createHeaders,
 		sendindHeader,
 		sendingBody,
@@ -57,4 +60,6 @@ private:
 	MethodStatus		refreshClient();
 	MethodStatus		createNewMethod();
 	MethodStatus		analizeHeaders();
+	MethodStatus		configureInput();
+	MethodStatus		configureOutput();
 };

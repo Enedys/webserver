@@ -30,6 +30,7 @@ HEADERS			=	NewClient.hpp \
 					include_resources.hpp \
 					RequestData.hpp \
 					URI.hpp \
+					OutputConfigurator.hpp\
 
 SRC				=	Debugger.cpp \
 					Header.cpp \
@@ -49,6 +50,7 @@ SRC				=	Debugger.cpp \
 					RequestData.cpp \
 					CGI.cpp \
 					URI.cpp \
+					OutputConfigurator.cpp \
 					main.cpp
 
 OBJ_DIR = ./bin/

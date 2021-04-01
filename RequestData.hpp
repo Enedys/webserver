@@ -13,9 +13,7 @@ typedef std::pair<bool, stringMap>			contTypeMap;
 class RequestData
 {	
 	public:
-		RequestData(t_ext_serv const *s, stringMap const *rHs, \
-					stringMap const *rFl, sockaddr_in addr, int errorCode);
-		RequestData();
+		RequestData(t_ext_serv const &s, sockaddr_in &addr, int &errorCode);
 		~RequestData();
 		typedef enum
 		{
@@ -34,6 +32,7 @@ class RequestData
 		}		headerNum;
 
 		std::string		hostName;
+		int				contentLength;
 		URI				uri;
 		t_serv const	*serv;
 		s_loc const		*location;
@@ -46,17 +45,17 @@ class RequestData
 
 		int				in;
 		int				errorMask;
-		int				error_code;
-		void			prepareData(size_t contLen);
+		int				&error_code;
+		void			setData(stringMap const *rHs, stringMap const *rFl, int contLen);
+		void			prepareData();
 		void			cleanData();
-		void			setData(t_ext_serv const *s, stringMap const *rHs,\
-								stringMap const *rFl, sockaddr_in addr, int errorcode);
+		void			createCGIEnv();
 		std::string const
-						&getMethod() const;
-		void			createCGIEnv(size_t contLen);
+						*getMethod() const;
 	
 	private:
-		t_ext_serv const	*_servsList;
+		RequestData();
+		t_ext_serv const	&_servsList;
 		stringMap const		*_reqHeads;
 		std::string	const	*_uri;
 		std::string	const	*_method;

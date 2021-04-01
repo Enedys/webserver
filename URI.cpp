@@ -164,7 +164,8 @@ bool		URI::procUri(std::string const &uri)
 		size_t	fragmentPos = request_uri.find('#', queryPos);
 		query_string = request_uri.substr(queryPos + 1, \
 								fragmentPos - queryPos - 1);
-		fragment_string = request_uri.substr(fragmentPos);
+		if (fragmentPos != std::string::npos)
+			fragment_string = request_uri.substr(fragmentPos);
 	}
 	std::pair<std::string, std::string>
 			script_info = parseRawPath(raw_path);

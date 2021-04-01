@@ -66,12 +66,13 @@ typedef enum
 	POST,
 	PUT,
 	OPTION,
+	DELETE,
 }		methodType;
 
 typedef enum
 {
+	bodyNotDefined,
 	bodyIsEmpty,
-	bodyIsError,
 	bodyIsAutoindex,		// text
 	bodyIsTextErrorPage,	// text
 	bodyIsFile,				// file: regularFile, indexFile, errorFile

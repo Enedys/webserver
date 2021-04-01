@@ -22,7 +22,7 @@ public:
 	t_ext_serv const	&getConfig() const;
 
 
-	static t_serv const *determineServer(t_ext_serv const *servList, std::string const &host);
+	static t_serv const *determineServer(t_ext_serv const &servList, std::string const &host);
 	static s_loc const	*findLocation(t_serv const *serv, std::string const &script_name);
 	static int			match(std::string const &s1, std::string const &s2, size_t i1, size_t i2);
 

@@ -72,26 +72,24 @@ int				Server::match(std::string const &s1, std::string const &s2, size_t i1 = 0
 	return (0);
 }
 
-t_serv const	*Server::determineServer(t_ext_serv const *servsList, std::string const &host)
+t_serv const	*Server::determineServer(t_ext_serv const &servsList, std::string const &host)
 {
 	t_serv const	*serv;
-	if (!servsList)
-		return (NULL);
 	size_t			portPos = host.find_last_of(':');
 	std::string		_hostName = host.substr(0, portPos);
 	stringToLower(_hostName);
-	std::vector<t_serv>::const_iterator sv = servsList->servs.cend();
-	for (std::vector<t_serv>::const_iterator i = servsList->servs.cbegin(); i < servsList->servs.cend(); i++)
+	std::vector<t_serv>::const_iterator sv = servsList.servs.cend();
+	for (std::vector<t_serv>::const_iterator i = servsList.servs.cbegin(); i < servsList.servs.cend(); i++)
 	{
 		std::string	tmpServName = i->serverName;
 		stringToLower(tmpServName);
 		if (match(_hostName, tmpServName))
 			if (sv->serverName.length() < i->serverName.length()\
-				|| sv == servsList->servs.cend())
+				|| sv == servsList.servs.cend())
 				sv = i;
 	}
-	if (sv == servsList->servs.cend())
-		serv = &(servsList->servs[0]);
+	if (sv == servsList.servs.cend())
+		serv = &(servsList.servs[0]);
 	else
 		serv = &(*sv);
 	return (serv);
@@ -104,21 +102,21 @@ s_loc const		*Server::findLocation(t_serv const *serv, std::string const &script
 		return (NULL);
 	std::cout << "SNAME: " << script_name << std::endl;
 	constLocIter	itLoc = serv->locs.begin();
-	constLocIter	itBest = serv->locs.end();
-	while (itLoc != serv->locs.end())
+	constLocIter	itBest = serv->locs.cend();
+	while (itLoc != serv->locs.cend())
 	{
 		if (script_name.find(itLoc->path) == std::string::npos)
 		{
 			itLoc++;
 			continue;
 		}
-		if (itBest == serv->locs.end())
+		if (itBest == serv->locs.cend())
 			itBest = itLoc;
 		else if (itLoc->path.length() >= itBest->path.length())
 			itBest = itLoc;
 		itLoc++;
 	}
-	if (itBest == serv->locs.end()) //404
+	if (itBest == serv->locs.cend()) //404
 		return (NULL);
 	else
 		location = &(*itBest);

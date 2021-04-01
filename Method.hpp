@@ -16,13 +16,14 @@ protected:
 	int					_fd;
 	stringMap			_headersMap;
 	methodType			_type;
+	bodyType			_bodyType;
 	AMethod();
 
 public:
 	AMethod(int &status, RequestData const &data);
 	virtual ~AMethod();
-	static const std::string	validMethods[7];
-	static const int			methodNums = 7;
+	static const int			methodNums = 6;
+	static const std::string	Methods[methodNums];
 	static bool					isValidMethod(std::string const &method);
 
 	virtual MethodStatus	createHeader() = 0;
@@ -32,5 +33,8 @@ public:
 	virtual MethodStatus	sendBody(int socket) = 0;
 	virtual MethodStatus	sendResponse(int socket) = 0;
 
-	int						getStatusCode() { return _statusCode; };
+	int						getStatusCode();
+	CGI						&getCGI();
+	bodyType				&getBodyType();
+	int						&getFd();
 };
