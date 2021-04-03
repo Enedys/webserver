@@ -5,37 +5,6 @@ Header::Header(std::string const &path, std::string const &root, int const statu
 
 Header::~Header(){ };
 
-mapIntStr statusCodes;
-static struct statusCodesInit
-{
-	statusCodesInit(){
-		statusCodes[200] = "OK";
-		statusCodes[201] = "Created";
-		statusCodes[202] = "Accepted";
-		statusCodes[400] = "Bad Request";
-		statusCodes[401] = "Unauthorized";
-		statusCodes[403] = "Forbidden";//when autoindex is off and request is a folder
-		statusCodes[404] = "Not Found";
-		statusCodes[405] = "Method Not Allowed";
-		statusCodes[406] = "Not Acceptable";
-		statusCodes[408] = "Request Timeout";
-		statusCodes[411] = "Length Required";
-		statusCodes[414] = "URI Too Long";
-		statusCodes[415] = "Unsupported Media Type";
-		statusCodes[418] = "I'm a teapot";
-		statusCodes[421] = "Misdirected Request";
-		statusCodes[422] = "Unprocessable Entity";
-		statusCodes[429] = "Too Many Requests";
-		statusCodes[431] = "Request Header Fields Too Large";
-		statusCodes[449] = "Retry With";
-		statusCodes[499] = "Client Closed Request";
-		statusCodes[500] = "Internal Server Error";
-		statusCodes[501] = "Not Implemented";
-		statusCodes[503] = "Service Unavailable";//перегрузка сервера
-		statusCodes[505] = "HTTP Version Not Supported";
-	}
-} statusCodesInit;
-
 mapIntStr defaultErrorPages;
 static struct defaultErrorPagesInit
 {
@@ -86,32 +55,6 @@ int		Header::generateImagePage(std::string &body, std::string &errorurl)
 	close(fd);
 	body = bufStr;
 	return 0;
-};
-
-void	Header::generateErrorPage(std::string &body, mapIntStr const &error_pages)
-{
-	std::string errorurl;
-	constMapIntStrIter cit;
-	mapIntStrIter it;
-	if ((cit = error_pages.find(_statusCode)) != error_pages.end()){
-		std::cout << "custom" << std::endl;
-		errorurl = cit->second;
-		if (generateImagePage(body, errorurl) == 0)
-			return ;
-	}
-	if ((it = defaultErrorPages.find(_statusCode)) != defaultErrorPages.end()){
-		std::cout << "default" << std::endl;
-		errorurl = it->second;
-		if (generateImagePage(body, errorurl) == 0)
-			return ;
-	}
-	body = "<html>"
-		"<style> body {background-color: rgb(252, 243, 233);}"
-		"h1 {color: rgb(200, 0, 0);}"
-		"e1 {color: rgb(100, 0, 0);} </style>"
-		"<body> <h1>ERROR</h1><br><e1>";
-	body += size2Dec(_statusCode) + " " + statusCodes[_statusCode];//add explanation
-	body += "</e1></body></html>\n";
 };
 
 void	Header::createGeneralHeaders(stringMap &headersMap)

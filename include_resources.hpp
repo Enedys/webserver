@@ -79,6 +79,37 @@ typedef enum
 	bodyIsCGI				// cgi
 }		bodyType;
 
+mapIntStr statusCodes;
+static struct	statusCodesInit
+{
+	statusCodesInit(){
+		statusCodes[200] = "OK";
+		statusCodes[201] = "Created";
+		statusCodes[202] = "Accepted";
+		statusCodes[400] = "Bad Request";
+		statusCodes[401] = "Unauthorized";
+		statusCodes[403] = "Forbidden";//when autoindex is off and request is a folder
+		statusCodes[404] = "Not Found";
+		statusCodes[405] = "Method Not Allowed";
+		statusCodes[406] = "Not Acceptable";
+		statusCodes[408] = "Request Timeout";
+		statusCodes[411] = "Length Required";
+		statusCodes[414] = "URI Too Long";
+		statusCodes[415] = "Unsupported Media Type";
+		statusCodes[418] = "I'm a teapot";
+		statusCodes[421] = "Misdirected Request";
+		statusCodes[422] = "Unprocessable Entity";
+		statusCodes[429] = "Too Many Requests";
+		statusCodes[431] = "Request Header Fields Too Large";
+		statusCodes[449] = "Retry With";
+		statusCodes[499] = "Client Closed Request";
+		statusCodes[500] = "Internal Server Error";
+		statusCodes[501] = "Not Implemented";
+		statusCodes[503] = "Service Unavailable";//перегрузка сервера
+		statusCodes[505] = "HTTP Version Not Supported";
+	}
+}				statusCodesInit;
+
 /* Typedefs */
 typedef std::map<std::string, std::string>					stringMap;
 typedef std::map<std::string, std::string>::iterator		mapIter;

@@ -1,4 +1,6 @@
 #pragma once
+
+#include <dirent.h>
 #include "include_resources.hpp"
 #include "RequestData.hpp"
 #include "Parser.hpp"
@@ -10,13 +12,16 @@ class AMethod
 protected:
 	int					&_statusCode;
 	RequestData	const	&data;
-	Header				*_header;
+	Header				*_header;//do not need anymore
 	CGI					cgi;
 
 	int					_fd;
-	stringMap			_headersMap;
+	stringMap			_headersMap;//будет не нужна, тк можно сразу в стр
 	methodType			_type;
 	bodyType			_bodyType;
+
+	std::string			_output;
+	cgiStatus			cgiStatus;
 	AMethod();
 
 public:
@@ -26,7 +31,7 @@ public:
 	static const std::string	Methods[methodNums];
 	static bool					isValidMethod(std::string const &method);
 
-	virtual MethodStatus	createHeader() = 0;
+	virtual MethodStatus	createHeader() = 0;// create response
 	virtual MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus) = 0;
 	virtual MethodStatus	sendHeader(int socket) = 0;
 	virtual MethodStatus	manageRequest() = 0;
@@ -37,4 +42,7 @@ public:
 	CGI						&getCGI();
 	bodyType				&getBodyType();
 	int						&getFd();
+
+	virtual std::string		&AMethod::generateErrorPage();//уже часть у Дани есть
+	virtual std::string		&AMethod::generateIdxPage();
 };

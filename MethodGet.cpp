@@ -6,121 +6,50 @@ MethodGet::~MethodGet(){ delete _header; };
 MethodStatus		MethodGet::sendResponse(int socket) { return ok; };
 MethodStatus		MethodGet::sendHeader(int socket) { return ok; };
 
-void			MethodGet::generateIdxPage(){
-
-	DIR				*dir;
-	struct dirent	*cur;
-
-	dir = opendir(data.uri.script_name.c_str());
-	if (!dir){//EACCES
-		_statusCode = errorOpeningURL;
-		return ;
-	}
-	_body = "<html><head><style> \
-					body {background-color: rgb(252, 243, 233);}\
-					h1   {color: lightseagreen;}\
-					td   {color: rgb(75, 8, 23);}\
-					a    {color: rgba(255, 99, 71, 1);}\
-			</style></head><body>"
-			"<h1>Directory index</h1><table style=\"width:80%\">";
-
-	std::string fname(data.uri.request_uri);
-	if (fname.at(fname.length() - 1) != '/')
-		fname.push_back('/');
-
-	errno = 0;
-	while ((cur = readdir(dir)) != NULL){//) && errno == 0){
-		if (strcmp(cur->d_name, ".") == 0)
-			continue ;
-
-		std::string fullPath(data.uri.script_name);
-		if (fullPath.at(fullPath.length() - 1) != '/')
-			fullPath.push_back('/');
-		fullPath += cur->d_name;
-		struct stat	st;
-		char buf[100];
-		stat(fullPath.c_str(), &st);
-		struct tm *tm2 = gmtime(&st.st_mtime);
-		strftime(buf, 100, "%d-%b-%Y %H:%M\n", tm2);
-		std::string lastModified(buf);
-		size_t size = st.st_size;
-		std::string fileSize = size2Dec(size);
-		if (S_ISDIR(st.st_mode))
-			fileSize = "-";
-
-		_body += "<tr><td><a href=\"" + fname + cur->d_name;
-		std::cout << "_body: " << _body << std::endl;
-		if (S_ISDIR(st.st_mode))
-			_body += "/";
-		_body += "\">" + std::string(cur->d_name);
-		if (S_ISDIR(st.st_mode))
-			_body += "/";
-		_body += "</a></td><td><small>" + lastModified + "</small></td><td><small>" + fileSize + "</small></td></tr><br>";
-	}
-	_body += "</body>\n</html>\n";
-	closedir(dir);
-}
-
 MethodStatus	MethodGet::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return (ok); };
 
 // POST || .php .py (cgi in config) || GET HEAD + no autoindex + IS_DIR + stat(index.php) in config - manageRequest
 //is error and error_page is set ad cgi extension - create header
 
-//always allowed. but others...
 MethodStatus	MethodGet::manageRequest()
 {
-
-	if (_statusCode != 0)
+	if (_statusCode != 0)//по старой логике
 		return ok;
 
-	// если файл сжи
+	if (_bodyType == bodyIsTextErrorPage)
+		_body = generateErrorPage();
+	else if (_bodyType == bodyIsAutoindex)
+		_body = generateIdxPage();
 
-	struct stat	st;
-	_statusCode = okSuccess;
-	if (stat(data.uri.script_name.c_str(), &st) == -1){// && errno == ENOENT)
-		_statusCode = notFound;
-		return error;
-	}
-
-	if (S_ISDIR(st.st_mode)){
-		if (data.location->autoindex)
-			generateIdxPage();
-		else {
-			_statusCode = errorOpeningURL;//403 Forbidden
-			return error;
-			// check index pages.
-			//   - взять первый файл если сжи то
-			//   - если есть ехе файлы
-		}
-	}
-
-	// else if (S_ISREG(st.st_mode) && (_fd = open(data.uri.script_name.c_str(), O_RDONLY | O_NONBLOCK)) < 0){// else S_ISFIFO S_ISLNK /// O_DIRECTORY
-	else if ((_fd = open(data.uri.script_name.c_str(), O_RDONLY | O_NONBLOCK)) < 0)
+	if (_bodyType == bodyIsCGI)
 	{
-		_statusCode = errorOpeningURL;
-		return (error);
+		_statusCode = cgi.init(data);
 	}
+	// else // это мб у Дани
+	// {
+	// 	_fd = open(data.uri.script_name.c_str(), O_RDONLY | O_NONBLOCK);
+	// 	if (_fd < 0)
+	// 		_statusCode = errorOpeningURL;
+	// }
+
 	return ok;
 };
 
-MethodStatus	MethodGet::createHeader()
+MethodStatus	MethodGet::createHeader()//createResponse()
 {
+	if (_bodyType == bodyIsCGI){
+		// cgi.smartOutput(_body);
+		return ok;
+	}
 
-	// std::string output;//getOutput();
-	// if (_bodyType == bodyIsTextErrorPage)
-	// 	output = generateErrorPage(_statusCode);
-	// if (_bodyType == bodyIsAutoindex)
-	// 	output = generateIndexPage(_statusCode);
-
-
-	_header = new Header(data.uri.script_name, data.location->root, _statusCode);
+	_header = new Header(data.uri.script_name, data.location->root, _statusCode);//get rid of
 
 	std::cout << "\n////\tGET METHOD, statusCode: " << _statusCode << std::endl;
 
 	_header->createGeneralHeaders(_headersMap);
 
-	if (_statusCode < 200 || _statusCode > 206)
-		_header->generateErrorPage(_body, data.serv->error_pages);
+	// if (_statusCode < 200 || _statusCode > 206)
+	// 	_header->generateErrorPage(_body, data.serv->error_pages);
 	// else if (_body.length() == 0)///
 	_header->addContentLengthHeader(_headersMap, _body);//for GET//body for auto+error//if not dir!
 
@@ -133,13 +62,15 @@ MethodStatus	MethodGet::createHeader()
 	// _header->addTransferEncodingHeader(_headersMap, _headersMapRequest);
 	_header->addAuthenticateHeader(_headersMap);
 
+	std::string headerStr = _header->headersToString(_headersMap);
+	_body.insert(0, headerStr);
+	delete _header;
+
 	return ok;
 };
 
 MethodStatus		MethodGet::sendBody(int socket)
 {
-	OutputConfigurator	cfg(data, cgi, _statusCode, flags);
-
 	std::string	response;
 	size_t		readBytes;
 	size_t		sentBytes;
@@ -147,42 +78,55 @@ MethodStatus		MethodGet::sendBody(int socket)
 	size_t		readBuf = _bs;
 
 	memset(buf, 0, _bs);
-	if (_statusCode != okSendingInProgress){
-		response = _header->headersToString(_headersMap);
-		size_t headersize = response.length();
-
-		if (cfg.getBodyType() == bodyIsAutoindex ||
-			cfg.getBodyType() == bodyIsTextErrorPage){
-			response += cfg.getOutputPage();
-			_bytesToSend = response.length();
-		}
-		else if (cfg.getBodyType() == bodyIsCGI){
-			_bytesToSend = cfg.getCGIResponseLength();//total length of all chunks from header//or one chunk length & flag
-		}
-		else {
+	if (_statusCode != okSendingInProgress)//do not update _statusCode
+	{
+		if (_bodyType == bodyIsFile)
+		{
 			struct stat sbuf;
 			fstat(_fd, &sbuf);
-			_bytesToSend = headersize + sbuf.st_size;
-			readBuf -= headersize;
+			_bytesToSend = _body.length() + sbuf.st_size;
+			readBuf -= _body.length();
 		}
+		else
+			_bytesToSend = _body.length();
 	}
+
 	if (!_remainder.empty()){//only if not a full response was sent (by send)
-		readBuf = _bs - _remainder.length();
-		response = _remainder;
+		// if (_bodyType == bodyIsCGI)
+		// {
+		// 	response += _remainder;
+		// }
+		// else
+		// {
+			readBuf = _bs - _remainder.length();
+			response = _remainder;
+		// }
 	}
-	if (cfg.getBodyType() == bodyIsFile ||
-		cfg.getBodyType() == bodyIsCGI)
+
+	if (_bodyType == bodyIsFile)
 	{
-		readBytes = read(_fd, buf, readBuf);//configure _fd before!
-		if (readBytes < 0){//what means if reading < 0 from cgi?
+		readBytes = read(_fd, buf, readBuf);	//configure _fd before!
+		if (readBytes < 0){
 			_statusCode = errorReadingURL;
 			close(_fd);
-			return error;//what happens after, above?
+			return error;//what happens after, a_body.length();bove?
 		}
 		buf[readBuf] = '\0';
 		std::string bufStr(buf, readBytes);
 		response += bufStr;
 	}
+	else if (_bodyType == bodyIsCGI)
+	{
+		// _statusCode = cgi.smartOutput(response);
+		// if (!_remainder.empty())
+		// 	response.insert(0, _remainder);//overflow velocity?
+		// // _bytesToSend = response.length();
+
+		if (_remainder.empty())
+			_statusCode = cgi.smartOutput(response);
+		// _bytesToSend = response.length();
+	}
+
 
 	sentBytes = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
 	if (sentBytes < 0 || errno == EMSGSIZE){
@@ -194,10 +138,13 @@ MethodStatus		MethodGet::sendBody(int socket)
 		_remainder.assign(response.c_str(), sentBytes, response.length() - sentBytes);
 		_sentBytesTotal += sentBytes;
 		_statusCode = okSendingInProgress;
-		return inprogress;
+		return inprogress;//cgi
 	};
 	// _remainder.clear();//
-	_sentBytesTotal += sentBytes;
+	if (_bodyType == bodyIsCGI && _statusCode == ok)
+		return ok;
+
+	_sentBytesTotal += sentBytes;//
 	if (_sentBytesTotal < _bytesToSend){
 		_statusCode = okSendingInProgress;
 		return inprogress;
@@ -206,3 +153,4 @@ MethodStatus		MethodGet::sendBody(int socket)
 	close(_fd);
 	return ok;
 }
+

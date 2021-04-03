@@ -1,6 +1,5 @@
 #pragma once
-#include <dirent.h>
-#include <iostream>
+
 #include "Method.hpp"
 
 //max body size
@@ -31,6 +30,4 @@ public:
 	virtual MethodStatus	sendBody(int socket);//4
 
 	virtual MethodStatus	sendResponse(int socket);
-
-	void					generateIdxPage();
 };
