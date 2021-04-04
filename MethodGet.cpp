@@ -2,7 +2,7 @@
 #include "Header.hpp"
 #include "OutputConfigurator.hpp"
 
-MethodGet::~MethodGet(){ delete _header; };
+MethodGet::~MethodGet(){};
 MethodStatus		MethodGet::sendResponse(int socket) { return ok; };
 MethodStatus		MethodGet::sendHeader(int socket) { return ok; };
 
@@ -13,144 +13,55 @@ MethodStatus	MethodGet::processBody(const std::string &requestBody, MethodStatus
 
 MethodStatus	MethodGet::manageRequest()
 {
-	if (_statusCode != 0)//по старой логике
-		return ok;
+	// if (_statusCode != 0)//по старой логике - надо ли оставить Д?
+	// 	return ok;
+	std::cout << "_bodyType manageRequest: " << _bodyType << std::endl;
 
-	if (_bodyType == bodyIsTextErrorPage)
-		_body = generateErrorPage();
-	else if (_bodyType == bodyIsAutoindex)
-		_body = generateIdxPage();
-
-	if (_bodyType == bodyIsCGI)
+	if (_bodyType == bodyIsAutoindex && (generateIdxPage(_body) < 0))
 	{
-		_statusCode = cgi.init(data);
+		_statusCode = 404;// дальше показать индексовую страницу, если она есть
+		// _bodyType = bodyNotDefined;
 	}
-	// else // это мб у Дани
-	// {
-	// 	_fd = open(data.uri.script_name.c_str(), O_RDONLY | O_NONBLOCK);
-	// 	if (_fd < 0)
-	// 		_statusCode = errorOpeningURL;
-	// }
-
-	return ok;
+	return ok;//
 };
+
+	// 0 bodyNotDefined,
+	// 1 bodyIsEmpty,
+	// 2 bodyIsAutoindex,		// text
+	// 3 bodyIsTextErrorPage,	// text
+	// 4 bodyIsFile,			// file: regularFile, indexFile, errorFile
+	// 5 bodyIsCGI				// cgi
 
 MethodStatus	MethodGet::createHeader()//createResponse()
 {
+	std::cout << "_bodyType createHeader: " << _bodyType << std::endl;
+
 	if (_bodyType == bodyIsCGI){
-		// cgi.smartOutput(_body);
+		_statusCode = cgi.init(data);//return 200
 		return ok;
 	}
+	if (_bodyType == bodyNotDefined)//bodyIsTextErrorPage)////->сказать Дане, надо bodyIsTextErrorPage)
+		generateErrorPage(_body);
 
-	_header = new Header(data.uri.script_name, data.location->root, _statusCode);//get rid of
-
+	Header		header(data.uri.script_name, data.location->root, _statusCode);
+	stringMap	hmap;
 	std::cout << "\n////\tGET METHOD, statusCode: " << _statusCode << std::endl;
 
-	_header->createGeneralHeaders(_headersMap);
-
-	// if (_statusCode < 200 || _statusCode > 206)
-	// 	_header->generateErrorPage(_body, data.serv->error_pages);
-	// else if (_body.length() == 0)///
-	_header->addContentLengthHeader(_headersMap, _body);//for GET//body for auto+error//if not dir!
+	header.createGeneralHeaders(hmap);
+	header.addContentLengthHeader(hmap, _body);//for GET//body for auto+error//if not dir!
 
 	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206))
-		_header->createEntityHeaders(_headersMap);
+		header.createEntityHeaders(hmap);
 	if (_statusCode == 405)
-		_header->addAllowHeader(_headersMap, *data.location);
-	_header->addLocationHeader(_headersMap);//if redirect
-	_header->addRetryAfterHeader(_headersMap);//503 429
-	// _header->addTransferEncodingHeader(_headersMap, _headersMapRequest);
-	_header->addAuthenticateHeader(_headersMap);
+		header.addAllowHeader(hmap, *data.location);
+	header.addLocationHeader(hmap);//if redirect
+	header.addRetryAfterHeader(hmap);//503 429
+	// header.addTransferEncodingHeader(hmap, hmapRequest);
+	header.addAuthenticateHeader(hmap);
 
-	std::string headerStr = _header->headersToString(_headersMap);
+	std::string headerStr;
+	header.headersToString(hmap, headerStr);
 	_body.insert(0, headerStr);
-	delete _header;
 
 	return ok;
 };
-
-MethodStatus		MethodGet::sendBody(int socket)
-{
-	std::string	response;
-	size_t		readBytes;
-	size_t		sentBytes;
-	char		buf[_bs + 1];
-	size_t		readBuf = _bs;
-
-	memset(buf, 0, _bs);
-	if (_statusCode != okSendingInProgress)//do not update _statusCode
-	{
-		if (_bodyType == bodyIsFile)
-		{
-			struct stat sbuf;
-			fstat(_fd, &sbuf);
-			_bytesToSend = _body.length() + sbuf.st_size;
-			readBuf -= _body.length();
-		}
-		else
-			_bytesToSend = _body.length();
-	}
-
-	if (!_remainder.empty()){//only if not a full response was sent (by send)
-		// if (_bodyType == bodyIsCGI)
-		// {
-		// 	response += _remainder;
-		// }
-		// else
-		// {
-			readBuf = _bs - _remainder.length();
-			response = _remainder;
-		// }
-	}
-
-	if (_bodyType == bodyIsFile)
-	{
-		readBytes = read(_fd, buf, readBuf);	//configure _fd before!
-		if (readBytes < 0){
-			_statusCode = errorReadingURL;
-			close(_fd);
-			return error;//what happens after, a_body.length();bove?
-		}
-		buf[readBuf] = '\0';
-		std::string bufStr(buf, readBytes);
-		response += bufStr;
-	}
-	else if (_bodyType == bodyIsCGI)
-	{
-		// _statusCode = cgi.smartOutput(response);
-		// if (!_remainder.empty())
-		// 	response.insert(0, _remainder);//overflow velocity?
-		// // _bytesToSend = response.length();
-
-		if (_remainder.empty())
-			_statusCode = cgi.smartOutput(response);
-		// _bytesToSend = response.length();
-	}
-
-
-	sentBytes = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
-	if (sentBytes < 0 || errno == EMSGSIZE){
-		_statusCode = errorSendingResponse;
-		close(_fd);
-		return error;
-	}
-	if (sentBytes < response.length()){
-		_remainder.assign(response.c_str(), sentBytes, response.length() - sentBytes);
-		_sentBytesTotal += sentBytes;
-		_statusCode = okSendingInProgress;
-		return inprogress;//cgi
-	};
-	// _remainder.clear();//
-	if (_bodyType == bodyIsCGI && _statusCode == ok)
-		return ok;
-
-	_sentBytesTotal += sentBytes;//
-	if (_sentBytesTotal < _bytesToSend){
-		_statusCode = okSendingInProgress;
-		return inprogress;
-	}
-
-	close(_fd);
-	return ok;
-}
-

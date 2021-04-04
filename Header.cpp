@@ -1,10 +1,5 @@
 #include "Header.hpp"
 
-Header::Header(std::string const &path, std::string const &root, int const statusCode)
-	: _path(path), _root(root), _statusCode(statusCode) {};
-
-Header::~Header(){ };
-
 mapIntStr defaultErrorPages;
 static struct defaultErrorPagesInit
 {
@@ -13,49 +8,20 @@ static struct defaultErrorPagesInit
 	}
 } defaultErrorPagesInit;
 
+Header::Header(std::string const &path, std::string const &root, int const statusCode)
+	: _path(path), _root(root), _statusCode(statusCode) {
+	};
+
+Header::~Header(){ };
+
 void	Header::headersToString(stringMap const &headersMap, std::string &output)
 {
 	std::string statusCodeStr = size2Dec(_statusCode);
-	output += "HTTP/1.1 " + statusCodeStr + " " + statusCodes[_statusCode] + CRLF;
+	output += "HTTP/1.1 " + statusCodeStr + " " + sc[_statusCode] + CRLF;
 	for (constMapIter it = headersMap.begin(); it != headersMap.end(); ++it)
 		output += (it->first) + ": " + (it->second) + CRLF;
 	output += CRLF;
 }
-
-std::string const & Header::headersToString(stringMap const &headersMap)
-{
-	std::string output;
-	std::string statusCodeStr = size2Dec(_statusCode);
-	output += "HTTP/1.1 " + statusCodeStr + " " + statusCodes[_statusCode] + CRLF;
-	for (constMapIter it = headersMap.begin(); it != headersMap.end(); ++it)
-		output += (it->first) + ": " + (it->second) + CRLF;
-	output += CRLF;
-	return output;
-};
-
-int		Header::generateImagePage(std::string &body, std::string &errorurl)
-{
-	size_t len = _root.length();
-	if (_root.at(_root.length() - 1) == '/')
-		len--;
-	std::string path(_root, 0, len);
-	if (*errorurl.begin() != '/')
-		path += '/';
-	path += errorurl;
-	int fd = open(path.c_str(), O_RDONLY);
-	if (fd < 0)
-		return -1;
-	struct stat st;
-	int rc = stat(path.c_str(), &st);
-	if (rc < 0 || !S_ISREG(st.st_mode))
-		return -1;
-	char buf[4096 * 24];
-	int res = read(fd, buf, st.st_size);
-	std::string bufStr(buf, st.st_size);
-	close(fd);
-	body = bufStr;
-	return 0;
-};
 
 void	Header::createGeneralHeaders(stringMap &headersMap)
 {

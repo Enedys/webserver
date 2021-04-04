@@ -7,21 +7,28 @@
 #include "Header.hpp"
 #include "CGI.hpp"
 
+extern mapIntStr sc;
+
 class AMethod
 {
 protected:
 	int					&_statusCode;
 	RequestData	const	&data;
-	Header				*_header;//do not need anymore
 	CGI					cgi;
 
 	int					_fd;
-	stringMap			_headersMap;//будет не нужна, тк можно сразу в стр
 	methodType			_type;
 	bodyType			_bodyType;
 
 	std::string			_output;
 	cgiStatus			cgiStatus;
+
+	size_t				_sentBytesTotal;
+	size_t				_bytesToSend;
+	static const size_t	_bs = 4096 * 512;
+	std::string			_remainder;
+	std::string			_body;
+
 	AMethod();
 
 public:
@@ -35,7 +42,7 @@ public:
 	virtual MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus) = 0;
 	virtual MethodStatus	sendHeader(int socket) = 0;
 	virtual MethodStatus	manageRequest() = 0;
-	virtual MethodStatus	sendBody(int socket) = 0;
+	virtual MethodStatus	sendBody(int socket);
 	virtual MethodStatus	sendResponse(int socket) = 0;
 
 	int						getStatusCode();
@@ -43,6 +50,6 @@ public:
 	bodyType				&getBodyType();
 	int						&getFd();
 
-	virtual std::string		&AMethod::generateErrorPage();//уже часть у Дани есть
-	virtual std::string		&AMethod::generateIdxPage();
+	virtual void			generateErrorPage(std::string &body);
+	virtual int				generateIdxPage(std::string &body);
 };

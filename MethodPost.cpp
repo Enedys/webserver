@@ -66,7 +66,7 @@ MethodStatus	MethodPost::createHeader()
 	{
 		std::string str;
 		_header = new Header(data.uri.script_name, data.location->root, _statusCode);
-		_header->generateErrorPage(str, data.serv->error_pages);
+		// _header->generateErrorPage(str, data.serv->error_pages);
 		_header->createGeneralHeaders(_headersMap);
 		_header->addContentLengthHeader(_headersMap, str);
 		_header->headersToString(_headersMap, _body);

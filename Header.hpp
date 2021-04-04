@@ -8,6 +8,8 @@
 #include "RequestData.hpp"
 #include "include_resources.hpp"
 
+extern mapIntStr sc;
+
 class Header
 {
 private:
@@ -37,8 +39,4 @@ public:
 	void	addAuthenticateHeader(stringMap &_headersMap);
 
 	void	headersToString(stringMap const &headersMap, std::string &output);
-	std::string const &headersToString(stringMap const &headersMap);
-
-	void	generateErrorPage(std::string &body, mapIntStr const &error_pages);
-	int		generateImagePage(std::string &body, std::string &errorurl);
 };

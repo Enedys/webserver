@@ -1,55 +1,45 @@
 #include "MethodOption.hpp"
 
-// MethodOption::MethodOption(t_serv const &config, int &code, stringMap const &headers) : AMethod(config, code, headers) {};
 MethodOption::~MethodOption() {};
 MethodStatus	MethodOption::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return ok; };
 MethodStatus	MethodOption::sendResponse(int socket) { return ok; }
+MethodStatus	MethodOption::sendHeader(int socket){ return ok; };
+
 MethodStatus	MethodOption::manageRequest()
 {
 	if (!data.location->optionsAvailable)
 		_statusCode = methodNotAllowed;
-	else
-		_statusCode = okSuccess;
+
+	else if (_bodyType == bodyIsAutoindex)
+	{
+		_statusCode = 403;
+		_bodyType = bodyNotDefined;///// bodyIsError
+	}
+
 	return ok;
 };
 
 MethodStatus	MethodOption::createHeader()
 {
-	// _header = new Header(data.uri.script_name, _statusCode);
-	_header = new Header(data.uri.script_name, data.location->root, _statusCode);
+	if (_bodyType == bodyIsCGI)// do not to init cgi
+		return ok;
+
+	if (_bodyType == bodyIsTextErrorPage)
+		generateErrorPage(_body);
+
+	Header		header(data.uri.script_name, data.location->root, _statusCode);
+	stringMap	hmap;
 	std::cout << "////\t\t OPTIONS METHOD, statusCode: " << _statusCode << std::endl;
 
-	_header->createGeneralHeaders(_headersMap);
-	if (_statusCode < 200 || _statusCode > 206)
-		_header->generateErrorPage(_body, data.serv->error_pages);
-	_headersMap.insert(std::pair<std::string, std::string>("Content-Length", "0"));
-	_header->addAllowHeader(_headersMap, *data.location);
+	header.createGeneralHeaders(hmap);
+	// header.addContentLengthHeader(hmap, _body);
+	hmap.insert(std::pair<std::string, std::string>("Content-Length", "0"));//can it be specified in request before?
 
-	return ok;
-};
+	header.addAllowHeader(hmap, *data.location);
 
-MethodStatus	MethodOption::sendHeader(int socket){ return ok; };
+	std::string headerStr;
+	header.headersToString(hmap, headerStr);
+	_body.insert(0, headerStr);
 
-MethodStatus	MethodOption::sendBody(int socket)
-{//send _body (if error?)
-	std::string	response;
-	size_t		sentBytes;
-
-	if (_remainder.length())
-		response = _remainder;
-	if (_statusCode != okSendingInProgress)
-		_header->headersToString(_headersMap, response);
-
-	sentBytes = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
-	if (sentBytes < 0 || errno == EMSGSIZE){
-		_statusCode = errorSendingResponse;
-		return error;
-	}
-	if (sentBytes < response.length()){
-		_remainder.assign(response.c_str(), sentBytes, response.length() - sentBytes);
-		_statusCode = okSendingInProgress;
-		return inprogress;
-	};
-	_remainder.clear();
 	return ok;
 };

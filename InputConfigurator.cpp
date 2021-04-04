@@ -1,6 +1,4 @@
-#pragma once
-
-#include <OutputConfigurator.hpp>
+#include "OutputConfigurator.hpp"
 
 bodyType const	OutputConfigurator::getBodyType()
 {
@@ -36,7 +34,7 @@ bool			OutputConfigurator::checkAndSetIndexPage(std::string const &indexPage)
 
 bool			OutputConfigurator::findIndexPageInConfig()
 {
-	std::vector<std::string>::iterator it = _data.location->index.begin();
+	std::vector<std::string>::const_iterator it = _data.location->index.begin();
 	while (it != _data.location->index.end())
 	{
 		if (checkAndSetIndexPage(*it) == true)
@@ -62,7 +60,7 @@ bodyType		OutputConfigurator::defineInputType(mode_t const &mode)
 
 	_statusCode = 403;
 
-	return bodyIsError;
+	return bodyNotDefined;//здесь было: bodyIsError - что вместо него
 }
 
 MethodStatus	OutputConfigurator::inputConfigurator()
@@ -76,8 +74,9 @@ MethodStatus	OutputConfigurator::inputConfigurator()
 
 	_bodyType = defineInputType(st.st_mode);
 
-	if (_bodyType == bodyIsCGI)// а что c delete? // думаю, что cgi должен все же запускать метод
-		_statusCode = cgi.init();
+	// if (_bodyType == bodyIsCGI)// а что c delete? // думаю, что cgi должен все же запускать метод
+	// 	_statusCode = _cgi.init();
+	std::cout << "inputConfigurator: _bodyType: " << _bodyType << std::endl;
 
 	return ok;
 }

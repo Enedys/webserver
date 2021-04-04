@@ -30,13 +30,12 @@ private:
 	MethodStatus	configurateErrorOutput();
 	MethodStatus	setErrorPage(bsPair const &ep);
 
-	bodyType	defineInputType(mode_t const &mode);
-	bool		findIndexPageInConfig();
-	bool		checkAndSetIndexPage(std::string const &indexPage);
+	bodyType		defineInputType(mode_t const &mode);
+	bool			findIndexPageInConfig();
+	bool			checkAndSetIndexPage(std::string const &indexPage);
 
 public:
 	void			setFd(int &fd) const;
-	MethodStatus	configurate();
 	OutputConfigurator(RequestData &data, CGI &cgi, int &statusCode, bodyType &bodyType);
 	~OutputConfigurator();
 	MethodStatus		configurate();

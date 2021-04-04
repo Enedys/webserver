@@ -23,6 +23,7 @@ private:
     MethodPost(/* args */);
     CGI cgi;
 	Header				*_header;
+	stringMap			_headersMap;
     std::string 		outputBuf;
 	std::string			_body;//ololo
 	MethodStatus	sendError(int socket);

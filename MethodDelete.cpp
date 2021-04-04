@@ -37,66 +37,50 @@ int				MethodDelete::deleteDirectory(std::string const &path)
 	return status;
 }
 
-MethodStatus	MethodDelete::manageRequest()
+MethodStatus	MethodDelete::manageRequest()//do i need to check if statuscode is already error?
 {
-	if (!data.location->deleteAvailable
-	|| data.uri.script_name.length() >= PATH_MAX - 1)//
-	{
+	if (!data.location->deleteAvailable){
 		_statusCode = methodNotAllowed;
-		return error;
+		return error;//
 	}
-	_statusCode = okSuccess;
+	// if (_bodyType == bodyIsAutoindex) // == нельзя удалить папку
+	// 	_statusCode = errorOpeningURL;
 
 	struct stat	st;
-	if (stat(data.uri.script_name.c_str(), &st) == -1){
-		_statusCode = notFound;
-		return ok;
-	}
+	stat(data.uri.script_name.c_str(), &st);
 	if (S_ISDIR(st.st_mode))
 		_statusCode = deleteDirectory(data.uri.script_name);
-	else if (open(data.uri.script_name.c_str(), 0) < 0 || unlink(data.uri.script_name.c_str()) == -1)//EACCES//EBUSY//EISDIR//
+	// else if (open(data.uri.script_name.c_str(), 0) < 0 || unlink(data.uri.script_name.c_str()) == -1)//EACCES//EBUSY//EISDIR//
+	else if (unlink(data.uri.script_name.c_str()) == -1)
 		_statusCode = errorOpeningURL;
+	else
+		_statusCode = okSuccess;
 
 	return ok;
 };
 
 MethodStatus	MethodDelete::createHeader()
 {
-	// _header = new Header(data.uri.script_name, _statusCode);
-	_header = new Header(data.uri.script_name, data.location->root, _statusCode);
+	if (_bodyType == bodyIsTextErrorPage)
+		generateErrorPage(_body);
+
+	Header		header(data.uri.script_name, data.location->root, _statusCode);
+	stringMap	hmap;
+
 	std::cout << "////\t\t DELETE METHOD, statusCode: " << _statusCode << std::endl;
 
-	_header->createGeneralHeaders(_headersMap);
-	// if (_statusCode < 200 || _statusCode > 206)
-	// 	_header->generateErrorPage(_body, data.serv->error_pages);
-	_headersMap.insert(std::pair<std::string, std::string>("Content-Length", "0"));//
-	if (_statusCode == methodNotAllowed)
-		_header->addAllowHeader(_headersMap, *data.location);
+	header.createGeneralHeaders(hmap);
+	// header.addContentLengthHeader(hmap, _body);
+	hmap.insert(std::pair<std::string, std::string>("Content-Length", "0"));//can it be specified in request before?
+
+	if (_statusCode == 405)
+		header.addAllowHeader(hmap, *data.location);
+
+	std::string headerStr;
+	header.headersToString(hmap, headerStr);
+	_body.insert(0, headerStr);
+
 	return ok;
 };
 
 MethodStatus	MethodDelete::sendHeader(int socket){ return ok; };
-
-MethodStatus	MethodDelete::sendBody(int socket)
-{
-	std::string	response;
-	size_t		sentBytes;
-
-	if (_remainder.length())
-		response = _remainder;
-	if (_statusCode != okSendingInProgress)
-		_header->headersToString(_headersMap, response);
-
-	sentBytes = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
-	if (sentBytes < 0 || errno == EMSGSIZE){
-		_statusCode = errorSendingResponse;
-		return error;
-	}
-	if (sentBytes < response.length()){
-		_remainder.assign(response.c_str(), sentBytes, response.length() - sentBytes);
-		_statusCode = okSendingInProgress;
-		return inprogress;
-	};
-	_remainder.clear();
-	return ok;
-};

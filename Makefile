@@ -14,6 +14,7 @@ FLAGS			=	-Wall -Werror -Wextra -g
 
 HEADERS			=	NewClient.hpp \
 					Debugger.hpp \
+					include_resources.hpp \
 					Header.hpp \
 					Method.hpp \
 					MethodDelete.hpp \
@@ -27,10 +28,9 @@ HEADERS			=	NewClient.hpp \
 					Server.hpp \
 					WebServer.hpp \
 					CGI.hpp \
-					include_resources.hpp \
 					RequestData.hpp \
 					URI.hpp \
-					OutputConfigurator.hpp\
+					OutputConfigurator.hpp
 
 SRC				=	Debugger.cpp \
 					Header.cpp \
@@ -50,6 +50,7 @@ SRC				=	Debugger.cpp \
 					RequestData.cpp \
 					CGI.cpp \
 					URI.cpp \
+					InputConfigurator.cpp \
 					OutputConfigurator.cpp \
 					main.cpp
 

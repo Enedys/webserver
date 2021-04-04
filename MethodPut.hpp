@@ -7,8 +7,6 @@ private:
 	MethodPut();
 	MethodPut(MethodPut const & src);
 	MethodPut & operator=(MethodPut const & src);
-	std::string			_remainder;
-	std::string			_body;
 
 public:
 	MethodPut(int &status, RequestData const &data) :
@@ -18,6 +16,5 @@ public:
 	virtual MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus);
 	virtual MethodStatus	sendHeader(int socket);
 	virtual MethodStatus	manageRequest();
-	virtual MethodStatus	sendBody(int socket);
 	virtual MethodStatus	sendResponse(int socket);
 };

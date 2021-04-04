@@ -115,7 +115,9 @@ MethodStatus		Client::configureOutput()
 
 MethodStatus		Client::configureInput()
 {
-	// Olyas code
+	OutputConfigurator	outConf(procData, _method->getCGI(),\
+						_statusCode, _method->getBodyType());
+	outConf.inputConfigurator();
 	return (ok);
 }
 
@@ -137,7 +139,7 @@ MethodStatus		Client::requestInterraction()
 	if (_state == manageRequest)
 		_state = getNextState(_method->manageRequest());
 
-	if (_state == readingBody) 
+	if (_state == readingBody)
 		_state = getNextState(_request.getRequestBody(_method));
 	else if (_request.getRequestState() == Request::body)	// cgi case, when we send answer,
 		if (_request.getRequestBody(_method) == error)		//  before read all request bodey
