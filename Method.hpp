@@ -12,6 +12,7 @@ protected:
 	int					_fd;
 	stringMap			_headersMap;
 	methodType			_type;
+	static const std::map<std::string, std::string> _mimeMap;
 	AMethod();
 
 public:
