@@ -40,7 +40,7 @@ MethodStatus	MethodPut::manageRequest()
 MethodStatus	MethodPut::createHeader()
 {
 	if (_bodyType == bodyIsCGI){
-		_statusCode = cgi.init(data);//always returns 200
+		// _statusCode = cgi.init(data);//always returns 200
 		return ok;
 	}
 	// if (_bodyType == bodyIsTextErrorPage) // в путе всегда bodyIsEmpty или bodyIsAutoindex

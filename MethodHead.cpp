@@ -21,7 +21,7 @@ MethodStatus	MethodHead::manageRequest()
 MethodStatus	MethodHead::createHeader()
 {
 	if (_bodyType == bodyIsCGI){
-		_statusCode = cgi.init(data);//return 200
+		// _statusCode = cgi.init(data);//return 200
 		return ok;
 	}
 	// if (_bodyType == bodyIsTextErrorPage)

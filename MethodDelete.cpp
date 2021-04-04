@@ -43,7 +43,7 @@ MethodStatus	MethodDelete::manageRequest()//do i need to check if statuscode is 
 		_statusCode = methodNotAllowed;
 		return error;//
 	}
-	// if (_bodyType == bodyIsAutoindex) // == нельзя удалить папку
+	// if (_bodyType == bodyIsAutoindex) // == если надо сделать, чтобы было нельзя удалить папку
 	// 	_statusCode = errorOpeningURL;
 
 	struct stat	st;

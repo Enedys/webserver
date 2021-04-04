@@ -22,6 +22,10 @@ MethodStatus	MethodGet::manageRequest()
 		_statusCode = 404;// дальше показать индексовую страницу, если она есть
 		// _bodyType = bodyNotDefined;
 	}
+	if (_bodyType == bodyIsCGI){
+		_statusCode = cgi.init(data);//return 200
+		return ok;
+	}
 	return ok;//
 };
 
@@ -35,11 +39,11 @@ MethodStatus	MethodGet::manageRequest()
 MethodStatus	MethodGet::createHeader()//createResponse()
 {
 	std::cout << "_bodyType createHeader: " << _bodyType << std::endl;
-
 	if (_bodyType == bodyIsCGI){
-		_statusCode = cgi.init(data);//return 200
+		// _statusCode = cgi.init(data);//return 200
 		return ok;
 	}
+
 	if (_bodyType == bodyNotDefined)//bodyIsTextErrorPage)////->сказать Дане, надо bodyIsTextErrorPage)
 		generateErrorPage(_body);
 
