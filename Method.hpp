@@ -42,8 +42,7 @@ public:
 	virtual MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus) = 0;
 	virtual MethodStatus	sendHeader(int socket) = 0;
 	virtual MethodStatus	manageRequest() = 0;
-	virtual MethodStatus	sendBody(int socket);
-	virtual MethodStatus	sendResponse(int socket) = 0;
+	virtual MethodStatus	sendResponse(int socket);
 
 	int						getStatusCode();
 	CGI						&getCGI();

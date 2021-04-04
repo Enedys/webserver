@@ -1,13 +1,13 @@
-#include "OutputConfigurator.hpp"
+#include "Configurator.hpp"
 
-OutputConfigurator::OutputConfigurator(RequestData &d, CGI &c, int &statusCode, bodyType &bodyType) :
+Configurator::Configurator(RequestData &d, CGI &c, int &statusCode, bodyType &bodyType) :
 _data(d), _cgi(c), _statusCode(statusCode), _bodyType(bodyType)
 {
 	cgi_path = NULL;
 	_fd = -1;
 }
 
-void	OutputConfigurator::setFd(int &fd) const
+void	Configurator::setFd(int &fd) const
 {
 	if (_bodyType != bodyIsFile)
 		return ;
@@ -17,18 +17,18 @@ void	OutputConfigurator::setFd(int &fd) const
 	fd = _fd;
 }
 
-OutputConfigurator::~OutputConfigurator()
+Configurator::~Configurator()
 {
 }
 
-bool	OutputConfigurator::errorOccured() const
+bool	Configurator::errorOccured() const
 {
 	if (_statusCode < 400)
 		return (false);
 	return (true);
 }
 
-bool		OutputConfigurator::CGIisOk() const
+bool		Configurator::CGIisOk() const
 {
 	cgiStatus cgiStatus = _cgi.getStatus();
 	if (cgiStatus == running || cgiStatus == done)
@@ -37,7 +37,7 @@ bool		OutputConfigurator::CGIisOk() const
 }
 
 std::string const
-		*OutputConfigurator::isCGI(std::string const &ext) const
+		*Configurator::isCGI(std::string const &ext) const
 {
 	if (!_data.serv)
 		return (NULL);
@@ -57,7 +57,7 @@ std::string const
 	}
 }
 
-bool	OutputConfigurator::fileExist(std::string const &f) const
+bool	Configurator::fileExist(std::string const &f) const
 {
 	struct stat	st;
 	if (stat(f.c_str(), &st) == -1)
@@ -65,7 +65,7 @@ bool	OutputConfigurator::fileExist(std::string const &f) const
 	return (true);
 }
 
-int		OutputConfigurator::openOutputFile(std::string const &f)
+int		Configurator::openOutputFile(std::string const &f)
 {
 	if (!fileExist(f))
 		return 404;
@@ -74,8 +74,8 @@ int		OutputConfigurator::openOutputFile(std::string const &f)
 	return 0;
 }
 
-bool	OutputConfigurator::isFile() const
-{		//maybe just check that _bodyType is a file? 
+bool	Configurator::isFile() const
+{		//maybe just check that _bodyType is a file?
 	std::string const	*method_name = _data.getMethod();
 	if (!method_name)
 		return (false);
@@ -86,7 +86,7 @@ bool	OutputConfigurator::isFile() const
 }
 
 MethodStatus
-		OutputConfigurator::configurateCorrectOutput()
+		Configurator::configurateCorrectOutput()
 {
 	if (CGIisOk())
 		_bodyType = bodyIsCGI;
@@ -114,7 +114,7 @@ bsPair	getPageByCode(mapIntStr const &map, int code)
 }
 
 MethodStatus
-		OutputConfigurator::runCGI(URI const &uri)
+		Configurator::runCGI(URI const &uri)
 {
 	_data.cgi_bin = *cgi_path;
 	if (!fileExist(_data.cgi_bin))
@@ -127,7 +127,7 @@ MethodStatus
 }
 
 MethodStatus
-		OutputConfigurator::setErrorPage(bsPair const &ep)
+		Configurator::setErrorPage(bsPair const &ep)
 {
 	bool	found = ep.first;
 	if (!found)
@@ -149,7 +149,7 @@ MethodStatus
 }
 
 MethodStatus
-		OutputConfigurator::configurateErrorOutput()
+		Configurator::configurateErrorOutput()
 {
 	if (CGIisOk())
 	{
@@ -157,11 +157,11 @@ MethodStatus
 		return (ok);
 	}
 	bsPair	configErrorPage = getPageByCode(_data.serv->error_pages, _statusCode);
-	MethodStatus	_status = setErrorPage(configErrorPage); 
+	MethodStatus	_status = setErrorPage(configErrorPage);
 	if (_status != error)
 		return (_status);
 	bsPair	defaultErrorPage = getPageByCode(_data.serv->error_pages, _statusCode); // here default pages need to find
-	_status = setErrorPage(defaultErrorPage); 
+	_status = setErrorPage(defaultErrorPage);
 	if (_statusCode != error)
 		return (_status);
 	_bodyType = bodyIsTextErrorPage;
@@ -169,7 +169,7 @@ MethodStatus
 }
 
 MethodStatus
-		OutputConfigurator::configurate()
+		Configurator::configurate()
 {
 	if (_cgi.getStatus() == running &&\
 		_cgi.httpStatus == 0)
@@ -180,4 +180,4 @@ MethodStatus
 	if (errorOccured())
 		return_status = configurateErrorOutput();
 	return (return_status);
-} 
+}

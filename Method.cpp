@@ -113,7 +113,7 @@ int					AMethod::generateIdxPage(std::string &body)
 };
 
 
-MethodStatus		AMethod::sendBody(int socket)
+MethodStatus		AMethod::sendResponse(int socket)
 {
 	std::string	response;//(_body)
 	size_t		res;

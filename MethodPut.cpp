@@ -66,4 +66,3 @@ MethodStatus	MethodPut::createHeader()
 
 MethodStatus	MethodPut::sendHeader(int socket){ return ok; };
 
-MethodStatus	MethodPut::sendResponse(int socket){ return ok; };

@@ -104,7 +104,7 @@ MethodStatus		Client::createNewMethod()
 
 MethodStatus		Client::configureOutput()
 {
-	OutputConfigurator	outConf(procData, _method->getCGI(),\
+	Configurator	outConf(procData, _method->getCGI(),\
 						_statusCode, _method->getBodyType());
 	if (outConf.configurate() == inprogress)
 		return (inprogress);
@@ -115,7 +115,7 @@ MethodStatus		Client::configureOutput()
 
 MethodStatus		Client::configureInput()
 {
-	OutputConfigurator	outConf(procData, _method->getCGI(),\
+	Configurator	outConf(procData, _method->getCGI(),\
 						_statusCode, _method->getBodyType());
 	outConf.inputConfigurator();
 	return (ok);
@@ -163,7 +163,7 @@ MethodStatus		Client::responseInterraction()
 		_state = getNextState(_method->sendHeader(_socket));
 
 	if (_state == sendingBody)
-		_state = getNextState(_method->sendBody(_socket));
+		_state = getNextState(_method->sendResponse(_socket));
 
 	if (_state == finalState)
 		if (refreshClient() == connectionClosed)

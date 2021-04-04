@@ -83,7 +83,7 @@ MethodStatus	MethodPost::sendHeader(int socket)
 	return ok;
 };
 
-MethodStatus	MethodPost::sendBody(int socket)
+MethodStatus	MethodPost::sendResponse(int socket)
 {
 	MethodStatus debug;
 	if (_statusCode == 200)
@@ -98,11 +98,6 @@ MethodStatus	MethodPost::sendBody(int socket)
 
 };
 
-
-
-MethodStatus		MethodPost::sendResponse(int socket) {
-	return ok;
-}
 
 MethodStatus MethodPost::sendError(int socket)
 {

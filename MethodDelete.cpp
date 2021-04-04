@@ -2,7 +2,6 @@
 
 MethodDelete::~MethodDelete() {};
 MethodStatus	MethodDelete::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return ok; };
-MethodStatus	MethodDelete::sendResponse(int socket) { return ok; }
 
 int				MethodDelete::deleteDirectory(std::string const &path)
 {

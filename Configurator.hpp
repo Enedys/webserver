@@ -6,7 +6,7 @@
 #include "URI.hpp"
 
 typedef std::pair<bool, std::string const &> bsPair;
-class OutputConfigurator
+class Configurator
 {
 private:
 	RequestData		&_data;
@@ -36,8 +36,8 @@ private:
 
 public:
 	void			setFd(int &fd) const;
-	OutputConfigurator(RequestData &data, CGI &cgi, int &statusCode, bodyType &bodyType);
-	~OutputConfigurator();
+	Configurator(RequestData &data, CGI &cgi, int &statusCode, bodyType &bodyType);
+	~Configurator();
 	MethodStatus		configurate();
 	MethodStatus		inputConfigurator();
 

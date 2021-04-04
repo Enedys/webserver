@@ -3,7 +3,6 @@
 
 MethodHead::~MethodHead() {};
 MethodStatus 	MethodHead::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return (ok); };
-MethodStatus	MethodHead::sendResponse(int socket) { return (ok); };
 MethodStatus	MethodHead::sendHeader(int socket) { return (ok); };
 
 MethodStatus	MethodHead::manageRequest()

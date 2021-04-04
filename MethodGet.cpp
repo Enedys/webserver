@@ -1,9 +1,8 @@
 #include "MethodGet.hpp"
 #include "Header.hpp"
-#include "OutputConfigurator.hpp"
+#include "Configurator.hpp"
 
 MethodGet::~MethodGet(){};
-MethodStatus		MethodGet::sendResponse(int socket) { return ok; };
 MethodStatus		MethodGet::sendHeader(int socket) { return ok; };
 
 MethodStatus	MethodGet::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return (ok); };

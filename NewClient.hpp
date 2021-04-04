@@ -9,7 +9,7 @@
 #include "MethodOption.hpp"
 #include "MethodDelete.hpp"
 #include "RequestData.hpp"
-#include "OutputConfigurator.hpp"
+#include "Configurator.hpp"
 
 typedef std::vector<s_loc>::iterator		locIter;
 typedef std::vector<s_loc>::const_iterator	constLocIter;

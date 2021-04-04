@@ -2,7 +2,6 @@
 
 MethodOption::~MethodOption() {};
 MethodStatus	MethodOption::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return ok; };
-MethodStatus	MethodOption::sendResponse(int socket) { return ok; }
 MethodStatus	MethodOption::sendHeader(int socket){ return ok; };
 
 MethodStatus	MethodOption::manageRequest()

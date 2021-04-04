@@ -1,16 +1,16 @@
-#include "OutputConfigurator.hpp"
+#include "Configurator.hpp"
 
-bodyType const	OutputConfigurator::getBodyType()
+bodyType const	Configurator::getBodyType()
 {
 	return this->_bodyType;
 };
 
-void			OutputConfigurator::updateBodyType(bodyType &newType)
+void			Configurator::updateBodyType(bodyType &newType)
 {
 	this->_bodyType = newType;
 };
 
-bool			OutputConfigurator::checkAndSetIndexPage(std::string const &indexPage)
+bool			Configurator::checkAndSetIndexPage(std::string const &indexPage)
 {
 	URI uri;
 
@@ -32,7 +32,7 @@ bool			OutputConfigurator::checkAndSetIndexPage(std::string const &indexPage)
 	return true;
 }
 
-bool			OutputConfigurator::findIndexPageInConfig()
+bool			Configurator::findIndexPageInConfig()
 {
 	std::vector<std::string>::const_iterator it = _data.location->index.begin();
 	while (it != _data.location->index.end())
@@ -44,7 +44,7 @@ bool			OutputConfigurator::findIndexPageInConfig()
 	return false;
 };
 
-bodyType		OutputConfigurator::defineInputType(mode_t const &mode)
+bodyType		Configurator::defineInputType(mode_t const &mode)
 {
 	if (!S_ISDIR(mode))
 		return isCGI(_data.uri.extension) ? bodyIsCGI : bodyIsFile;
@@ -63,7 +63,7 @@ bodyType		OutputConfigurator::defineInputType(mode_t const &mode)
 	return bodyNotDefined;//здесь было: bodyIsError - что вместо него
 }
 
-MethodStatus	OutputConfigurator::inputConfigurator()
+MethodStatus	Configurator::inputConfigurator()
 {
 	struct stat	st;
 	if (stat(_data.uri.script_name.c_str(), &st) == -1)
