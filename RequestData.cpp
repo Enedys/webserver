@@ -58,6 +58,11 @@ void		RequestData::setHeaderState(headerNum hN, bool error)
 	errorMask |= ((error == false) ? hN : 0);
 }
 
+void			RequestData::setCGIbin(std::string const &s)
+{
+	cgi_bin = s;
+}
+
 void		RequestData::procQualityHeaders()
 {
 	constMapIter	header;

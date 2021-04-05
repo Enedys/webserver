@@ -10,7 +10,7 @@ private:
 	MethodGet & operator=(MethodGet const & src);
 
 public:
-	MethodGet(int &status, RequestData const &data) :
+	MethodGet(int &status, RequestData &data) :
 		AMethod(status, data) { _type = GET; };
 	~MethodGet();
 	virtual MethodStatus	createHeader();

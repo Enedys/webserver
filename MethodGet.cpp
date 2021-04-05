@@ -25,7 +25,8 @@ MethodStatus	MethodGet::manageRequest()
 		constMapIter cgi_iter = data.location->cgi.find(data.uri.extension);
 		if (cgi_iter ==  data.location->cgi.cend())
 			return (error);
-		data.cgi_bin = (*cgi_iter).second;
+		data.setCGIbin((*cgi_iter).second);
+		// data.cgi_bin = (*cgi_iter).second;
 		// if (!fileExist(_data.cgi_bin))
 		// 	return (error);
 		data.createCGIEnv();

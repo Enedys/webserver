@@ -10,7 +10,7 @@ private:
 	MethodDelete & operator=(MethodDelete const & src);
 
 public:
-	MethodDelete(int &status, RequestData const &data) : AMethod(status, data) {
+	MethodDelete(int &status, RequestData &data) : AMethod(status, data) {
 			_type = DELETE;
 	};
 	~MethodDelete();

@@ -2,7 +2,7 @@
 
 AMethod::~AMethod() {};
 
-AMethod::	AMethod(int &status, RequestData const &datas) :
+AMethod::	AMethod(int &status, RequestData &datas) :
 	_statusCode(status), data(datas), _bodyType(bodyNotDefined)
 {
 	_sentBytesTotal = 0;

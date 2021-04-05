@@ -47,6 +47,7 @@ class RequestData
 		int				errorMask;
 		int				&error_code;
 		void			setData(stringMap const *rHs, stringMap const *rFl, int contLen);
+		void			setCGIbin(std::string const &s);
 		void			prepareData();
 		void			cleanData();
 		void			createCGIEnv();

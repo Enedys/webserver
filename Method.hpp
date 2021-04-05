@@ -13,8 +13,7 @@ class AMethod
 {
 protected:
 	int					&_statusCode;
-	RequestData			&data; //need setter for change cgi-bin.
-	// RequestData	const	&data;
+	RequestData			&data;
 	CGI					cgi;
 
 	int					_fd;
@@ -33,7 +32,7 @@ protected:
 	AMethod();
 
 public:
-	AMethod(int &status, RequestData const &data);
+	AMethod(int &status, RequestData	 &data);
 	virtual ~AMethod();
 	static const int			methodNums = 6;
 	static const std::string	Methods[methodNums];

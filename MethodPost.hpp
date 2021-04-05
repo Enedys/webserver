@@ -32,7 +32,7 @@ private:
 		// RequestData const &reqData;
 
 public:
-	MethodPost(int &status, RequestData const &data) :
+	MethodPost(int &status, RequestData &data) :
 		AMethod(status, data) {_type = POST;};
 	virtual ~MethodPost();
 	virtual MethodStatus	createHeader();

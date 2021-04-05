@@ -9,7 +9,7 @@ private:
 	MethodHead & operator=(MethodHead const & src);
 
 public:
-	MethodHead(int &status, RequestData const &data) :
+	MethodHead(int &status, RequestData &data) :
 		AMethod(status, data) { _type = HEAD;};
 	~MethodHead();
 	virtual MethodStatus	createHeader();
