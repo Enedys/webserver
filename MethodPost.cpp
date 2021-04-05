@@ -21,15 +21,30 @@ MethodStatus	MethodPost::manageRequest()
 //	if (_statusCode < 200 || _statusCode > 206)
 //		return error;
 //	return ok;
+	if (data.location->cgi.find(data.uri.extension) == data.location->cgi.cend())
+	{
+		_statusCode = 405;
+		return error;
+	}
 	if (_bodyType == bodyIsAutoindex && (generateIdxPage(_body) < 0))
 	{
 		_statusCode = 404;// дальше показать индексовую страницу, если она есть
 		// _bodyType = bodyNotDefined;
+		return error;
 	}
+	if (_bodyType == bodyNotDefined)
+	{
+		_statusCode = 404;
+		return error;
+	}
+
 	if (_bodyType == bodyIsCGI){
 		constMapIter cgi_iter = data.location->cgi.find(data.uri.extension);
 		if (cgi_iter ==  data.location->cgi.cend())
+		{
+			_statusCode = 405;
 			return (error);
+		}
 		data.setCGIbin((*cgi_iter).second);
 		// data.cgi_bin = (*cgi_iter).second;
 		// if (!fileExist(_data.cgi_bin))
@@ -55,22 +70,36 @@ MethodStatus MethodPost::processBody(const std::string &requestBody, MethodStatu
 
 MethodStatus	MethodPost::createHeader()
 {
-//	std::cerr << "\n\nCREATE HEADER!!!!!!!\n\n";
-	std::cout << _statusCode;
-	if (_statusCode < 200 || _statusCode > 206)
-	{
-		std::string str;
-		_header = new Header(data.uri.script_name, data.location->root, _statusCode);
-		// _header->generateErrorPage(str, data.serv->error_pages);
-		_header->createGeneralHeaders(_headersMap);
-		_header->addContentLengthHeader(_headersMap, str);
-		_header->headersToString(_headersMap, _body);
-		_body = _body + str;
-		delete _header;
+	std::cout << "_bodyType createHeader: " << _bodyType << std::endl;
+	if (_bodyType == bodyIsCGI){
+		// _statusCode = cgi.init(data);//return 200
+		return ok;
 	}
-//		if (_statusCode == 405)
-//			_header->addAllowHeader(_headersMap, *data.serv);
-	return(ok);
+
+	if (_bodyType == bodyNotDefined)//bodyIsTextErrorPage)////->сказать Дане, надо bodyIsTextErrorPage)
+		generateErrorPage(_body);
+
+	Header		header(data.uri.script_name, data.location->root, _statusCode);
+	stringMap	hmap;
+	std::cout << "\n////\tGET METHOD, statusCode: " << _statusCode << std::endl;
+
+	header.createGeneralHeaders(hmap);
+	header.addContentLengthHeader(hmap, _body);//for GET//body for auto+error//if not dir!
+
+	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206))
+		header.createEntityHeaders(hmap);
+	if (_statusCode == 405)
+		header.addAllowHeader(hmap, *data.location);
+	header.addLocationHeader(hmap);//if redirect
+	header.addRetryAfterHeader(hmap);//503 429
+	// header.addTransferEncodingHeader(hmap, hmapRequest);
+	header.addAuthenticateHeader(hmap);
+
+	std::string headerStr;
+	header.headersToString(hmap, headerStr);
+	_body.insert(0, headerStr);
+
+	return ok;
 }
 
 MethodStatus	MethodPost::sendHeader(int socket)
