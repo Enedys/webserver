@@ -24,7 +24,7 @@ private:
 	Header				*_header;
 	stringMap			_headersMap;
     std::string 		outputBuf;
-	std::string			_body;//ololo
+//	std::string			_body;//ololo
 	MethodStatus	sendError(int socket);
 	bool fileExists (char *filename);
 
