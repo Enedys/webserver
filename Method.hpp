@@ -19,6 +19,7 @@ protected:
 	int					_fd;
 	methodType			_type;
 	bodyType			_bodyType;
+	static const std::map<std::string, std::string> _mimeMap;
 
 	std::string			_output;
 	cgiStatus			cgiStatus;
