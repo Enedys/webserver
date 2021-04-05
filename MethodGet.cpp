@@ -22,6 +22,15 @@ MethodStatus	MethodGet::manageRequest()
 		// _bodyType = bodyNotDefined;
 	}
 	if (_bodyType == bodyIsCGI){
+		constMapIter cgi_iter = data.location->cgi.find(data.uri.extension);
+		if (cgi_iter ==  data.location->cgi.cend())
+			return (error);
+		data.cgi_bin = (*cgi_iter).second;
+		// if (!fileExist(_data.cgi_bin))
+		// 	return (error);
+		data.createCGIEnv();
+		if (!data.cgi_conf)
+			return (error);
 		_statusCode = cgi.init(data);//return 200
 		return ok;
 	}

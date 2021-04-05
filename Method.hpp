@@ -13,7 +13,8 @@ class AMethod
 {
 protected:
 	int					&_statusCode;
-	RequestData	const	&data;
+	RequestData			&data; //need setter for change cgi-bin.
+	// RequestData	const	&data;
 	CGI					cgi;
 
 	int					_fd;
