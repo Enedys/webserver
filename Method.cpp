@@ -147,7 +147,12 @@ MethodStatus		AMethod::sendResponse(int socket)
 		response = _remainder;
 	}
 	else if (_bodyType == bodyIsCGI)
+	{
 		_statusCode = cgi.smartOutput(response);//can error be returned?
+		if (_statusCode == inprogress && response.empty())
+			return inprogress;//
+		std::cout << response << std::endl;
+	}
 
 	if (_bodyType == bodyIsFile)
 	{
@@ -175,6 +180,8 @@ MethodStatus		AMethod::sendResponse(int socket)
 		return inprogress;
 	};
 	_remainder.clear();
+	if (_bodyType == bodyIsCGI && _statusCode == inprogress)
+		return inprogress;//
 	if (_bodyType == bodyIsCGI && _statusCode == ok)
 		return ok;
 
@@ -188,5 +195,6 @@ MethodStatus		AMethod::sendResponse(int socket)
 	_statusCode = ok;//do we still need this?
 
 	close(_fd);
+
 	return ok;
 }
