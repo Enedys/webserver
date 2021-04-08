@@ -189,6 +189,15 @@ bool		URI::setTranslatedPath(s_loc const *locs)
 		root_name = locs->root.substr(0, root_len - 1);
 	else
 		root_name = locs->root;
+	#ifdef TESTER
+	size_t	lock_pos = script_name.find(locs->path);
+	if (lock_pos == std::string::npos)
+		return (false);
+	script_name = script_name.substr(lock_pos + locs->path.size());
+	if (!script_name.empty())
+		if (script_name[0] != '/')
+			script_name = "/" + script_name;
+	#endif
 	script_name = root_name + script_name;
 	if (!path_info.empty())
 		path_translated = root_name + path_info;
@@ -213,13 +222,13 @@ bool		URI::setTranslatedPath(std::string const &root)
 
 void		URI::cleanData()
 {
-	request_uri = "";
-	raw_path = "";
-	query_string = "";
-	fragment_string = "";
-	script_name = "";
-	path_info = "";
-	path_translated = "";
-	extension = "";
+	request_uri.clear();
+	raw_path.clear();
+	query_string.clear();
+	fragment_string.clear();
+	script_name.clear();
+	path_info.clear();
+	path_translated.clear();
+	extension.clear();
 	queryEnv.clear();
 }

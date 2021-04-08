@@ -447,7 +447,10 @@ void	RequestData::procUri()
 		return ;
 	}
 	if (!uri.setTranslatedPath(location))
+	{
+		error_code = 404;
 		setHeaderState(e_uri, false);
+	}
 }
 
 void		RequestData::procAuthorization()
