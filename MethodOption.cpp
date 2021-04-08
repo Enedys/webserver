@@ -6,15 +6,18 @@ MethodStatus	MethodOption::sendHeader(int socket){ return ok; };
 
 MethodStatus	MethodOption::manageRequest()
 {
+	_bodyType = bodyIsEmpty;
+
 	if (!data.location->optionsAvailable)
 		_statusCode = methodNotAllowed;
 
-	else if (_bodyType == bodyIsAutoindex)
-	{
-		_statusCode = 403;
-		_bodyType = bodyNotDefined;///// bodyIsError
-	}
-
+	// else if (_bodyType == bodyIsAutoindex)
+	// {
+	// 	_statusCode = 403;
+	// 	_bodyType = bodyNotDefined;///// bodyIsError
+	// }
+	if (_statusCode == 0)
+		_statusCode = 200;
 	return ok;
 };
 

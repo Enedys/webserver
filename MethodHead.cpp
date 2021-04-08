@@ -8,6 +8,7 @@ MethodStatus	MethodHead::sendHeader(int socket) { return (ok); };
 MethodStatus	MethodHead::manageRequest()
 {
 	std::cout << "_bodyType manageRequest: " << _bodyType << std::endl;
+	_bodyType = bodyIsEmpty;
 	if (_bodyType == bodyIsAutoindex)
 	{
 		_statusCode = 403;
@@ -16,7 +17,6 @@ MethodStatus	MethodHead::manageRequest()
 	}
 	if (_statusCode == 0)
 		_statusCode = 200;
-	_bodyType = bodyIsEmpty;
 	return ok;
 };
 
