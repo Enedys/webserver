@@ -65,6 +65,7 @@ void CGI::initFork()
 
 CGI::CGI(char *execpath, char **args, char **env)
 {
+	status = not_started;
 	initPipes();
 	initFork();
 	headersDone = false;
@@ -77,7 +78,6 @@ CGI::CGI(char *execpath, char **args, char **env)
 	outputBuf.clear();
 	sendBuf.clear();
 	cgiDone = inprogress;
-	status = not_started;
 }
 
 
@@ -87,6 +87,7 @@ void CGI::init()
 	pipein[1] = -1;
 	pipeout[0] = -1;
 	pipeout[1] = -1;
+	status = not_started;
 	initPipes();
 	initFork();
 	headersDone = false;
@@ -99,7 +100,6 @@ void CGI::init()
 	outputBuf.clear();
 	sendBuf.clear();
 	httpStatus = -1;
-	status = not_started;
 }
 
 void CGI::input(const std::string &str, MethodStatus mStatus) // inputting body

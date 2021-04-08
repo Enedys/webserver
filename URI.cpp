@@ -199,7 +199,9 @@ bool		URI::setTranslatedPath(std::string const &root)
 {
 	size_t	root_len = root.length();
 	std::string	root_name;
-	if (root.back() == '/')//c++11 extension, can be replaced: if (locs->root.at(locs->root.length() - 1) == '/')
+	if (root == "")
+		root_name = "";
+	else if (root.back() == '/')//c++11 extension, can be replaced: if (locs->root.at(locs->root.length() - 1) == '/')
 		root_name = root.substr(0, root_len - 1);
 	else
 		root_name = root;

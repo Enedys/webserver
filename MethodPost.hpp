@@ -21,18 +21,17 @@ class MethodPost : public AMethod
 private:
     /* data */
     MethodPost(/* args */);
-    CGI cgi;
 	Header				*_header;
 	stringMap			_headersMap;
     std::string 		outputBuf;
-	std::string			_body;//ololo
+//	std::string			_body;//ololo
 	MethodStatus	sendError(int socket);
 	bool fileExists (char *filename);
 
 		// RequestData const &reqData;
 
 public:
-	MethodPost(int &status, RequestData const &data) :
+	MethodPost(int &status, RequestData &data) :
 		AMethod(status, data) {_type = POST;};
 	virtual ~MethodPost();
 	virtual MethodStatus	createHeader();

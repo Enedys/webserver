@@ -9,7 +9,7 @@ private:
 	MethodPut & operator=(MethodPut const & src);
 
 public:
-	MethodPut(int &status, RequestData const &data) :
+	MethodPut(int &status, RequestData &data) :
 		AMethod(status, data) { _type = PUT; };
 	~MethodPut();
 	virtual MethodStatus	createHeader();
