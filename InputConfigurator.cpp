@@ -54,9 +54,13 @@ bodyType		Configurator::defineInputType(mode_t const &mode)
 	if (_data.location->autoindex)
 		return bodyIsAutoindex;
 
+	if (*(_data.getMethod()) == "HEAD"){
+		_statusCode = 403;
+		return bodyIsEmpty;
+	}
+
 	if (findIndexPageInConfig() == true)
-		if (isCGI(_data.uri.extension))
-			return bodyIsCGI;
+		return isCGI(_data.uri.extension) ? bodyIsCGI : bodyIsFile;
 
 	_statusCode = 403;
 

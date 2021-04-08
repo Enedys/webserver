@@ -16,12 +16,10 @@ MethodStatus	MethodGet::manageRequest()
 	// 	return ok;
 	std::cout << "_bodyType manageRequest: " << _bodyType << std::endl;
 
-	if (_bodyType == bodyIsAutoindex && (generateIdxPage(_body) < 0))
-	{
-		_statusCode = 404;// дальше показать индексовую страницу, если она есть
-		// _bodyType = bodyNotDefined;
+	if (_bodyType == bodyIsAutoindex && (generateIdxPage(_body) < 0)){
+		_statusCode = 404;// _bodyType = bodyNotDefined;
 	}
-	if (_bodyType == bodyIsCGI){
+	else if (_bodyType == bodyIsCGI){
 		constMapIter cgi_iter = data.location->cgi.find(data.uri.extension);
 		if (cgi_iter ==  data.location->cgi.cend())
 			return (error);
@@ -33,7 +31,6 @@ MethodStatus	MethodGet::manageRequest()
 		if (!data.cgi_conf)
 			return (error);
 		_statusCode = cgi.init(data);//return 200
-		return ok;
 	}
 	return ok;//
 };
@@ -48,12 +45,10 @@ MethodStatus	MethodGet::manageRequest()
 MethodStatus	MethodGet::createHeader()//createResponse()
 {
 	std::cout << "_bodyType createHeader: " << _bodyType << std::endl;
-	if (_bodyType == bodyIsCGI){
-		// _statusCode = cgi.init(data);//return 200
+	if (_bodyType == bodyIsCGI)
 		return ok;
-	}
 
-	if (_bodyType == bodyNotDefined)//bodyIsTextErrorPage)////->сказать Дане, надо bodyIsTextErrorPage)
+	if (_bodyType == bodyIsTextErrorPage)//bodyNotDefined)//bodyIsTextErrorPage)////->сказать Дане, надо bodyIsTextErrorPage)
 		generateErrorPage(_body);
 
 	Header		header(data.uri.script_name, data.location->root, _statusCode);

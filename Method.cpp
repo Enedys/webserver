@@ -2,7 +2,7 @@
 
 AMethod::~AMethod() {};
 
-AMethod::	AMethod(int &status, RequestData const &datas) :
+AMethod::	AMethod(int &status, RequestData &datas) :
 	_statusCode(status), data(datas), _bodyType(bodyNotDefined)
 {
 	_sentBytesTotal = 0;
@@ -49,9 +49,9 @@ int					&AMethod::getFd() {return _fd; };
 void				AMethod::generateErrorPage(std::string &body)
 {
 	body = "<html>"
-		"<style> body {background-color: rgb(252, 243, 233);}"
-		"h1 {color: rgb(200, 0, 0);}"
-		"e1 {color: rgb(100, 0, 0);} </style>"
+		"<style> body {background-color: rgb(247, 247, 247);}"
+		"h1 {color: rgb(235, 70, 52);}"
+		"e1 {color: rgb(69, 69, 69);} </style>"
 		"<body> <h1>ERROR</h1><br><e1>";
 	body += size2Dec(_statusCode) + " " + sc[_statusCode];
 	body += "</e1></body></html>\n";
@@ -68,8 +68,8 @@ int					AMethod::generateIdxPage(std::string &body)
 		return -1;
 	}
 	body = "<html><head><style> \
-					body {background-color: rgb(252, 243, 233);}\
-					h1   {color: lightseagreen;}\
+					body {background-color: rgb(247, 247, 247);}\
+					h1   {color: rgb(235, 70, 52);}\
 					td   {color: rgb(75, 8, 23);}\
 					a    {color: rgba(255, 99, 71, 1);}\
 			</style></head><body>"
@@ -135,6 +135,8 @@ MethodStatus		AMethod::sendResponse(int socket)
 			_bytesToSend = _body.length() + sbuf.st_size;
 			readBuf -= _body.length();
 		}
+		// else if (_bodyType == bodyIsEmpty)//
+		// 	_bytesToSend = response.length();
 		else
 			_bytesToSend = _body.length();
 		std::cout << "_body.length(): " << _body.length() << std::endl;
@@ -151,7 +153,6 @@ MethodStatus		AMethod::sendResponse(int socket)
 		_statusCode = cgi.smartOutput(response);//can error be returned?
 		if (_statusCode == inprogress && response.empty())
 			return inprogress;//
-		std::cout << response << std::endl;
 	}
 
 	if (_bodyType == bodyIsFile)
@@ -180,10 +181,8 @@ MethodStatus		AMethod::sendResponse(int socket)
 		return inprogress;
 	};
 	_remainder.clear();
-	if (_bodyType == bodyIsCGI && _statusCode == inprogress)
-		return inprogress;//
-	if (_bodyType == bodyIsCGI && _statusCode == ok)
-		return ok;
+	if (_bodyType == bodyIsCGI)
+		return _statusCode == ok ? ok : inprogress;
 
 	_sentBytesTotal += res;
 		std::cout << "_bytesToSend: " << _bytesToSend << std::endl;

@@ -9,8 +9,10 @@ static struct defaultErrorPagesInit
 } defaultErrorPagesInit;
 
 Header::Header(std::string const &path, std::string const &root, int const statusCode)
-	: _path(path), _root(root), _statusCode(statusCode) {
-	};
+	: _path(path), _root(root), _statusCode(statusCode) {};
+
+// Header::Header(RequestData const &data, int const statusCode)
+// 	: _data(data), _statusCode(statusCode) {};
 
 Header::~Header(){ };
 
