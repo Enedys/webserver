@@ -95,10 +95,18 @@ MethodStatus
 	else if (isFile())
 	{
 		int	open_status = openOutputFile(_data.uri.script_name);
-		if (open_status == 0)
-			_bodyType = bodyIsFile;
+		if (open_status != 0) //open error occur
+		{
+			_statusCode = open_status;
+			return (ok);
+		}
+		if (*(_data.getMethod()) == "HEAD")
+		{
+			close(_fd);
+			_bodyType = bodyIsEmpty; 
+		}
 		else
-			_statusCode = open_status;		//error occur
+			_bodyType = bodyIsFile;	
 	}
 	else
 		_bodyType = bodyIsEmpty;
