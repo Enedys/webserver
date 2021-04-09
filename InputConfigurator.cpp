@@ -22,7 +22,6 @@ bool			Configurator::checkAndSetIndexPage(std::string const &indexPage)
 	{
 		_data.uri = uri;
 		_bodyType = bodyIsCGI;
-		_data.uri = uri;
 		return true;
 	}
 	_fd = open(uri.script_name.c_str(), O_RDONLY | O_NONBLOCK);
