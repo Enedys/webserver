@@ -532,6 +532,8 @@ void		RequestData::createCGIEnv()
 	addCgiVar(i++, "SCRIPT_FILENAME=" + uri.script_name);
 	addCgiVar(i++, "REMOTE_ADDR=" + getClientIp(_addr.sin_addr.s_addr));
 	addCgiVar(i++, "HTTP_HOST=" + serv->host + ":" + size2Hex(serv->port, 10));
+	if (_reqHeads->find("cookie") != _reqHeads->cend())
+		addCgiVar(i++, "HTTP_COOKIE=" + _reqHeads->find("cookie")->second);
 	if (error_code != 0)
 	{
 		addCgiVar(i++, "AUTH_TYPE=");
