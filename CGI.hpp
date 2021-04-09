@@ -62,7 +62,6 @@ class CGI
 		void setScriptName(const std::string &scriptName);
 		void setRoot(const std::string &root);
 		CGI();
-		CGI(char *execpath, char **args, char **env); // prepare cgi process, prepare forks, etc
 		void init(); // if default constructor, this func need to be called;
 		void input(const std::string &str, MethodStatus mStatus); // ready to input;
 		MethodStatus output(std::string &str); // ready to output

@@ -63,24 +63,6 @@ void CGI::initFork()
 
 }
 
-CGI::CGI(char *execpath, char **args, char **env)
-{
-	status = not_started;
-	initPipes();
-	initFork();
-	headersDone = false;
-	headersNotFound = false;
-	headersNotFoundProcessExited = false;
-	httpStatus = -1;
-	contentLength = false;
-	headersSent = false;
-	inputBuf.clear();
-	outputBuf.clear();
-	sendBuf.clear();
-	cgiDone = inprogress;
-}
-
-
 void CGI::init()
 {
 	pipein[0] = -1;
@@ -115,13 +97,13 @@ void CGI::input(const std::string &str, MethodStatus mStatus) // inputting body
 		r = write(pipein[1], str.c_str(), str.length());
 		if (r == -1) // pipe is absolutely full
 			inputBuf += str;
-		else if (r < str.size()) // pipe is full;
+		else if (r < static_cast <int> (str.size())) // pipe is full;
 			inputBuf += str.substr(r, str.size());
 	}
 	else
 	{
 		r = write(pipein[1], inputBuf.c_str(), 8192); // TODO: set bufsize
-		if (r > 0 && r < inputBuf.size())
+		if (r > 0 && r <  static_cast <int> (inputBuf.size()))
 			inputBuf = inputBuf.substr(r, inputBuf.size());
 		inputBuf += str;
 	}
@@ -133,9 +115,9 @@ void CGI::inputFromBuf()
 	{
 		int r;
 		r = write(pipein[1], inputBuf.c_str(), inputBuf.size()); // TODO: set bufsize
-		if (r > 0 && r < inputBuf.size())
+		if (r > 0 && r < static_cast <int> (inputBuf.size()))
 			inputBuf = inputBuf.substr(r, inputBuf.size());
-		if (r == inputBuf.size())
+		if (r == static_cast <int> (inputBuf.size()))
 		{
 			inputBuf.clear();
 			close(pipein[1]); // todo: SIMPLIFY IFS?
@@ -285,6 +267,7 @@ CGI::CGI()
 	pipein[1] = -1;
 	pipeout[0] = -1;
 	pipeout[1] = -1;
+	args = NULL;
 	status = not_started;
 	headersDone = false;
 	headersNotFound = false;
@@ -304,13 +287,12 @@ CGI::~CGI()
 
 void CGI::parseHeaders(std::string str)
 {
-	size_t pos;
 	std::string key;
 	std::string value;
 	while (str.find("\r\n") != std::string::npos)
 	{
 		key = str.substr(0, str.find(':'));
-		for (int i = 0; i < key.length(); i++)
+		for (int i = 0; i <  static_cast <int> (key.length()); i++)
 			key.at(i) = std::tolower(key.at(i));
 		value = str.substr(str.find(':') + 1, str.find("\r\n") - (str.find(':') + 1)); // todo: test; upd: looks, like works
 		value = value.substr(value.find_first_not_of(" \v\t"), value.size()); // test ' '
@@ -333,7 +315,7 @@ void CGI::freeMem()
 	close(pipeout[0]);
 	inputBuf.clear();
 	outputBuf.clear();
-	if (!args)
+	if (args)
 		free(args);
 	args = NULL;
 }
@@ -502,7 +484,7 @@ void CGI::concatHeaders()
 	for (itCommon = headersMapCommon.begin(); itCommon != headersMapCommon.end(); itCommon++)
 	{
 		std::string key = itCommon->first;
-		for (int i = 0; i < key.length(); i++)
+		for (int i = 0; i <  static_cast <int> (key.length()); i++)
 			key.at(i) = std::tolower(key.at(i)); // todo: temporary
 		it = _headersMap.find(key);
 		if (it == _headersMap.end())
@@ -519,7 +501,7 @@ MethodStatus CGI::sendOutput(std::string &output, int socket)
 {
 	int r;
 	r = send(socket, output.c_str(), output.length(), MSG_DONTWAIT);
-	if (r < output.length())
+	if (r <  static_cast <int> (output.length()))
 	{
 		sendBuf = output.substr(r, output.length());
 		return inprogress;

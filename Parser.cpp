@@ -592,7 +592,7 @@ void Parser::makeServExt()
 	newStruct.servs.push_back(servers.front());
 	newStruct.port = servers.front().port;
 	newStruct.host = servers.front().host;
-	for (int i = 1; i < servers.size(); i++)
+	for (unsigned int i = 1; i < servers.size(); i++) // todo: int i = 1?
 	{
 		if (servers[i - 1].host == servers[i].host && servers[i-1].port == servers[i].port)
 			newStruct.servs.push_back(servers[i]);

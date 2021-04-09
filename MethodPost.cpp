@@ -3,7 +3,7 @@
 MethodPost::~MethodPost()
 {
 
-};
+}
 
 MethodStatus	MethodPost::manageRequest()
 {
@@ -21,15 +21,15 @@ MethodStatus	MethodPost::manageRequest()
 //	if (_statusCode < 200 || _statusCode > 206)
 //		return error;
 //	return ok;
-	if (data.location->cgi.find(data.uri.extension) == data.location->cgi.cend())
+	if (_bodyType == bodyIsAutoindex)
 	{
-		_statusCode = 405;
+		_statusCode = 403; // todo: !! ??
+		_bodyType = bodyNotDefined;
 		return error;
 	}
-	if (_bodyType == bodyIsAutoindex && (generateIdxPage(_body) < 0))
+	if (data.location->cgi.find(data.uri.extension) == data.location->cgi.end()) // todo: cend is c++11
 	{
-		_statusCode = 404;// дальше показать индексовую страницу, если она есть
-		// _bodyType = bodyNotDefined;
+		_statusCode = 405;
 		return error;
 	}
 	if (_bodyType == bodyNotDefined)
@@ -40,7 +40,7 @@ MethodStatus	MethodPost::manageRequest()
 
 	if (_bodyType == bodyIsCGI){
 		constMapIter cgi_iter = data.location->cgi.find(data.uri.extension);
-		if (cgi_iter ==  data.location->cgi.cend())
+		if (cgi_iter ==  data.location->cgi.end()) // todo: cend is c++11
 		{
 			_statusCode = 405;
 			return (error);
@@ -56,7 +56,7 @@ MethodStatus	MethodPost::manageRequest()
 		return ok;
 	}
 	return ok;//
-};
+}
 
 MethodStatus MethodPost::processBody(const std::string &requestBody, MethodStatus bodyStatus)
 {
@@ -66,7 +66,7 @@ MethodStatus MethodPost::processBody(const std::string &requestBody, MethodStatu
 
 	//	todo: update _statusCode according to cgi output status
 	return (bodyStatus);
-};
+}
 
 MethodStatus	MethodPost::createHeader()
 {
@@ -104,8 +104,9 @@ MethodStatus	MethodPost::createHeader()
 
 MethodStatus	MethodPost::sendHeader(int socket)
 {
+	(void)socket;
 	return ok;
-};
+}
 
 MethodStatus	MethodPost::sendResponse(int socket)
 {
@@ -121,14 +122,14 @@ MethodStatus	MethodPost::sendResponse(int socket)
 //		return sendError(socket);
 	return AMethod::sendResponse(socket);
 
-};
+}
 
 
 MethodStatus MethodPost::sendError(int socket)
 {
 	int r;
 	r = send(socket, _body.c_str(), BUFSIZ, MSG_DONTWAIT);
-	if (r < _body.length())
+	if (r < static_cast <int> (_body.length()))
 	{
 		_body.substr(r, _body.length());
 		return inprogress;
