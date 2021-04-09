@@ -15,11 +15,12 @@ bool			Configurator::checkAndSetIndexPage(std::string const &indexPage)
 	URI uri;
 
 	uri.procUri(indexPage);
-	uri.setTranslatedPath(_data.serv->root);
+	uri.setTranslatedPath(_data.uri.script_name);
 	if (fileExist(uri.script_name) == false)
 		return false;
 	if (isCGI(uri.extension))						// Danya
 	{
+		_data.uri = uri;
 		_bodyType = bodyIsCGI;
 		return true;
 	}

@@ -74,6 +74,8 @@ MethodStatus		Client::analizeHeaders()
 							_request.getContentLength());
 	procData.prepareData();
 	MethodStatus	methodStatus = createNewMethod();
+	if (procData.serv)
+		_request.setBodyLimit(procData.serv->bodySizeLimit);
 	return (methodStatus);
 }
 

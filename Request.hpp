@@ -9,7 +9,6 @@
 #define	MAX_REQUEST_SIZE	8192
 #define	BODY_BUFSIZE		(size_t)1048576 // 1 Mb
 
-
 class Request
 {
 public:
@@ -37,6 +36,7 @@ public:
 	std::string const	&getURI();
 	std::string const	&getMethod();
 	size_t				getContentLength();
+	void				setBodyLimit(size_t limit);
 
 private:
 	Request();
@@ -50,6 +50,7 @@ private:
 	int									_socket;
 	size_t								_bodySize;
 	int									&_errorCode;
+	size_t								_bodyLimit;
 	
 	std::map<int, std::string>			_errors;
 

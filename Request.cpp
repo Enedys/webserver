@@ -56,6 +56,11 @@ MethodStatus		Request::setErrorCode(int code)
 	return (error);
 };
 
+void				Request::setBodyLimit(size_t lim)
+{
+	_bodyLimit = lim;
+}
+
 MethodStatus		Request::getRequestHead()
 {
 	std::cout << "\033[32m Into getRequestHead: " << requestStage << " IN BUFFER: "\
@@ -219,6 +224,9 @@ MethodStatus		Request::parseStartLine(size_t posCRLF)
 MethodStatus		Request::getRequestBody(AMethod *method)
 {
 	static	size_t	residBodysize = _bodySize;
+	static	size_t	trEnSize = 0;
+	if (_bodySize > _bodyLimit)
+		return (setErrorCode(413));
 	MethodStatus	rbodyStatus = ok;
 	std::string		reqBody;
 	if (requestStage != body)
@@ -233,7 +241,14 @@ MethodStatus		Request::getRequestBody(AMethod *method)
 		rbodyStatus = residBodysize == 0 ? ok : inprogress;
 	}
 	else if (_bodySize < 0)
+	{
 		rbodyStatus = getTrEncodedMsg(reqBody);
+		trEnSize += reqBody.size();
+		if (trEnSize > _bodyLimit)
+			return (setErrorCode(413));
+		if (rbodyStatus == ok)
+			trEnSize = 0;
+	}
 	if (rbodyStatus == error)
 		return (error);
 	if (rbodyStatus == ok) 		// What reason to change requestStage?
@@ -244,8 +259,9 @@ MethodStatus		Request::getRequestBody(AMethod *method)
 
 MethodStatus	Request::getTrEncodedMsg(std::string &dest)
 {
-	dest = "";
+	dest.clear();
 	static size_t	chunkSize = 0;
+	static bool		end_body = false;
 	size_t			pullBytes = 0;
 	size_t			posCRLF;
 	while (true)
@@ -253,27 +269,40 @@ MethodStatus	Request::getTrEncodedMsg(std::string &dest)
 		posCRLF = _buffer.find(CRLF, pullBytes);
 		if (chunkSize)
 		{
-			dest += _buffer.substr(pullBytes, chunkSize - 2);
-			chunkSize -= dest.length();
-			pullBytes += dest.length();
+			std::string	chunk_part = _buffer.substr(pullBytes, chunkSize - 2); 
+			dest += chunk_part;
+			chunkSize -= chunk_part.length();
+			pullBytes += chunk_part.length();
 			if (posCRLF != std::string::npos && chunkSize != 2)
-				return (error);
-			else if (posCRLF != std::string::npos)
-				pullBytes += 2;
-			else
+				return (setErrorCode(418));
+			else if (posCRLF == std::string::npos)
+			{
+				_buffer.erase(0, pullBytes);
 				return (inprogress);
+			}
+			pullBytes += 2;
+			chunkSize = 0;
 			continue ;
 		}
+		if (end_body)
+			break ;
 		if (posCRLF == std::string::npos)
+		{
+			if (pullBytes > 0)
+				_buffer.erase(0, pullBytes);
 			return (inprogress);
+		}
 		chunkSize = string2Size(_buffer.substr(pullBytes, posCRLF - pullBytes)) + 2;
 		if (chunkSize < 2)
-			return (error);
+			return (setErrorCode(418));
+		else if (chunkSize == 2)
+			end_body = true;
 		pullBytes += (posCRLF - pullBytes + 2);
 	}
-	// CLION: impossible to reach this statement
-	_buffer.erase(0, pullBytes);
+	if (pullBytes > 0)
+		_buffer.erase(0, pullBytes);
 	chunkSize = 0;
+	end_body = false;
 	return (ok);
 }
 
