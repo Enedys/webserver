@@ -285,6 +285,16 @@ CGI::CGI()
 	pipein[1] = -1;
 	pipeout[0] = -1;
 	pipeout[1] = -1;
+	status = not_started;
+	headersDone = false;
+	headersNotFound = false;
+	headersNotFoundProcessExited = false;
+	contentLength = false;
+	headersSent = false;
+	cgiDone = inprogress;
+	outputBuf.clear();
+	sendBuf.clear();
+	httpStatus = -1;
 }
 
 CGI::~CGI()

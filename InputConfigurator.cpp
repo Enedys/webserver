@@ -18,17 +18,18 @@ bool			Configurator::checkAndSetIndexPage(std::string const &indexPage)
 	uri.setTranslatedPath(_data.uri.script_name);
 	if (fileExist(uri.script_name) == false)
 		return false;
-	if (isCGI(uri.extension))						// Danya
+	if (isCGI(uri.extension))
 	{
 		_data.uri = uri;
 		_bodyType = bodyIsCGI;
+		_data.uri = uri;
 		return true;
 	}
 	_fd = open(uri.script_name.c_str(), O_RDONLY | O_NONBLOCK);
 	if (_fd < 0)
 		return false;
-	_data.uri = uri;
 	_bodyType = bodyIsFile;
+	_data.uri = uri;
 
 	return true;
 }
@@ -65,7 +66,7 @@ bodyType		Configurator::defineInputType(mode_t const &mode)
 
 	_statusCode = 403;
 
-	return bodyNotDefined;//здесь было: bodyIsError - что вместо него
+	return bodyNotDefined;
 }
 
 MethodStatus	Configurator::inputConfigurator()
@@ -79,8 +80,6 @@ MethodStatus	Configurator::inputConfigurator()
 
 	_bodyType = defineInputType(st.st_mode);
 
-	// if (_bodyType == bodyIsCGI)// а что c delete? // думаю, что cgi должен все же запускать метод
-	// 	_statusCode = _cgi.init();
 	std::cout << "inputConfigurator: _bodyType: " << _bodyType << std::endl;
 
 	return ok;
