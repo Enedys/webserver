@@ -90,7 +90,7 @@ MethodStatus	MethodPost::createHeader()
 		header.createEntityHeaders(hmap);
 	if (_statusCode == 405)
 		header.addAllowHeader(hmap, *data.location);
-	header.addLocationHeader(hmap);//if redirect
+	// header.addLocationHeader(hmap);
 	header.addRetryAfterHeader(hmap);//503 429
 	// header.addTransferEncodingHeader(hmap, hmapRequest);
 	header.addAuthenticateHeader(hmap);

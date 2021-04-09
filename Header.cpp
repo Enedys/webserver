@@ -77,9 +77,16 @@ void	Header::addContentLocationHeader(stringMap &_headersMap)
 //  while Content-Location is associated with the data returned
 };
 
-void	Header::addContentTypeHeader(stringMap &_headersMap)
-{//type from cgi ot rhm/conf
-	_headersMap.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));
+void  Header::addContentTypeHeader(stringMap &_headersMap, const std::string &ext)
+{
+	constMapIter it = _mimeMap.begin();
+	while (it != _mimeMap.end()){
+		if (it->first == ext){
+			_headersMap.insert(std::pair<std::string, std::string>("Content-Type", it->second));
+			break ;
+		}
+		it++;
+	}
 };
 
 void	Header::addLastModifiedHeader(stringMap &headersMap)
@@ -127,19 +134,25 @@ void	Header::addAllowHeader(stringMap &_headersMap, const s_loc &location)
 // в случае ошибки пользователь смог сам произвести переход.
 // The principal use is to indicate the URL of a resource transmitted
 // as the result of content negotiation.
-void	Header::addLocationHeader(stringMap &_headersMap)
+void  Header::addLocationHeader(stringMap &_headersMap, const s_loc &location, const std::string &request_uri)
 {
-	std::string redirectPath = "/files/test.file";//
-	if (_statusCode == 301 || _statusCode == 302 || _statusCode == 303 || _statusCode == 307 || \
-	_statusCode == 308 || _statusCode == 201)
-	//(() && method != head )
-	{
-		// if (_statusCode != 201)
-			// _body += redirectPath;//if 201 not
-		_headersMap.insert(std::pair<std::string, std::string>("Location", redirectPath));
-	}
-}
+  // std::cout <<  "\nlocation.path: " << location.path \
+  //       << "\nlocation.root: " << location.root \
+  //       << "\n_path: " << _path \
+  //       << "\n_root: " << _root \
+  //       << "\nlocation.auth: " << location.auth \
+  //       << "\nlocation.authLogPass: " << location.authLogPass << std::endl;
 
+  // std::string redirectPath = "/files/test.file";//
+  // if (_statusCode == 301 || _statusCode == 302 || _statusCode == 303 || _statusCode == 307 || \
+  // _statusCode == 308 || _statusCode == 201)  // //(() && method != head )
+  // {
+    // if (_statusCode != 201)
+      // _body += redirectPath;//if 201 not
+  // if (_statusCode > 300)
+  //   _headersMap.insert(std::pair<std::string, std::string>("Location", request_uri));
+  // // }
+}
 // Retry-After: <http-date>
 // Retry-After: <delay-seconds>
 // When sent with a 503 (Service Unavailable) response, this indicates how long the service is expected to be unavailable.
@@ -175,7 +188,7 @@ void	Header::addTransferEncodingHeader(stringMap &_headersMap, stringMap const &
 }
 
 void	Header::addAuthenticateHeader(stringMap &_headersMap)
-{
+{///data.location.uri.auth
 	if (_statusCode == 401)
 		_headersMap.insert(std::pair<std::string, std::string>("WWW-Authenticate", "Basic realm=\"Access to the staging site\", charset=\"UTF-8\""));
 }

@@ -4,9 +4,6 @@ MethodPut::~MethodPut() {};
 
 MethodStatus	MethodPut::processBody(const std::string &requestBody, MethodStatus bodyStatus)
 {
-	if (_statusCode >= 400)
-		return error;//or ok?
-
 	_fd = open(data.uri.script_name.c_str(), O_WRONLY | O_APPEND | O_CREAT| O_NONBLOCK, 0644);
 	if (_fd < 0){
 		_statusCode = notFound;

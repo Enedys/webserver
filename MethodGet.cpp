@@ -62,8 +62,11 @@ MethodStatus	MethodGet::createHeader()//createResponse()
 		header.createEntityHeaders(hmap);
 	if (_statusCode == 405)
 		header.addAllowHeader(hmap, *data.location);
-	header.addLocationHeader(hmap);//if redirect
+	// header.addLocationHeader(hmap, *data.location, data.uri.request_uri);//if redirect
+	// header.addContentLocationHeader(hmap, *data.location, data.uri.request_uri);
 	header.addRetryAfterHeader(hmap);//503 429
+	if (_bodyType != bodyIsCGI && _bodyType != bodyIsEmpty)
+		header.addContentTypeHeader(hmap, data.uri.extension);
 	// header.addTransferEncodingHeader(hmap, hmapRequest);
 	header.addAuthenticateHeader(hmap);
 

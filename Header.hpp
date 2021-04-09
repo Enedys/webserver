@@ -32,12 +32,12 @@ public:
 	void	addAllowHeader(stringMap &_headersMap, const s_loc &location);
 	void	addContentLanguageHeader(stringMap &_headersMap);
 	void	addContentLengthHeader(stringMap &_headersMap, std::string const & body);
+	// void	addContentLocationHeader(stringMap &_headersMap, const s_loc &location, const std::string &request_uri);
 	void	addContentLocationHeader(stringMap &_headersMap);
-	void	addContentTypeHeader(stringMap &_headersMap);
+	void	addContentTypeHeader(stringMap &_headersMap, const std::string &ext);
 
 	void	addLastModifiedHeader(stringMap &_headersMap);
-	void	addLocationHeader(stringMap &_headersMap);
-
+	void	addLocationHeader(stringMap &_headersMap, const s_loc &location, const std::string &request_uri);
 	void	addRetryAfterHeader(stringMap &_headersMap);
 	void	addTransferEncodingHeader(stringMap &_headersMap, stringMap const &_headersMapRequest);
 	void	addAuthenticateHeader(stringMap &_headersMap);
