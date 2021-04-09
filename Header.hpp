@@ -13,12 +13,16 @@ extern mapIntStr sc;
 class Header
 {
 private:
-	std::string const	&_path;
-	std::string const	&_root;
-	int const			_statusCode;
+	// RequestData const		&_data;
+	std::string const		&_path;
+	std::string const		&_root;
+	int const				_statusCode;
+	static const stringMap	_mimeMap;
+
 	Header();
 public:
 	Header(std::string const &path, std::string const &root, int const statusCode);
+	// Header(RequestData const &data, int const statusCode);
 	~Header();
 
 	void	createGeneralHeaders(stringMap &_headersMap);

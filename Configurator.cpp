@@ -103,10 +103,10 @@ MethodStatus
 		if (*(_data.getMethod()) == "HEAD")
 		{
 			close(_fd);
-			_bodyType = bodyIsEmpty; 
+			_bodyType = bodyIsEmpty;
 		}
 		else
-			_bodyType = bodyIsFile;	
+			_bodyType = bodyIsFile;
 	}
 	else
 		_bodyType = bodyIsEmpty;
@@ -159,6 +159,9 @@ MethodStatus
 MethodStatus
 		Configurator::configurateErrorOutput()
 {
+	if (_bodyType == bodyIsEmpty)
+		return (ok);
+
 	if (CGIisOk())
 	{
 		_bodyType = bodyIsCGI;
@@ -170,7 +173,7 @@ MethodStatus
 		return (_status);
 	bsPair	defaultErrorPage = getPageByCode(_data.serv->error_pages, _statusCode); // here default pages need to find
 	_status = setErrorPage(defaultErrorPage);
-	if (_statusCode != error)
+	if (_status != error)
 		return (_status);
 	_bodyType = bodyIsTextErrorPage;
 	return (ok);

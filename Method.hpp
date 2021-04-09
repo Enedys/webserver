@@ -19,7 +19,6 @@ protected:
 	int					_fd;
 	methodType			_type;
 	bodyType			_bodyType;
-	static const std::map<std::string, std::string> _mimeMap;
 
 	std::string			_output;
 	cgiStatus			cgiStatus;
@@ -33,7 +32,7 @@ protected:
 	AMethod();
 
 public:
-	AMethod(int &status, RequestData	 &data);
+	AMethod(int &status, RequestData &data);
 	virtual ~AMethod();
 	static const int			methodNums = 6;
 	static const std::string	Methods[methodNums];
