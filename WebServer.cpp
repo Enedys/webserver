@@ -156,7 +156,7 @@ int						WebServer::communicate()
 		flag = clientIsReady(cIt);
 		if (flag)
 		{
-			std::cout << "r?: " << (flag & 1) << ", w?: " << (flag & 2) << std::endl;
+			// std::cout << "r?: " << (flag & 1) << ", w?: " << (flag & 2) << std::endl;
 			_webLogger << Message::verbose << "Communicate:: client socket: "\
 				<< (*cIt)->getClientSocket() << Logger::endl;
 			if ((*cIt)->interract(flag & 1, flag & 2) == error)

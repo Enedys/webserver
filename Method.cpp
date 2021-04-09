@@ -121,7 +121,7 @@ MethodStatus		AMethod::sendResponse(int socket)
 	size_t		readBuf = _bs;
 
 	memset(buf, 0, _bs);
-	std::cout << "_bodyType: " << _bodyType << std::endl;
+	// std::cout << "_bodyType: " << _bodyType << std::endl;
 
 	if (_statusCode != okSendingInProgress)
 	{
@@ -139,9 +139,9 @@ MethodStatus		AMethod::sendResponse(int socket)
 		// 	_bytesToSend = response.length();
 		else
 			_bytesToSend = _body.length();
-		std::cout << "_body.length(): " << _body.length() << std::endl;
-		std::cout << "_bytesToSend: " << _bytesToSend << std::endl;
-		std::cout << "readBuf: " << readBuf << std::endl;
+		// std::cout << "_body.length(): " << _body.length() << std::endl;
+		// std::cout << "_bytesToSend: " << _bytesToSend << std::endl;
+		// std::cout << "readBuf: " << readBuf << std::endl;
 	}
 
 	if (!_remainder.empty()){//что-то не отослалось в send. only if not a full response was sent (by send)

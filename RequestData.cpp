@@ -457,6 +457,12 @@ void		RequestData::procAuthorization()
 {
 	constMapIter	header;
 
+	if (!location	&& !location->authLogPass.empty()\
+					&& !location->auth.empty())
+	{
+		error_code = 401;
+		return (setHeaderState(e_auth, false));
+	}
 	if (location->authLogPass.empty() || location->auth.empty())
 		return ;
 	if (!location)
