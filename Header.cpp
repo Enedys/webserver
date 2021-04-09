@@ -16,8 +16,9 @@ Header::~Header(){ };
 
 void	Header::headersToString(stringMap const &headersMap, std::string &output)
 {
-	std::string statusCodeStr = size2Dec(_statusCode);
-	output += "HTTP/1.1 " + statusCodeStr + " " + sc[_statusCode] + CRLF;
+	int	status_to_send = _statusCode == 0 ? 200 : _statusCode;
+	std::string statusCodeStr = size2Dec(status_to_send);
+	output += "HTTP/1.1 " + statusCodeStr + " " + sc[status_to_send] + CRLF;
 	for (constMapIter it = headersMap.begin(); it != headersMap.end(); ++it)
 		output += (it->first) + ": " + (it->second) + CRLF;
 	output += CRLF;
