@@ -38,7 +38,7 @@ public:
 	static const std::string	Methods[methodNums];
 	static bool					isValidMethod(std::string const &method);
 
-	virtual MethodStatus	createHeader() = 0;// create response
+	virtual MethodStatus	createHeader();// create response
 	virtual MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus) = 0;
 	virtual MethodStatus	sendHeader(int socket) = 0;
 	virtual MethodStatus	manageRequest() = 0;

@@ -112,6 +112,49 @@ int					AMethod::generateIdxPage(std::string &body)
 	return 0;
 }
 
+MethodStatus		AMethod::createHeader()
+{
+	if (_type == GET)
+	{
+		if (_bodyType == bodyIsCGI)//up
+		return ok;
+
+		if (_bodyType == bodyIsTextErrorPage)//bodyNotDefined)//bodyIsTextErrorPage)////->сказать Дане, надо bodyIsTextErrorPage)
+			generateErrorPage(_body);
+	}
+
+	Header		header(data.uri.script_name, data.location->root, _statusCode);
+	stringMap	hmap;
+
+	header.createGeneralHeaders(hmap);
+
+	if (_type == GET || _type == HEAD || _type == POST){//delete POST
+		header.addContentLengthHeader(hmap, _body);//for GET//body for auto+error//if not dir!
+		if (_statusCode < 400){
+			header.addLastModifiedHeader(hmap);
+			if (_bodyType != bodyIsCGI && _bodyType != bodyIsEmpty)//head: always
+				header.addContentTypeHeader(hmap, data.uri.extension);
+		}
+	}
+	else//bodyIsEmpty
+		hmap.insert(std::pair<std::string, std::string>("Content-Length", "0"));//can it be specified in request before?
+
+
+	if (_type == OPTION || _statusCode == 405)
+		header.addAllowHeader(hmap, *data.location);
+
+	// header.addContentLocationHeader(hmap);
+	// header.addLocationHeader(hmap, *data.location, data.uri.request_uri);//if redirect
+	// header.addRetryAfterHeader(hmap);//503 429
+	// header.addTransferEncodingHeader(hmap, hmapRequest);
+	// header.addAuthenticateHeader(hmap);
+
+	std::string headerStr;
+	header.headersToString(hmap, headerStr);
+	_body.insert(0, headerStr);
+
+	return ok;
+}
 
 MethodStatus		AMethod::sendResponse(int socket)
 {

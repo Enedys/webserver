@@ -42,10 +42,10 @@ void	Header::createGeneralHeaders(stringMap &headersMap)
 
 void	Header::createEntityHeaders(stringMap &headersMap)
 {//specific for statuses and methods
-	// addContentLanguageHeader(headersMap);
-	addContentLocationHeader(headersMap);//redir?
-	// addContentTypeHeader(headersMap);
-	addLastModifiedHeader(headersMap);//if modified
+	// // addContentLanguageHeader(headersMap);
+	// addContentLocationHeader(headersMap);//redir?
+	// // addContentTypeHeader(headersMap);
+	// addLastModifiedHeader(headersMap);//if modified
 };
 
 void	Header::addContentLanguageHeader(stringMap &headersMap)
