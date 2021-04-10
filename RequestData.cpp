@@ -523,8 +523,18 @@ void		RequestData::createCGIEnv()
 	addCgiVar(i++, "SERVER_SOFTWARE=BSHABILLUM/1.1");
 	addCgiVar(i++, "SERVER_NAME=" + serv->serverName);
 	addCgiVar(i++, "SERVER_PORT=" + size2Hex(serv->port, 10));
+//	if (uri.query_string == "redirect_to=http://localhost:2026/&reauth=1")
+//		addCgiVar(i++, "QUERY_STRING=redirect_to=http%3A%2F%2Flocalhost%3A2026%2F&reauth=1");
+//	else
 	addCgiVar(i++, "QUERY_STRING=" + uri.query_string);
-	addCgiVar(i++, "REQUEST_URI=" + uri.request_uri);
+//	addCgiVar(i++, "REQUEST_URI=" + uri.request_uri);
+//	if (!uri.query_string.empty())
+//		addCgiVar(i++, "REQUEST_URI=" + uri.request_uri);
+//	else
+//	http://localhost:2026/wp-login.php?redirect_to=http%3A%2F%2Flocalhost%3A2026%2F&reauth=1
+//	addCgiVar(i++, "REQUEST_URI=/"); // todo: revert with condition
+	//addCgiVar(i++, "REQUEST_URI=" + uri.request_uri.substr(0,uri.request_uri.find_last_of('/')) + "/");
+	addCgiVar(i++, "REQUEST_URI=" + uri.raw_path);
 	addCgiVar(i++, "PATH_INFO=" + uri.path_info);
 	addCgiVar(i++, "PATH_TRANSLATED=" + uri.path_translated);
 	addCgiVar(i++, "SCRIPT_FILENAME=" + uri.script_name);
