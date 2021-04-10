@@ -400,7 +400,7 @@ void Parser::getLocUploadPass()
 	std::string value = getValue("location: upload_pass: ");
 	if (value == "allow")
 		loc.uploadPass = true;
-	if (value == "deny")
+	else if (value == "deny")
 		loc.uploadPass = false;
 	else
 		error("location: upload_pass: expected allow | deny");
