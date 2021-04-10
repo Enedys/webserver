@@ -303,7 +303,12 @@ void CGI::parseHeaders(std::string str)
 			httpStatus = std::atoi(value.c_str());
 			continue;
 		}
-		_headersMap.insert(std::pair<std::string, std::string>(key, value));
+		if (_headersMap.find(key) != _headersMap.end())
+		{
+			_headersMap[key] += std::string("\r\n" + key + ": " + value); // todo: test later, seems work;
+		}
+		else
+			_headersMap.insert(std::pair<std::string, std::string>(key, value));
 	}
 }
 
