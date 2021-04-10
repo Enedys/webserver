@@ -1,10 +1,10 @@
 #include "Request.hpp"
 
 Request::Request(int fd, int &statusCode) :
-_socket(fd), _errorCode(statusCode), _bodySize(0), requestStage(firstLine)
+requestStage(firstLine), _socket(fd), _bodySize(0), _errorCode(statusCode)
 {
 	createErrorCodesMap();
-};
+}
 
 size_t				Request::getBufferResidual()
 {
@@ -26,8 +26,8 @@ MethodStatus		Request::cleanRequest()
 	return (ok);
 }
 
-const stringMap		&Request::getStartLine() const {return (startLine); };
-const stringMap		&Request::getHeadersMap() const { return (headersMap); };
+const stringMap		&Request::getStartLine() const {return (startLine); }
+const stringMap		&Request::getHeadersMap() const { return (headersMap); }
 
 std::string const	&Request::getURI()
 {
@@ -54,7 +54,7 @@ MethodStatus		Request::setErrorCode(int code)
 {
 	_errorCode = code;
 	return (error);
-};
+}
 
 void				Request::setBodyLimit(size_t lim)
 {
@@ -167,7 +167,7 @@ MethodStatus		Request::parseHeaders()
 		if (key.find(' ') != std::string::npos ||\
 			key.find('\t') != std::string::npos)
 			return (setErrorCode(400));
-		for (int i = 0; i < key.length(); i++)
+		for (size_t i = 0; i < key.length(); i++)
 			key.at(i) = std::tolower(key.at(i));
 		std::string	trimmedValue;
 		trimmedValue = headerLine.substr(sepPos + 1, posCRLF - sepPos - 1);

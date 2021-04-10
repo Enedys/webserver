@@ -1,13 +1,13 @@
 #include "Server.hpp"
 
-Server::Server() {};
-Server::~Server() {};
-void				Server::closeSocket() {if (_socket != -1) close(_socket);};
+Server::Server() {}
+Server::~Server() {}
+void				Server::closeSocket() {if (_socket != -1) close(_socket);}
 t_serv const		&Server::getDefaultServer() const {return (_server.servs[0]);}
-int					Server::getServePort() const {return (_server.port);};
-std::string const 	&Server::getServeHost() const {return (_server.host);};
+int					Server::getServePort() const {return (_server.port);}
+std::string const 	&Server::getServeHost() const {return (_server.host);}
 t_ext_serv const	&Server::getConfig() const { return (_server);}
-int					Server::getServerSocket() const {return (_socket);};
+int					Server::getServerSocket() const {return (_socket);}
 
 
 Server	&Server::operator=(const Server &s)
@@ -32,7 +32,7 @@ Server::Server(t_ext_serv const &conf) try : _server(conf)
 catch(char const *s)
 {
 	std::cout << s << std::endl;
-};
+}
 
 int					Server::createSocket()
 {
@@ -78,17 +78,17 @@ t_serv const	*Server::determineServer(t_ext_serv const &servsList, std::string c
 	size_t			portPos = host.find_last_of(':');
 	std::string		_hostName = host.substr(0, portPos);
 	stringToLower(_hostName);
-	std::vector<t_serv>::const_iterator sv = servsList.servs.cend();
-	for (std::vector<t_serv>::const_iterator i = servsList.servs.cbegin(); i < servsList.servs.cend(); i++)
+	std::vector<t_serv>::const_iterator sv = servsList.servs.end();
+	for (std::vector<t_serv>::const_iterator i = servsList.servs.begin(); i < servsList.servs.end(); i++)
 	{
 		std::string	tmpServName = i->serverName;
 		stringToLower(tmpServName);
 		if (match(_hostName, tmpServName))
 			if (sv->serverName.length() < i->serverName.length()\
-				|| sv == servsList.servs.cend())
+				|| sv == servsList.servs.end())
 				sv = i;
 	}
-	if (sv == servsList.servs.cend())
+	if (sv == servsList.servs.end())
 		serv = &(servsList.servs[0]);
 	else
 		serv = &(*sv);
@@ -102,21 +102,21 @@ s_loc const		*Server::findLocation(t_serv const *serv, std::string const &script
 		return (NULL);
 	std::cout << "SNAME: " << script_name << std::endl;
 	constLocIter	itLoc = serv->locs.begin();
-	constLocIter	itBest = serv->locs.cend();
-	while (itLoc != serv->locs.cend())
+	constLocIter	itBest = serv->locs.end();
+	while (itLoc != serv->locs.end())
 	{
 		if (script_name.find(itLoc->path) == std::string::npos)
 		{
 			itLoc++;
 			continue;
 		}
-		if (itBest == serv->locs.cend())
+		if (itBest == serv->locs.end())
 			itBest = itLoc;
 		else if (itLoc->path.length() >= itBest->path.length())
 			itBest = itLoc;
 		itLoc++;
 	}
-	if (itBest == serv->locs.cend()) //404
+	if (itBest == serv->locs.end()) //404
 		return (NULL);
 	else
 		location = &(*itBest);

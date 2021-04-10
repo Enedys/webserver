@@ -1,7 +1,7 @@
 #include "RequestData.hpp"
 
 RequestData::RequestData(t_ext_serv const &s, sockaddr_in &adr, int &errorCode) :
-	_addr(adr), error_code(errorCode), _servsList(s)
+	error_code(errorCode), _servsList(s), _addr(adr)
 {
 	location = NULL;	serv = NULL;
 	_uri = NULL;		_reqHeads = NULL;
@@ -10,7 +10,7 @@ RequestData::RequestData(t_ext_serv const &s, sockaddr_in &adr, int &errorCode) 
 	badalloc_index = -1;
 	error_code = errorCode;
 	contentLength = 0;
-};
+}
 
 void		RequestData::cleanData()
 {
@@ -44,7 +44,7 @@ void		RequestData::setData(stringMap const *rHs, stringMap const *rFl, int contL
 	}
 }
 
-RequestData::~RequestData() {cleanCGIenv();};
+RequestData::~RequestData() {cleanCGIenv();}
 
 std::string const
 			*RequestData::getMethod() const
@@ -102,7 +102,6 @@ void		RequestData::procUserAgent()
 void		RequestData::procContentType()
 {
 	constMapIter	header;
-	bool			var;
 	if ((header = _reqHeads->find("content-type")) != _reqHeads->end())
 	{
 		contTypeMap map = getContentType(header->second);
@@ -134,7 +133,7 @@ bool		RequestData::isValidHost(std::string const &s1, size_t port)
 	int	minusNum = 0;
 	if (s.size() > 253 || s.size() == 0)
 		return (false);
-	int i = 0;
+	size_t	i = 0;
 	while (i < s.size())
 	{
 		if (!std::isalnum(s[i]))
@@ -199,7 +198,6 @@ qualityMap	RequestData::parseAcceptionLine(std::string const &s, int isLang, int
 	{
 		bool	ok = true;
 		int		q = -1;
-		int		aster = 0;
 		std::string	name = "";
 		if (!std::isalpha(s[i]) && s[i] != '*')
 			ok = false;
@@ -271,7 +269,7 @@ qualityMap	RequestData::parseAcceptionLine(std::string const &s, int isLang, int
 		lst.first &= ok;
 	}
 	return (lst);
-};
+}
 
 std::string	RequestData::base64encode(std::string const &s)
 {
@@ -280,7 +278,7 @@ std::string	RequestData::base64encode(std::string const &s)
 	unsigned char	res;
 	std::string		encoded;
 	encoded.reserve(s.size() / 3 * 4 + s.size() % 3 + 2);
-	for (int i = 0; i < s.size(); i++)
+	for (size_t i = 0; i < s.size(); i++)
 	{
 		unsigned char	ch = s[i];
 		if (i % 3 == 0)
@@ -332,10 +330,10 @@ std::string	RequestData::base64decode(std::string const &s)
 	unsigned int	chunk;
 	std::string		decode;
 	decode.reserve((s.size() / 4 + 1) * 3);
-	for (int i = 0; i < s.size() / 4; i++)
+	for (size_t i = 0; i < s.size() / 4; i++)
 	{
 		int res = 0;
-		for (int j = 0; j < 4; j++)
+		for (size_t j = 0; j < 4; j++)
 		{
 			if (s[4 * i + j] == '=')
 				chunk = 0;
@@ -360,7 +358,7 @@ contTypeMap	RequestData::getContentType(std::string const &s)
 	size_t	delim = s.find(';');
 	std::string type = s.substr(0, delim);
 	int delimNum = 0;
-	for (int i = 0; i < type.length(); i++)
+	for (size_t i = 0; i < type.length(); i++)
 	{
 		if (type[i] == '/' && delimNum++ < 1)
 		{
@@ -457,16 +455,10 @@ void		RequestData::procAuthorization()
 {
 	constMapIter	header;
 
-	if (!location	&& !location->authLogPass.empty()\
-					&& !location->auth.empty())
-	{
-		error_code = 401;
-		return (setHeaderState(e_auth, false));
-	}
-	if (location->authLogPass.empty() || location->auth.empty())
-		return ;
 	if (!location)
 		return (setHeaderState(e_auth, false));
+	if (location->authLogPass.empty() || location->auth.empty())
+		return ;
 	header = _reqHeads->find("authorization");
 	if (header == _reqHeads->end() &&\
 		!location->authLogPass.empty() &&\
@@ -538,7 +530,7 @@ void		RequestData::createCGIEnv()
 	addCgiVar(i++, "SCRIPT_FILENAME=" + uri.script_name);
 	addCgiVar(i++, "REMOTE_ADDR=" + getClientIp(_addr.sin_addr.s_addr));
 	addCgiVar(i++, "HTTP_HOST=" + serv->host + ":" + size2Hex(serv->port, 10));
-	if (_reqHeads->find("cookie") != _reqHeads->cend())
+	if (_reqHeads->find("cookie") != _reqHeads->end())
 		addCgiVar(i++, "HTTP_COOKIE=" + _reqHeads->find("cookie")->second);
 	if (error_code != 0)
 	{

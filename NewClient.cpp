@@ -1,8 +1,8 @@
 #include "NewClient.hpp"
 
 Client::Client(int socket, sockaddr_in adr, t_ext_serv const &config) :
-	_socket(socket), _clientAddr(adr), _statusCode(0), _request(socket, _statusCode),\
-	_config(config), _method(NULL), _state(defaultState), procData(config, adr, _statusCode)
+	_request(socket, _statusCode), _method(NULL), procData(config, adr, _statusCode),\
+	_config(config), _clientAddr(adr), _socket(socket), _state(defaultState), _statusCode(0)
 {
 }
 
@@ -15,7 +15,7 @@ Client::~Client()
 int			 		Client::getClientSocket() const
 {
 	return _socket;
-};
+}
 
 bool				Client::isReading() const
 {

@@ -17,7 +17,7 @@ public:
 		init,
 		firstLine,
 		headers,
-		body,
+		body
 	}	requestStatus;
 
 	Request(int fd, int &code);

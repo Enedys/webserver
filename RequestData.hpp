@@ -28,7 +28,7 @@ class RequestData
 			e_serv = 1 << 8,
 			e_uri = 1 << 9,
 			e_loc = 1 << 10,
-			e_cgi = 1 << 11,
+			e_cgi = 1 << 11
 		}		headerNum;
 
 		std::string		hostName;

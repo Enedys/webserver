@@ -13,7 +13,7 @@ public:
 		error,
 		fatal,
 		sys,
-		reset,
+		reset
 	} LogLevel;
 	static	const	std::string	resetColor;
 	static	const	std::string	coutStyleColor;
@@ -65,7 +65,7 @@ public:
 	const std::string		&getMsgColor() const;
 	const std::string		&getMsg() const;
 	const std::string		&getMsgPrefix() const;
-	const LogLevel			getMsgLvl() const;
+	LogLevel				getMsgLvl() const;
 	~Message() {};
 	protected:
 	std::string		_msg;

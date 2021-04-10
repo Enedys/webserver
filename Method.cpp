@@ -1,12 +1,12 @@
 #include "Method.hpp"
 
-AMethod::~AMethod() {};
+AMethod::~AMethod() {}
 
 AMethod::	AMethod(int &status, RequestData &datas) :
 	_statusCode(status), data(datas), _bodyType(bodyNotDefined)
 {
 	_sentBytesTotal = 0;
-};
+}
 
 const std::string	AMethod::Methods[AMethod::methodNums] = {
 "GET", "HEAD", "POST", "PUT", "OPTIONS", "DELETE"
@@ -41,10 +41,10 @@ MethodStatus		AMethod::sendHeader(int socket)
 	return (ok);
 }
 
-int					AMethod::getStatusCode() { return _statusCode; };
-CGI					&AMethod::getCGI() { return cgi; };
-bodyType			&AMethod::getBodyType() {return _bodyType; };
-int					&AMethod::getFd() {return _fd; };
+int					AMethod::getStatusCode() { return _statusCode; }
+CGI					&AMethod::getCGI() { return cgi; }
+bodyType			&AMethod::getBodyType() {return _bodyType; }
+int					&AMethod::getFd() {return _fd; }
 
 void				AMethod::generateErrorPage(std::string &body)
 {
@@ -55,7 +55,7 @@ void				AMethod::generateErrorPage(std::string &body)
 		"<body> <h1>ERROR</h1><br><e1>";
 	body += size2Dec(_statusCode) + " " + sc[_statusCode];
 	body += "</e1></body></html>\n";
-};
+}
 
 int					AMethod::generateIdxPage(std::string &body)
 {
@@ -110,7 +110,7 @@ int					AMethod::generateIdxPage(std::string &body)
 	body += "</body>\n</html>\n";
 	closedir(dir);
 	return 0;
-};
+}
 
 
 MethodStatus		AMethod::sendResponse(int socket)

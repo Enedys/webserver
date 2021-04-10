@@ -87,7 +87,6 @@ int						WebServer::checkActualConnections()
 
 int						WebServer::acceptNewConnections()
 {
-	int				newSocket;
 	sockaddr_in		clientName;
 	socklen_t		clientLen = sizeof(clientName);
 	server			sIt = _serverList.begin();
@@ -172,9 +171,6 @@ int						WebServer::communicate()
 
 int						WebServer::runWebServer()
 {
-	sockaddr_in	clientAddr;
-	socklen_t	clientLen = sizeof(clientAddr);
-
 	while (1)
 	{
 		communicate();

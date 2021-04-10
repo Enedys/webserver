@@ -37,7 +37,7 @@ typedef	enum
 	connectionClosed,
 	socketError,
 	logicError,
-	allocationError,
+	allocationError
 }		MethodStatus;
 
 typedef enum
@@ -66,7 +66,7 @@ typedef enum
 	POST,
 	PUT,
 	OPTION,
-	DELETE,
+	DELETE
 }		methodType;
 
 typedef enum

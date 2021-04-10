@@ -37,7 +37,7 @@ mapIntStr scInit()
 	sc[503] = "Service Unavailable";//перегрузка сервера
 	sc[505] = "HTTP Version Not Supported";
 	return sc;
-};
+}
 
 mapIntStr sc = scInit();
 
@@ -51,7 +51,7 @@ int main()
 	std::cout << parser.servers.size() << std::endl;
 	// return (0);
 
-	for (int i = 0; i < parser.servers_ext.size(); i++)
+	for (size_t i = 0; i < parser.servers_ext.size(); i++)
 	{
 		std::cout << "Host: " << parser.servers_ext[i].host << "\tPort: " << parser.servers_ext[i].port << std::endl;
 		try

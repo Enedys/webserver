@@ -41,6 +41,6 @@ public:
 	MethodStatus		configurate();
 	MethodStatus		inputConfigurator();
 
-	bodyType const	getBodyType();
+	bodyType		getBodyType() const;
 	void			updateBodyType(bodyType &newType);
 };

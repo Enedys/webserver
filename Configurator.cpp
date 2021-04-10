@@ -44,14 +44,14 @@ std::string const
 	if (_data.location)
 	{
 		constMapIter cgi_iter = _data.location->cgi.find(ext);
-		if (cgi_iter ==  _data.location->cgi.cend())
+		if (cgi_iter ==  _data.location->cgi.end())
 			return (NULL);
 		return (&((*cgi_iter).second));
 	}
 	else
 	{
 		constMapIter cgi_iter = _data.serv->cgi.find(ext);
-		if (cgi_iter ==  _data.serv->cgi.cend())
+		if (cgi_iter ==  _data.serv->cgi.end())
 			return (NULL);
 		return (&((*cgi_iter).second));
 	}
@@ -116,7 +116,7 @@ MethodStatus
 bsPair	getPageByCode(mapIntStr const &map, int code)
 {
 	constMapIntStrIter	errorPageIter = map.find(code);
-	if (errorPageIter != map.cend())
+	if (errorPageIter != map.end())
 		return bsPair(true, (*errorPageIter).second);
 	return bsPair(false, std::string(""));
 }
@@ -124,6 +124,7 @@ bsPair	getPageByCode(mapIntStr const &map, int code)
 MethodStatus
 		Configurator::runCGI(URI const &uri)
 {
+	(void)uri;
 	_data.cgi_bin = *cgi_path;
 	if (!fileExist(_data.cgi_bin))
 		return (error);

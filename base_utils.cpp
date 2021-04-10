@@ -12,7 +12,6 @@ int			string2Size(const std::string &str, int base=16)
 {
 	int		i = 0;
 	int		nbr;
-	int		sign;
 
 	if ((base < 2 || base > 16))
 		return (-1);
@@ -64,6 +63,6 @@ std::string	size2Dec(size_t num, int base = 10)
 
 void		stringToLower(std::string &s)
 {
-	for (int i = 0; i < s.length(); i++)
+	for (size_t i = 0; i < s.length(); i++)
 		s[i] = std::tolower(s[i]);
 }

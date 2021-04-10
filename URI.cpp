@@ -1,7 +1,7 @@
 #include "URI.hpp"
 
-URI::URI() {};
-URI::~URI() {};
+URI::URI() {}
+URI::~URI() {}
 URI				&URI::operator=(URI const &other)
 {
 	if (this == &other)
@@ -36,9 +36,9 @@ int			URI::isHex(int c)
 	if (c >= 47 && c <= 57)			// digit
 		return (c - '0');
 	else if (c >= 97 && c <= 122)	// lowercase ascii
-		return (c - 'a');
+		return (c - 'a' + 10);
 	else if (c >= 65 && c <= 90)	// uppercase ascii
-		return (c - 'A');
+		return (c - 'A' + 10);
 	return (-1);
 }
 
@@ -58,8 +58,7 @@ std::pair<std::string, int>
 		delimPos = s.length();
 	std::string	envVar = "HTTP_";
 	envVar.reserve(5 + delimPos - start);
-	int	validSym;
-	int	i = 0;
+	size_t	i = 0;
 	int	eqNum = 0;
 	while (i < delimPos - start)
 	{
@@ -87,7 +86,7 @@ std::pair<std::string, int>
 bool		URI::getEnvVarVector()
 {
 	std::pair<std::string, int>	env = getEnvVar(query_string, 0);
-	while (env.second != std::string::npos && env.second >= 0)
+	while ((size_t)env.second != std::string::npos && env.second >= 0)
 	{
 		queryEnv.push_back(env.first);
 		env = getEnvVar(query_string, env.second + 1);
@@ -183,12 +182,15 @@ bool		URI::setTranslatedPath(s_loc const *locs)
 {
 	if (!locs)
 		return (false);
-	size_t	root_len = locs->root.length();
+	size_t	root_len = locs->root.size();
 	std::string	root_name;
-	if (locs->root.back() == '/')//c++11 extension, can be replaced: if (locs->root.at(locs->root.length() - 1) == '/')
-		root_name = locs->root.substr(0, root_len - 1);
-	else
-		root_name = locs->root;
+	if (root_len > 0)
+	{
+		if (locs->root[root_len - 1] == '/')
+			root_name = locs->root.substr(0, root_len - 1);
+		else
+			root_name = locs->root;
+	}
 	#ifdef TESTER
 	size_t	lock_pos = script_name.find(locs->path);
 	if (lock_pos == std::string::npos)
@@ -208,12 +210,13 @@ bool		URI::setTranslatedPath(std::string const &root)
 {
 	size_t	root_len = root.length();
 	std::string	root_name;
-	if (root == "")
-		root_name = "";
-	else if (root.back() == '/')//c++11 extension, can be replaced: if (locs->root.at(locs->root.length() - 1) == '/')
-		root_name = root.substr(0, root_len - 1);
-	else
-		root_name = root;
+	if (root_len > 0)
+	{
+		if (root[root_len - 1] == '/')
+			root_name = root.substr(0, root_len - 1);
+		else
+			root_name = root;
+	}
 	script_name = root_name + script_name;
 	if (!path_info.empty())
 		path_translated = root_name + path_info;

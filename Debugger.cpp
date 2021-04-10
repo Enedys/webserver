@@ -10,7 +10,7 @@ void					Message::setLvl(LogLevel lvl){_msgLvl = lvl; };
 const std::string		&Message::getMsgColor() const {return (_msgColor);};
 const std::string		&Message::getMsg() const {return (_msg);};
 const std::string		&Message::getMsgPrefix() const {return (_msgPrefix);};
-const Message::LogLevel	Message::getMsgLvl() const {return (_msgLvl);};
+Message::LogLevel		Message::getMsgLvl() const {return (_msgLvl);};
 
 /* Logger Class */
 

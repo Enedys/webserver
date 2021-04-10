@@ -8,7 +8,7 @@ enum
 {
 	okQueryCh = 1,
 	percent = '%',
-	equal = '=',
+	equal = '='
 };
 
 private:

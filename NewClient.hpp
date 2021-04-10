@@ -29,7 +29,7 @@ class Client
 		sendindHeader,
 		sendingBody,
 		finalState,
-		sendingErrorState,
+		sendingErrorState
 	}			conditionCode;
 
 public:
