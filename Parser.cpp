@@ -362,21 +362,24 @@ void Parser::getLocFileIsDir()
 
 void Parser::getLocDenyMethod()
 {
-	std::string value = getValue("location: deny: ");
-	if (value == "GET")
-		loc.getAvailable = false;
-	else if (value == "POST")
-		loc.postAvailable = false;
-	else if (value == "HEAD")
-		loc.headAvailable = false;
-	else if (value == "PUT")
-		loc.putAvailable = false;
-	else if (value == "OPTIONS")
-		loc.optionsAvailable = false;
-	else if (value == "DELETE")
-		loc.deleteAvailable = false;
-	else
-		error("expected deny POST | HEAD | PUT | GET | OPTIONS | DELETE");
+	std::vector<std::string> vecValues = getVectorValues("location: deny: ");
+	for (unsigned int i = 0; i < vecValues.size(); i++)
+	{
+		if (vecValues[i] == "GET")
+			loc.getAvailable = false;
+		else if (vecValues[i] == "POST")
+			loc.postAvailable = false;
+		else if (vecValues[i] == "HEAD")
+			loc.headAvailable = false;
+		else if (vecValues[i] == "PUT")
+			loc.putAvailable = false;
+		else if (vecValues[i] == "OPTIONS")
+			loc.optionsAvailable = false;
+		else if (vecValues[i] == "DELETE")
+			loc.deleteAvailable = false;
+		else
+			error("expected deny POST | HEAD | PUT | GET | OPTIONS | DELETE");
+	}
 }
 
 
