@@ -21,6 +21,12 @@ MethodStatus	MethodPost::manageRequest()
 //	if (_statusCode < 200 || _statusCode > 206)
 //		return error;
 //	return ok;
+	if (!data.location->postAvailable)
+	{
+		_statusCode = 405;
+		_bodyType = bodyNotDefined;
+		return error;
+	}
 	if (_bodyType == bodyIsAutoindex)
 	{
 		_statusCode = 403; // todo: !! ??
@@ -76,7 +82,7 @@ MethodStatus	MethodPost::createHeader()
 		return ok;
 	}
 
-	if (_bodyType == bodyNotDefined)//bodyIsTextErrorPage)////->сказать Дане, надо bodyIsTextErrorPage)
+	if (_bodyType == bodyIsTextErrorPage)//bodyIsTextErrorPage)////->сказать Дане, надо bodyIsTextErrorPage)
 		generateErrorPage(_body);
 
 	Header		header(data.uri.script_name, data.location->root, _statusCode);
