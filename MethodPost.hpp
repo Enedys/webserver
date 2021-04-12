@@ -34,9 +34,7 @@ public:
 	MethodPost(int &status, RequestData &data) :
 		AMethod(status, data) {_type = POST;};
 	virtual ~MethodPost();
-	// virtual MethodStatus	createHeader();
 	virtual MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus);
-	virtual MethodStatus	sendHeader(int socket);
 	virtual MethodStatus	manageRequest();
 	virtual MethodStatus	sendResponse(int socket);
 };

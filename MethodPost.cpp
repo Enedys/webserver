@@ -108,12 +108,6 @@ MethodStatus MethodPost::processBody(const std::string &requestBody, MethodStatu
 // 	return ok;
 // }
 
-MethodStatus	MethodPost::sendHeader(int socket)
-{
-	(void)socket;
-	return ok;
-}
-
 MethodStatus	MethodPost::sendResponse(int socket)
 {
 //	MethodStatus debug;

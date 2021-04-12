@@ -5,7 +5,6 @@
 # include <time.h>
 # include <sys/time.h>
 
-#include "RequestData.hpp"
 #include "include_resources.hpp"
 
 extern mapIntStr sc;
@@ -13,7 +12,6 @@ extern mapIntStr sc;
 class Header
 {
 private:
-	// RequestData const		&_data;
 	std::string const		&_path;
 	std::string const		&_root;
 	std::string const		_extension;
@@ -28,13 +26,11 @@ public:
 	~Header();
 
 	void	createGeneralHeaders(stringMap &_headersMap);
-	void	createEntityHeaders(stringMap &_headersMap);
 	void	createOptHeaders(stringMap &_headersMap);
 
 	void	addAllowHeader(stringMap &_headersMap);
 	void	addContentLanguageHeader(stringMap &_headersMap);
 	void	addContentLengthHeader(stringMap &_headersMap, std::string const & body);
-	// void	addContentLocationHeader(stringMap &_headersMap, const s_loc &location, const std::string &request_uri);
 	void	addContentLocationHeader(stringMap &_headersMap);
 	void	addContentTypeHeader(stringMap &_headersMap);
 

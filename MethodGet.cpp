@@ -2,15 +2,17 @@
 #include "Header.hpp"
 #include "Configurator.hpp"
 
-MethodGet::~MethodGet(){};
-MethodStatus		MethodGet::sendHeader(int socket) { return ok; };
+MethodGet::~MethodGet(){}
 
-MethodStatus	MethodGet::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return (ok); };
+MethodStatus	MethodGet::processBody(const std::string &requestBody, MethodStatus bodyStatus)
+{
+	(void)requestBody;
+	(void)bodyStatus;
+	return ok;
+}
 
 MethodStatus	MethodGet::manageRequest()
 {
-	// if (_statusCode != 0)//по старой логике - надо ли оставить
-	// 	return ok;
 	std::cout << "_bodyType manageRequest: " << _bodyType << std::endl;
 
 	if (!data.location->getAvailable)
@@ -34,11 +36,4 @@ MethodStatus	MethodGet::manageRequest()
 		_statusCode = cgi.init(data);//return 200
 	}
 	return ok;//
-};
-
-	// 0 bodyNotDefined,
-	// 1 bodyIsEmpty,
-	// 2 bodyIsAutoindex,		// text
-	// 3 bodyIsTextErrorPage,	// text
-	// 4 bodyIsFile,			// file: regularFile, indexFile, errorFile
-	// 5 bodyIsCGI				// cgi
+}

@@ -11,7 +11,7 @@ AMethod::	AMethod(int &status, RequestData &datas) :
 }
 
 const std::string	AMethod::Methods[AMethod::methodNums] = {
-"GET", "HEAD", "POST", "PUT", "OPTIONS", "DELETE"
+	"GET", "HEAD", "POST", "PUT", "OPTIONS", "DELETE"
 };
 
 bool				AMethod::isValidMethod(std::string const &method)
@@ -24,24 +24,9 @@ bool				AMethod::isValidMethod(std::string const &method)
 
 MethodStatus		AMethod::sendHeader(int socket)
 {
-	char resp[] = "HTTP/1.1 200 OK\r\n"
-	"Server: nginx/1.2.1\r\n"
-	"Date: Sat, 08 Mar 2014 22:53:46 GMT\r\n"
-	"Content-Type: text/html\r\n"
-	"Content-Length: 58\r\n"
-	"Last-Modified: Sat, 08 Mar 2014 22:53:30 GMT\r\n\r\n";
-	char bodya[] = "<html>"
-	"<head>"
-	"</head>"
- 	"<body>"
-   	"<h1>Hello World<h1>"
- 	"</body>"
-	"</html>";
-	std::string	letter(resp);
-	letter = letter + bodya;
-	send(socket, letter.c_str(), letter.length(), MSG_DONTWAIT);
-	return (ok);
-}
+	(void)socket;
+	return ok;
+};
 
 int					AMethod::getStatusCode() { return _statusCode; }
 CGI					&AMethod::getCGI() { return cgi; }
@@ -116,20 +101,20 @@ int					AMethod::generateIdxPage(std::string &body)
 
 MethodStatus		AMethod::createHeader()
 {
-	if (_bodyType == bodyIsCGI)//
+	if (_bodyType == bodyIsCGI)
 		return ok;
-	if (_type == GET && _bodyType == bodyIsTextErrorPage)///->сказать Дане, надо bodyIsTextErrorPage)
+	if (_type == GET && _bodyType == bodyIsTextErrorPage)
 		generateErrorPage(_body);
 
-	// Header		header(data.uri.script_name, data.location->root, _statusCode);
 	Header		header(data, _statusCode);
 	stringMap	hmap;
 
 	header.createGeneralHeaders(hmap);
 
-	if (_type == GET || _type == HEAD){// || _type == POST){//delete POST
+	if (_type == GET || _type == HEAD){
 		header.addContentLengthHeader(hmap, _body);
-		if (_statusCode < 400){//if index page no need
+		if (_statusCode < 400)
+		{
 			header.addLastModifiedHeader(hmap);
 			header.addContentTypeHeader(hmap);
 		}
@@ -199,7 +184,7 @@ MethodStatus	AMethod::readFromFileToBuf(size_t limit)
 
 MethodStatus		AMethod::sendBuf(int socket, std::string const & response)
 {
-	int sentBytes = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
+	size_t sentBytes = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
 
 	if (sentBytes < 0 || errno == EMSGSIZE){
 		_statusCode = errorSendingResponse;
@@ -236,11 +221,8 @@ MethodStatus		AMethod::sendResponse(int socket)
 	size_t readBuf = defineRWlimits();
 
 	if (_bodyType == bodyIsCGI && _remainder.empty())
-	{
-		_statusCode = cgi.smartOutput(_body);
-		if (_statusCode == inprogress && _body.empty())
+		if ((_statusCode = cgi.smartOutput(_body)) == inprogress && _body.empty())
 			return inprogress;
-	}
 
 	if (_bodyType == bodyIsFile)
 		if (readFromFileToBuf(readBuf) == error)

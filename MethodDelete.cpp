@@ -1,8 +1,12 @@
 #include "MethodDelete.hpp"
 
-MethodDelete::~MethodDelete() {};
-MethodStatus	MethodDelete::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return ok; };
-MethodStatus	MethodDelete::sendHeader(int socket){ return ok; };
+MethodDelete::~MethodDelete() {}
+MethodStatus	MethodDelete::processBody(const std::string &requestBody, MethodStatus bodyStatus)
+{
+	(void)requestBody;
+	(void)bodyStatus;
+	return ok;
+}
 
 int				MethodDelete::deleteDirectory(std::string const &path)
 {
@@ -28,7 +32,7 @@ int				MethodDelete::deleteDirectory(std::string const &path)
 		if (S_ISDIR(st.st_mode))
 			status = deleteDirectory(cur->d_name);
 		else if (open(cur->d_name, 0) < 0 || unlink(cur->d_name) == -1)
-			status = ImaTeapot;//-1;//404//500
+			status = ImaTeapot;
 	}
 	closedir(dir);
 	chdir(curDir.c_str());
@@ -37,7 +41,7 @@ int				MethodDelete::deleteDirectory(std::string const &path)
 	return status;
 }
 
-MethodStatus	MethodDelete::manageRequest()//do i need to check if statuscode is already error?
+MethodStatus	MethodDelete::manageRequest()
 {
 	// if (_bodyType == bodyIsAutoindex) // to disable folder deleting
 	// 	_statusCode = errorOpeningURL;
@@ -59,4 +63,4 @@ MethodStatus	MethodDelete::manageRequest()//do i need to check if statuscode is 
 		_statusCode = okSuccess;
 
 	return ok;
-};
+}

@@ -11,7 +11,7 @@ static struct defaultErrorPagesInit
 Header::Header(std::string const &path, std::string const &root, int const statusCode)
 	: _path(path),
 	  _root(root),
-	  _statusCode(statusCode) {};
+	  _statusCode(statusCode) {}
 
 Header::Header(RequestData const &data, int const statusCode)
 	: _path(data.uri.script_name),
@@ -20,7 +20,7 @@ Header::Header(RequestData const &data, int const statusCode)
 	  _location(data.location),
 	  _statusCode(statusCode) {};
 
-Header::~Header(){ };
+Header::~Header(){ }
 
 void	Header::headersToString(stringMap const &headersMap, std::string &output)
 {
@@ -44,20 +44,12 @@ void	Header::createGeneralHeaders(stringMap &headersMap)
 	std::string date = std::string(buf1);
 	headersMap.insert(std::pair<std::string, std::string>("Server", "Bshabillum/1.0.7"));
 	headersMap.insert(std::pair<std::string, std::string>("Date", date));
-};
-
-void	Header::createEntityHeaders(stringMap &headersMap)
-{//specific for statuses and methods
-	// // addContentLanguageHeader(headersMap);
-	// addContentLocationHeader(headersMap);//redir?
-	// // addContentTypeHeader(headersMap);
-	// addLastModifiedHeader(headersMap);//if modified
-};
+}
 
 void	Header::addContentLanguageHeader(stringMap &headersMap)
 {
 	headersMap.insert(std::pair<std::string, std::string>("Content-Language", "en-US"));//can it be specified in request before?
-};
+}
 
 void	Header::addContentLengthHeader(stringMap &headersMap, std::string const & body)
 {
@@ -74,14 +66,16 @@ void	Header::addContentLengthHeader(stringMap &headersMap, std::string const & b
 	}
 	std::string contentLength = size2Dec(bodySize);
 	headersMap.insert(std::pair<std::string, std::string>("Content-Length", contentLength));//can it be specified in request before?
-};
+}
 
 void	Header::addContentLocationHeader(stringMap &_headersMap)
 {//if moved
 // Content-Location indicates the direct URL to use to access the resource, without further
 // content negotiation in the future. Location is a header associated with the response,
 //  while Content-Location is associated with the data returned
-};
+	if (_statusCode >= 300 && _statusCode < 400)
+		_headersMap.insert(std::pair<std::string, std::string>("Location", _path));
+}
 
 void  Header::addContentTypeHeader(stringMap &_headersMap)
 {
@@ -93,7 +87,7 @@ void  Header::addContentTypeHeader(stringMap &_headersMap)
 		}
 		it++;
 	}
-};
+}
 
 void	Header::addLastModifiedHeader(stringMap &headersMap)
 {
@@ -133,7 +127,7 @@ void	Header::addAllowHeader(stringMap &_headersMap)
 	if (allowedMethods.at(allowedMethods.length() - 1) == ' ')
 		allowedMethods.resize(allowedMethods.length() - 2);
 	_headersMap.insert(std::pair<std::string, std::string>("Allow", allowedMethods));
-};
+}
 
 // При всех перенаправлениях, если метод запроса был не HEAD, то в тело ответа
 // следует включить короткое гипертекстовое сообщение с целевым адресом, чтобы
@@ -143,23 +137,10 @@ void	Header::addAllowHeader(stringMap &_headersMap)
 // void  Header::addLocationHeader(stringMap &_headersMap, const s_loc &location, const std::string &request_uri)
 void  Header::addLocationHeader(stringMap &_headersMap)
 {
-//   std::cout <<  "\n_location.path: " << location.path \
-//         << "\n_location.root: " << location.root \
-//         << "\n_path: " << _path \
-//         << "\n_root: " << _root \
-//         << "\n_location.auth: " << location.auth \
-//         << "\n_location.authLogPass: " << location.authLogPass << std::endl;
-
-//   std::string redirectPath = "/files/test.file";//
-//   if (_statusCode == 301 || _statusCode == 302 || _statusCode == 303 || _statusCode == 307 || \
-//   _statusCode == 308 || _statusCode == 201)  // //(() && method != head )
-//   {
-//     if (_statusCode != 201)
-//       _body += redirectPath;//if 201 not
-//   if (_statusCode > 300)
-//     _headersMap.insert(std::pair<std::string, std::string>("Location", request_uri));
-//   // }
+	if (_statusCode >= 300 && _statusCode < 400)
+		_headersMap.insert(std::pair<std::string, std::string>("Location", _root));
 }
+
 // Retry-After: <http-date>
 // Retry-After: <delay-seconds>
 // When sent with a 503 (Service Unavailable) response, this indicates how long the service is expected to be unavailable.

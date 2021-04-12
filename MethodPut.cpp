@@ -1,7 +1,6 @@
 #include "MethodPut.hpp"
 
-MethodPut::~MethodPut() {};
-MethodStatus	MethodPut::sendHeader(int socket){ return ok; };
+MethodPut::~MethodPut() {}
 
 MethodStatus	MethodPut::processBody(const std::string &requestBody, MethodStatus bodyStatus)
 {
@@ -14,7 +13,7 @@ MethodStatus	MethodPut::processBody(const std::string &requestBody, MethodStatus
 		return error;
 	}
 
-	int res = write(_fd, requestBody.c_str(), requestBody.length());
+	size_t res = write(_fd, requestBody.c_str(), requestBody.length());
 	close(_fd);
 	if (res < requestBody.length()){
 		_statusCode = 404;
@@ -26,7 +25,7 @@ MethodStatus	MethodPut::processBody(const std::string &requestBody, MethodStatus
 	if (bodyStatus == inprogress)
 		return inprogress;
 	return ok;
-};
+}
 
 MethodStatus	MethodPut::manageRequest()
 {
@@ -39,4 +38,4 @@ MethodStatus	MethodPut::manageRequest()
 	_bodyType = bodyIsEmpty;
 
 	return ok;
-};
+}

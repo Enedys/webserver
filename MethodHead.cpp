@@ -1,9 +1,14 @@
 #include "MethodHead.hpp"
 #include "Header.hpp"
 
-MethodHead::~MethodHead() {};
-MethodStatus 	MethodHead::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return (ok); };
-MethodStatus	MethodHead::sendHeader(int socket) { return (ok); };
+MethodHead::~MethodHead() {}
+
+MethodStatus 	MethodHead::processBody(const std::string &requestBody, MethodStatus bodyStatus)
+{
+	(void)requestBody;
+	(void)bodyStatus;
+	return ok;
+}
 
 MethodStatus	MethodHead::manageRequest()
 {
@@ -12,10 +17,10 @@ MethodStatus	MethodHead::manageRequest()
 	if (!data.location->headAvailable)
 		_statusCode = methodNotAllowed;
 
-	else if (_bodyType == bodyIsAutoindex)//isCGI
+	else if (_bodyType == bodyIsAutoindex)
 		_statusCode = 403;
 
 	_bodyType = bodyIsEmpty;
 
 	return ok;
-};
+}

@@ -25,7 +25,7 @@ protected:
 
 	size_t				_sentBytesTotal;
 	size_t				_bytesToSend;
-	static const size_t	_bs = 4096 * 10;
+	static const size_t	_bs = 4096 * 448;
 	std::string			_remainder;
 	std::string			_body;
 
@@ -38,11 +38,12 @@ public:
 	static const std::string	Methods[methodNums];
 	static bool					isValidMethod(std::string const &method);
 
-	virtual MethodStatus	createHeader();// create response
+	virtual MethodStatus	createHeader();
 	virtual MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus) = 0;
-	virtual MethodStatus	sendHeader(int socket) = 0;
+	virtual MethodStatus	sendHeader(int socket);
 	virtual MethodStatus	manageRequest() = 0;
 	virtual MethodStatus	sendResponse(int socket);
+
 	virtual size_t			defineRWlimits();
 	virtual MethodStatus	readFromFileToBuf(size_t limit);
 	virtual MethodStatus	sendBuf(int socket, std::string const & buf);
