@@ -6,6 +6,8 @@ AMethod::	AMethod(int &status, RequestData &datas) :
 	_statusCode(status), data(datas), _bodyType(bodyNotDefined)
 {
 	_sentBytesTotal = 0;
+	_bytesToSend = 0;
+	_fd = -1;
 }
 
 const std::string	AMethod::Methods[AMethod::methodNums] = {
@@ -151,81 +153,100 @@ MethodStatus		AMethod::createHeader()
 	return ok;
 }
 
-MethodStatus		AMethod::sendResponse(int socket)
+size_t			AMethod::defineRWlimits()
 {
-	std::string	response;//(_body)
-	size_t		res;
-	char		buf[_bs + 1];
-	size_t		readBuf = _bs;
+	size_t	readBuf = _bs;
 
-	memset(buf, 0, _bs);
-
-	if (_statusCode != okSendingInProgress)
+	if (_statusCode == okSendingInProgress)
 	{
-		if (_bodyType != bodyIsCGI)
-			response += _body;
-
-		if (_bodyType == bodyIsFile)
-		{
-			struct stat sbuf;
-			fstat(_fd, &sbuf);
-			_bytesToSend = _body.length() + sbuf.st_size;
-			readBuf -= _body.length();
+		if (!_remainder.empty()){//что-то не отослалось в send
+			readBuf = _bs - _remainder.length();
+			_body = _remainder;
 		}
-		else
-			_bytesToSend = _body.length();
-	}
-
-	if (!_remainder.empty()){//что-то не отослалось в send. only if not a full response was sent (by send)
-		readBuf = _bs - _remainder.length();
-		response = _remainder;
-	}
-	else if (_bodyType == bodyIsCGI)
-	{
-		_statusCode = cgi.smartOutput(response);//can error be returned?
-		if (_statusCode == inprogress && response.empty())
-			return inprogress;//
+		return readBuf;
 	}
 
 	if (_bodyType == bodyIsFile)
 	{
-		res = read(_fd, buf, readBuf);
-		if (res < 0){
-			_statusCode = errorReadingURL;
-			close(_fd);
-			return error;//what happens after, above, _body.length()
-		}
-		buf[readBuf] = '\0';
-		std::string bufStr(buf, res);
-		response += bufStr;
+		struct stat sbuf;
+		fstat(_fd, &sbuf);
+		_bytesToSend = _body.length() + sbuf.st_size;
+		readBuf -= _body.length();
 	}
+	else
+		_bytesToSend = _body.length();
 
-	res = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
-	if (res < 0 || errno == EMSGSIZE){
+	return readBuf;
+}
+
+MethodStatus	AMethod::readFromFileToBuf(size_t limit)
+{
+	char	buf[_bs + 1];
+
+	memset(buf, 0, _bs);
+	size_t res = read(_fd, buf, limit);
+	if (res < 0){
+		_statusCode = errorReadingURL;
+		close(_fd);
+		return error;
+	}
+	buf[limit] = '\0';
+	std::string bufStr(buf, res);
+	_body += bufStr;
+
+	return ok;
+}
+
+MethodStatus		AMethod::sendBuf(int socket, std::string const & response)
+{
+	int sentBytes = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
+
+	if (sentBytes < 0 || errno == EMSGSIZE){
 		_statusCode = errorSendingResponse;
 		close(_fd);
 		return error;
 	}
-	if (res < response.length()){
-		_remainder.assign(response.c_str(), res, response.length() - res);
-		_sentBytesTotal += res;
+	if (sentBytes < response.length()){
+		_remainder.assign(response.c_str(), sentBytes, response.length() - sentBytes);
+		_sentBytesTotal += sentBytes;
 		_statusCode = okSendingInProgress;
 		return inprogress;
 	};
+
 	_remainder.clear();
 	if (_bodyType == bodyIsCGI)
 		return _statusCode == ok ? ok : inprogress;
 
-	_sentBytesTotal += res;
-		std::cout << "_bytesToSend: " << _bytesToSend << std::endl;
-		std::cout << "_sentBytesTotal: " << _sentBytesTotal << std::endl;
+	_sentBytesTotal += sentBytes;
 	if (_sentBytesTotal < _bytesToSend){
+		_body.clear();
 		_statusCode = okSendingInProgress;
 		return inprogress;
 	}
-	_statusCode = ok;//do we still need this?
 
-	close(_fd);
+	_statusCode = ok;
+	if (_fd != -1)
+		close(_fd);
 
 	return ok;
+}
+
+MethodStatus		AMethod::sendResponse(int socket)
+{
+	size_t readBuf = defineRWlimits();
+
+	if (_bodyType == bodyIsCGI && _remainder.empty())
+	{
+		_statusCode = cgi.smartOutput(_body);
+		if (_statusCode == inprogress && _body.empty())
+			return inprogress;
+	}
+
+	if (_bodyType == bodyIsFile)
+		if (readFromFileToBuf(readBuf) == error)
+			return error;
+
+	MethodStatus status = sendBuf(socket, _body);
+
+	return status;
 }

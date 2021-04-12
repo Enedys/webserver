@@ -25,7 +25,7 @@ protected:
 
 	size_t				_sentBytesTotal;
 	size_t				_bytesToSend;
-	static const size_t	_bs = 4096 * 512;
+	static const size_t	_bs = 4096 * 10;
 	std::string			_remainder;
 	std::string			_body;
 
@@ -43,6 +43,9 @@ public:
 	virtual MethodStatus	sendHeader(int socket) = 0;
 	virtual MethodStatus	manageRequest() = 0;
 	virtual MethodStatus	sendResponse(int socket);
+	virtual size_t			defineRWlimits();
+	virtual MethodStatus	readFromFileToBuf(size_t limit);
+	virtual MethodStatus	sendBuf(int socket, std::string const & buf);
 
 	int						getStatusCode();
 	CGI						&getCGI();
