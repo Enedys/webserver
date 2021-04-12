@@ -74,39 +74,39 @@ MethodStatus MethodPost::processBody(const std::string &requestBody, MethodStatu
 	return (bodyStatus);
 }
 
-MethodStatus	MethodPost::createHeader()
-{
-	std::cout << "_bodyType createHeader: " << _bodyType << std::endl;
-	if (_bodyType == bodyIsCGI){
-		// _statusCode = cgi.init(data);//return 200
-		return ok;
-	}
+// MethodStatus	MethodPost::createHeader()
+// {
+// 	std::cout << "_bodyType createHeader: " << _bodyType << std::endl;
+// 	if (_bodyType == bodyIsCGI){
+// 		// _statusCode = cgi.init(data);//return 200
+// 		return ok;
+// 	}
 
-	if (_bodyType == bodyIsTextErrorPage)//bodyIsTextErrorPage)////->сказать Дане, надо bodyIsTextErrorPage)
-		generateErrorPage(_body);
+// 	if (_bodyType == bodyNotDefined)//bodyIsTextErrorPage)////->сказать Дане, надо bodyIsTextErrorPage)
+// 		generateErrorPage(_body);
 
-	Header		header(data.uri.script_name, data.location->root, _statusCode);
-	stringMap	hmap;
-	std::cout << "\n////\tGET METHOD, statusCode: " << _statusCode << std::endl;
+// 	Header		header(data.uri.script_name, data.location->root, _statusCode);
+// 	stringMap	hmap;
+// 	std::cout << "\n////\tGET METHOD, statusCode: " << _statusCode << std::endl;
 
-	header.createGeneralHeaders(hmap);
-	header.addContentLengthHeader(hmap, _body);//for GET//body for auto+error//if not dir!
+// 	header.createGeneralHeaders(hmap);
+// 	header.addContentLengthHeader(hmap, _body);//for GET//body for auto+error//if not dir!
 
-	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206))
-		header.createEntityHeaders(hmap);
-	if (_statusCode == 405)
-		header.addAllowHeader(hmap, *data.location);
-	// header.addLocationHeader(hmap);
-	header.addRetryAfterHeader(hmap);//503 429
-	// header.addTransferEncodingHeader(hmap, hmapRequest);
-	header.addAuthenticateHeader(hmap);
+// 	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206))
+// 		header.createEntityHeaders(hmap);
+// 	if (_statusCode == 405)
+// 		header.addAllowHeader(hmap, *data.location);
+// 	// header.addLocationHeader(hmap);
+// 	header.addRetryAfterHeader(hmap);//503 429
+// 	// header.addTransferEncodingHeader(hmap, hmapRequest);
+// 	header.addAuthenticateHeader(hmap);
 
-	std::string headerStr;
-	header.headersToString(hmap, headerStr);
-	_body.insert(0, headerStr);
+// 	std::string headerStr;
+// 	header.headersToString(hmap, headerStr);
+// 	_body.insert(0, headerStr);
 
-	return ok;
-}
+// 	return ok;
+// }
 
 MethodStatus	MethodPost::sendHeader(int socket)
 {

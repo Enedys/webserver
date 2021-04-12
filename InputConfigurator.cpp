@@ -1,6 +1,6 @@
 #include "Configurator.hpp"
 
-bodyType const	Configurator::getBodyType()
+bodyType		Configurator::getBodyType() const
 {
 	return this->_bodyType;
 };
@@ -55,11 +55,12 @@ bodyType		Configurator::defineInputType(mode_t const &mode)
 	if (_data.location->autoindex)
 		return bodyIsAutoindex;
 
-	if (*(_data.getMethod()) == "HEAD"){
+	if (*(_data.getMethod()) == "DELETE")
+		return bodyIsEmpty;
+	if (*(_data.getMethod()) == "HEAD" || *(_data.getMethod()) == "PUT"){
 		_statusCode = 403;
 		return bodyIsEmpty;
 	}
-
 	if (findIndexPageInConfig() == true)
 		return isCGI(_data.uri.extension) ? bodyIsCGI : bodyIsFile;
 

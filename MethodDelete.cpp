@@ -2,6 +2,7 @@
 
 MethodDelete::~MethodDelete() {};
 MethodStatus	MethodDelete::processBody(const std::string &requestBody, MethodStatus bodyStatus) { return ok; };
+MethodStatus	MethodDelete::sendHeader(int socket){ return ok; };
 
 int				MethodDelete::deleteDirectory(std::string const &path)
 {
@@ -38,18 +39,20 @@ int				MethodDelete::deleteDirectory(std::string const &path)
 
 MethodStatus	MethodDelete::manageRequest()//do i need to check if statuscode is already error?
 {
-	if (!data.location->deleteAvailable){
-		_statusCode = methodNotAllowed;
-		return error;//
-	}
-	// if (_bodyType == bodyIsAutoindex) // == если надо сделать, чтобы было нельзя удалить папку
+	// if (_bodyType == bodyIsAutoindex) // to disable folder deleting
 	// 	_statusCode = errorOpeningURL;
+
+	_bodyType = bodyIsEmpty;
+
+	if (!data.location->deleteAvailable)
+		_statusCode = methodNotAllowed;
+	if (_statusCode != 0)
+		return error;
 
 	struct stat	st;
 	stat(data.uri.script_name.c_str(), &st);
 	if (S_ISDIR(st.st_mode))
 		_statusCode = deleteDirectory(data.uri.script_name);
-	// else if (open(data.uri.script_name.c_str(), 0) < 0 || unlink(data.uri.script_name.c_str()) == -1)//EACCES//EBUSY//EISDIR//
 	else if (unlink(data.uri.script_name.c_str()) == -1)
 		_statusCode = errorOpeningURL;
 	else
@@ -57,29 +60,3 @@ MethodStatus	MethodDelete::manageRequest()//do i need to check if statuscode is 
 
 	return ok;
 };
-
-MethodStatus	MethodDelete::createHeader()
-{
-	if (_bodyType == bodyIsTextErrorPage)
-		generateErrorPage(_body);
-
-	Header		header(data.uri.script_name, data.location->root, _statusCode);
-	stringMap	hmap;
-
-	std::cout << "////\t\t DELETE METHOD, statusCode: " << _statusCode << std::endl;
-
-	header.createGeneralHeaders(hmap);
-	// header.addContentLengthHeader(hmap, _body);
-	hmap.insert(std::pair<std::string, std::string>("Content-Length", "0"));//can it be specified in request before?
-
-	if (_statusCode == 405)
-		header.addAllowHeader(hmap, *data.location);
-
-	std::string headerStr;
-	header.headersToString(hmap, headerStr);
-	_body.insert(0, headerStr);
-
-	return ok;
-};
-
-MethodStatus	MethodDelete::sendHeader(int socket){ return ok; };
