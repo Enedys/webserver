@@ -80,7 +80,7 @@ class Logger
 private:
 	int						_isFile;
 	LogLevel				_lvl;
-	LogLevel				_lastMsgLvl;
+	// LogLevel				_lastMsgLvl;
 	std::ostream			*_stream;
 	time_t					_startLogTime;
 	Message					_msg;

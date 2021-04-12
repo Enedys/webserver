@@ -114,31 +114,25 @@ int					AMethod::generateIdxPage(std::string &body)
 
 MethodStatus		AMethod::createHeader()
 {
-	if (_type == GET)
-	{
-		if (_bodyType == bodyIsCGI)//up
+	if (_bodyType == bodyIsCGI)//
 		return ok;
-
-		if (_bodyType == bodyIsTextErrorPage)//bodyNotDefined)//bodyIsTextErrorPage)////->сказать Дане, надо bodyIsTextErrorPage)
-			generateErrorPage(_body);
-	}
+	if (_type == GET && _bodyType == bodyIsTextErrorPage)///->сказать Дане, надо bodyIsTextErrorPage)
+		generateErrorPage(_body);
 
 	Header		header(data.uri.script_name, data.location->root, _statusCode);
 	stringMap	hmap;
 
 	header.createGeneralHeaders(hmap);
 
-	if (_type == GET || _type == HEAD || _type == POST){//delete POST
-		header.addContentLengthHeader(hmap, _body);//for GET//body for auto+error//if not dir!
-		if (_statusCode < 400){
+	if (_type == GET || _type == HEAD){// || _type == POST){//delete POST
+		header.addContentLengthHeader(hmap, _body);
+		if (_statusCode < 400){//if index page no need
 			header.addLastModifiedHeader(hmap);
-			if (_bodyType != bodyIsCGI && _bodyType != bodyIsEmpty)//head: always
-				header.addContentTypeHeader(hmap, data.uri.extension);
+			header.addContentTypeHeader(hmap, data.uri.extension);
 		}
 	}
-	else//bodyIsEmpty
+	else
 		hmap.insert(std::pair<std::string, std::string>("Content-Length", "0"));//can it be specified in request before?
-
 
 	if (_type == OPTION || _statusCode == 405)
 		header.addAllowHeader(hmap, *data.location);
@@ -164,7 +158,6 @@ MethodStatus		AMethod::sendResponse(int socket)
 	size_t		readBuf = _bs;
 
 	memset(buf, 0, _bs);
-	// std::cout << "_bodyType: " << _bodyType << std::endl;
 
 	if (_statusCode != okSendingInProgress)
 	{
@@ -178,13 +171,8 @@ MethodStatus		AMethod::sendResponse(int socket)
 			_bytesToSend = _body.length() + sbuf.st_size;
 			readBuf -= _body.length();
 		}
-		// else if (_bodyType == bodyIsEmpty)//
-		// 	_bytesToSend = response.length();
 		else
 			_bytesToSend = _body.length();
-		// std::cout << "_body.length(): " << _body.length() << std::endl;
-		// std::cout << "_bytesToSend: " << _bytesToSend << std::endl;
-		// std::cout << "readBuf: " << readBuf << std::endl;
 	}
 
 	if (!_remainder.empty()){//что-то не отослалось в send. only if not a full response was sent (by send)

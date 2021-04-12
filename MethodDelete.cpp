@@ -40,14 +40,14 @@ int				MethodDelete::deleteDirectory(std::string const &path)
 MethodStatus	MethodDelete::manageRequest()//do i need to check if statuscode is already error?
 {
 	// if (_bodyType == bodyIsAutoindex) // to disable folder deleting
-	// { _statusCode = errorOpeningURL; return error; }
+	// 	_statusCode = errorOpeningURL;
 
 	_bodyType = bodyIsEmpty;
 
-	if (!data.location->deleteAvailable){
+	if (!data.location->deleteAvailable)
 		_statusCode = methodNotAllowed;
-		return error;//
-	}
+	if (_statusCode != 0)
+		return error;
 
 	struct stat	st;
 	stat(data.uri.script_name.c_str(), &st);
@@ -60,23 +60,3 @@ MethodStatus	MethodDelete::manageRequest()//do i need to check if statuscode is 
 
 	return ok;
 };
-
-// MethodStatus	MethodDelete::createHeader()
-// {
-// 	Header		header(data.uri.script_name, data.location->root, _statusCode);
-// 	stringMap	hmap;
-
-// 	std::cout << "////\t\t DELETE METHOD, statusCode: " << _statusCode << std::endl;
-
-// 	header.createGeneralHeaders(hmap);
-// 	hmap.insert(std::pair<std::string, std::string>("Content-Length", "0"));// header.addContentLengthHeader(hmap, _body);
-
-// 	if (_statusCode == 405)
-// 		header.addAllowHeader(hmap, *data.location);
-
-// 	std::string headerStr;
-// 	header.headersToString(hmap, headerStr);
-// 	_body.insert(0, headerStr);
-
-// 	return ok;
-// };

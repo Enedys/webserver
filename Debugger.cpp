@@ -15,13 +15,13 @@ Message::LogLevel		Message::getMsgLvl() const {return (_msgLvl);};
 /* Logger Class */
 
 const std::string	Logger::endl = "\n";
-Logger::Logger() : _lvl(Message::verbose), _stream(&std::cerr), _isFile(0) 
+Logger::Logger() : _isFile(0), _lvl(Message::verbose), _stream(&std::cerr)
 {_startLogTime = time(NULL);};
 
-Logger::Logger(std::ostream &file, LogLevel lvl) : _lvl(lvl), _stream(&file), _isFile(0)
+Logger::Logger(std::ostream &file, LogLevel lvl) : _isFile(0), _lvl(lvl), _stream(&file)
 {_startLogTime = time(NULL);};
 Logger::Logger(std::string &fileName, LogLevel lvl) try :
-	_lvl(lvl), _isFile(1)
+	_isFile(1), _lvl(lvl)
 {
 	_stream = new std::ofstream(fileName.c_str(), std::ios::trunc);
 	if (!static_cast<std::fstream *>(_stream)->is_open() ||\
