@@ -119,7 +119,8 @@ MethodStatus		AMethod::createHeader()
 	if (_type == GET && _bodyType == bodyIsTextErrorPage)///->сказать Дане, надо bodyIsTextErrorPage)
 		generateErrorPage(_body);
 
-	Header		header(data.uri.script_name, data.location->root, _statusCode);
+	// Header		header(data.uri.script_name, data.location->root, _statusCode);
+	Header		header(data, _statusCode);
 	stringMap	hmap;
 
 	header.createGeneralHeaders(hmap);
@@ -128,14 +129,14 @@ MethodStatus		AMethod::createHeader()
 		header.addContentLengthHeader(hmap, _body);
 		if (_statusCode < 400){//if index page no need
 			header.addLastModifiedHeader(hmap);
-			header.addContentTypeHeader(hmap, data.uri.extension);
+			header.addContentTypeHeader(hmap);
 		}
 	}
 	else
 		hmap.insert(std::pair<std::string, std::string>("Content-Length", "0"));//can it be specified in request before?
 
 	if (_type == OPTION || _statusCode == 405)
-		header.addAllowHeader(hmap, *data.location);
+		header.addAllowHeader(hmap);
 
 	// header.addContentLocationHeader(hmap);
 	// header.addLocationHeader(hmap, *data.location, data.uri.request_uri);//if redirect

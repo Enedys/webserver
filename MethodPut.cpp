@@ -5,7 +5,7 @@ MethodStatus	MethodPut::sendHeader(int socket){ return ok; };
 
 MethodStatus	MethodPut::processBody(const std::string &requestBody, MethodStatus bodyStatus)
 {
-	if (_statusCode == 403)
+	if (_statusCode == 403 || _statusCode == 405)
 		return ok;
 
 	_fd = open(data.uri.script_name.c_str(), O_WRONLY | O_APPEND | O_CREAT| O_NONBLOCK, 0644);

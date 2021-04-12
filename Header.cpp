@@ -9,10 +9,16 @@ static struct defaultErrorPagesInit
 } defaultErrorPagesInit;
 
 Header::Header(std::string const &path, std::string const &root, int const statusCode)
-	: _path(path), _root(root), _statusCode(statusCode) {};
+	: _path(path),
+	  _root(root),
+	  _statusCode(statusCode) {};
 
-// Header::Header(RequestData const &data, int const statusCode)
-// 	: _data(data), _statusCode(statusCode) {};
+Header::Header(RequestData const &data, int const statusCode)
+	: _path(data.uri.script_name),
+	  _root(data.location->root),
+	  _extension(data.uri.extension),
+	  _location(data.location),
+	  _statusCode(statusCode) {};
 
 Header::~Header(){ };
 
@@ -77,11 +83,11 @@ void	Header::addContentLocationHeader(stringMap &_headersMap)
 //  while Content-Location is associated with the data returned
 };
 
-void  Header::addContentTypeHeader(stringMap &_headersMap, const std::string &ext)
+void  Header::addContentTypeHeader(stringMap &_headersMap)
 {
 	constMapIter it = _mimeMap.begin();
 	while (it != _mimeMap.end()){
-		if (it->first == ext){
+		if (it->first == _extension){
 			_headersMap.insert(std::pair<std::string, std::string>("Content-Type", it->second));
 			break ;
 		}
@@ -107,22 +113,22 @@ void	Header::addLastModifiedHeader(stringMap &headersMap)
 // This header must be sent if the server responds with a 405 Method Not Allowed status code
 // to indicate which request methods can be used. An empty Allow header indicates that the
 // resource allows no request methods, which might occur temporarily for a given resource, for example.
-void	Header::addAllowHeader(stringMap &_headersMap, const s_loc &location)
+void	Header::addAllowHeader(stringMap &_headersMap)
 {
 	std::cout << "////\t\taddAllowHeader" << _statusCode << std::endl;
 	// int statusCode1 = const_cast<int&>(statusCode) = 405;
 	std::string allowedMethods;// = "";
-	if (location.getAvailable)
+	if ((*_location).getAvailable)
 		allowedMethods += "GET, ";
-	if (location.headAvailable)
+	if ((*_location).headAvailable)
 		allowedMethods += "HEAD, ";
-	if (location.postAvailable)
+	if ((*_location).postAvailable)
 		allowedMethods += "POST, ";
-	if (location.putAvailable)
+	if ((*_location).putAvailable)
 		allowedMethods += "PUT, ";
-	if (location.optionsAvailable)
+	if ((*_location).optionsAvailable)
 		allowedMethods += "OPTIONS, ";
-	if (location.deleteAvailable)
+	if ((*_location).deleteAvailable)
 		allowedMethods += "DELETE";
 	if (allowedMethods.at(allowedMethods.length() - 1) == ' ')
 		allowedMethods.resize(allowedMethods.length() - 2);
@@ -134,24 +140,25 @@ void	Header::addAllowHeader(stringMap &_headersMap, const s_loc &location)
 // в случае ошибки пользователь смог сам произвести переход.
 // The principal use is to indicate the URL of a resource transmitted
 // as the result of content negotiation.
-void  Header::addLocationHeader(stringMap &_headersMap, const s_loc &location, const std::string &request_uri)
+// void  Header::addLocationHeader(stringMap &_headersMap, const s_loc &location, const std::string &request_uri)
+void  Header::addLocationHeader(stringMap &_headersMap)
 {
-  // std::cout <<  "\nlocation.path: " << location.path \
-  //       << "\nlocation.root: " << location.root \
-  //       << "\n_path: " << _path \
-  //       << "\n_root: " << _root \
-  //       << "\nlocation.auth: " << location.auth \
-  //       << "\nlocation.authLogPass: " << location.authLogPass << std::endl;
+//   std::cout <<  "\n_location.path: " << location.path \
+//         << "\n_location.root: " << location.root \
+//         << "\n_path: " << _path \
+//         << "\n_root: " << _root \
+//         << "\n_location.auth: " << location.auth \
+//         << "\n_location.authLogPass: " << location.authLogPass << std::endl;
 
-  // std::string redirectPath = "/files/test.file";//
-  // if (_statusCode == 301 || _statusCode == 302 || _statusCode == 303 || _statusCode == 307 || \
-  // _statusCode == 308 || _statusCode == 201)  // //(() && method != head )
-  // {
-    // if (_statusCode != 201)
-      // _body += redirectPath;//if 201 not
-  // if (_statusCode > 300)
-  //   _headersMap.insert(std::pair<std::string, std::string>("Location", request_uri));
-  // // }
+//   std::string redirectPath = "/files/test.file";//
+//   if (_statusCode == 301 || _statusCode == 302 || _statusCode == 303 || _statusCode == 307 || \
+//   _statusCode == 308 || _statusCode == 201)  // //(() && method != head )
+//   {
+//     if (_statusCode != 201)
+//       _body += redirectPath;//if 201 not
+//   if (_statusCode > 300)
+//     _headersMap.insert(std::pair<std::string, std::string>("Location", request_uri));
+//   // }
 }
 // Retry-After: <http-date>
 // Retry-After: <delay-seconds>
