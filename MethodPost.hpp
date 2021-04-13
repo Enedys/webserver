@@ -36,5 +36,6 @@ public:
 	virtual ~MethodPost();
 	virtual MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus);
 	virtual MethodStatus	manageRequest();
+	// virtual MethodStatus	createHeader();
 	virtual MethodStatus	sendResponse(int socket);
 };

@@ -24,8 +24,10 @@ MethodStatus	MethodPost::manageRequest()
 	if (!data.location->postAvailable)
 	{
 		_statusCode = 405;
-		_bodyType = bodyNotDefined;
-		return error;
+		_bodyType = bodyIsTextErrorPage;
+		// _bodyType = bodyNotDefined;
+		return ok;
+		// return error;
 	}
 	if (_bodyType == bodyIsAutoindex)
 	{
@@ -66,6 +68,8 @@ MethodStatus	MethodPost::manageRequest()
 
 MethodStatus MethodPost::processBody(const std::string &requestBody, MethodStatus bodyStatus)
 {
+	if (_statusCode >= 400)
+		return bodyStatus;
 	// todo: bodystartus - ok, end of input;
 	cgi.input(requestBody, bodyStatus);
 	std::cout << "\n\nbody\n\n";
@@ -82,24 +86,24 @@ MethodStatus MethodPost::processBody(const std::string &requestBody, MethodStatu
 // 		return ok;
 // 	}
 
-// 	if (_bodyType == bodyNotDefined)//bodyIsTextErrorPage)////->сказать Дане, надо bodyIsTextErrorPage)
+// 	if (_bodyType == bodyIsTextErrorPage)//bodyNotDefined)//)////->сказать Дане, надо bodyIsTextErrorPage)
 // 		generateErrorPage(_body);
 
 // 	Header		header(data.uri.script_name, data.location->root, _statusCode);
 // 	stringMap	hmap;
-// 	std::cout << "\n////\tGET METHOD, statusCode: " << _statusCode << std::endl;
+// 	std::cout << "\n////\tPOST METHOD, statusCode: " << _statusCode << std::endl;
 
 // 	header.createGeneralHeaders(hmap);
 // 	header.addContentLengthHeader(hmap, _body);//for GET//body for auto+error//if not dir!
 
-// 	if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206))
-// 		header.createEntityHeaders(hmap);
+// 	// if (_statusCode == 0 || (_statusCode >= 200 && _statusCode <= 206))
+// 	// 	header.createEntityHeaders(hmap);
 // 	if (_statusCode == 405)
-// 		header.addAllowHeader(hmap, *data.location);
+// 		header.addAllowHeader(hmap);
 // 	// header.addLocationHeader(hmap);
-// 	header.addRetryAfterHeader(hmap);//503 429
+// 	// header.addRetryAfterHeader(hmap);//503 429
 // 	// header.addTransferEncodingHeader(hmap, hmapRequest);
-// 	header.addAuthenticateHeader(hmap);
+// 	// header.addAuthenticateHeader(hmap);
 
 // 	std::string headerStr;
 // 	header.headersToString(hmap, headerStr);

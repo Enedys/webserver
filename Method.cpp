@@ -100,9 +100,11 @@ int					AMethod::generateIdxPage(std::string &body)
 
 MethodStatus		AMethod::createHeader()
 {
+	std::cout << "createHeader: _bodyType: " << _bodyType << std::endl;
+
 	if (_bodyType == bodyIsCGI)
 		return ok;
-	if (_type == GET && _bodyType == bodyIsTextErrorPage)
+	if ((_type == GET || _type == POST) && _bodyType == bodyIsTextErrorPage)
 		generateErrorPage(_body);
 
 	Header		header(data, _statusCode);
@@ -110,14 +112,16 @@ MethodStatus		AMethod::createHeader()
 
 	header.createGeneralHeaders(hmap);
 
-	if (_type == GET || _type == HEAD){
+	if (_type == GET || _type == HEAD || (_type == POST && _bodyType == bodyIsTextErrorPage))//post for debug
 		header.addContentLengthHeader(hmap, _body);
+	else
+		hmap.insert(std::pair<std::string, std::string>("Content-Length", "0"));
+
+	if (_type == GET || _type == HEAD)
+	{
 		header.addLastModifiedHeader(hmap);
 		header.addContentTypeHeader(hmap);
 	}
-	else
-		hmap.insert(std::pair<std::string, std::string>("Content-Length", "0"));//can it be specified in request before?
-
 	if (_type == PUT)
 	{
 		header.addContentLocationHeader(hmap);
@@ -133,6 +137,8 @@ MethodStatus		AMethod::createHeader()
 	std::string headerStr;
 	header.headersToString(hmap, headerStr);
 	_body.insert(0, headerStr);
+
+	// std::cout << "_body: " << _body << std::endl;
 
 	return ok;
 }
@@ -228,6 +234,7 @@ MethodStatus		AMethod::sendResponse(int socket)
 		if (readFromFileToBuf(readBuf) == error)
 			return error;
 
+	// std::cout << "_body: " << _body << std::endl;
 	MethodStatus status = sendBuf(socket, _body);
 
 	return status;

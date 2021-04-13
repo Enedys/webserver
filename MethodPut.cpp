@@ -2,10 +2,22 @@
 
 MethodPut::~MethodPut() {}
 
+void			MethodPut::setUploadPath()
+{
+	std::string uploadUri(data.location->uploadStore);
+	std::size_t found = data.uri.request_uri.find_last_of('/');
+	std::string fname =	data.uri.request_uri.substr(found, data.uri.request_uri.length() - 1);
+	uploadUri += fname;
+	data.uri.script_name = uploadUri;
+}
+
 MethodStatus	MethodPut::processBody(const std::string &requestBody, MethodStatus bodyStatus)
 {
 	if (_statusCode == 403 || _statusCode == 405)
 		return ok;
+
+	if (data.location->uploadPass)
+		setUploadPath();
 
 	_fd = open(data.uri.script_name.c_str(), O_WRONLY | O_APPEND | O_CREAT| O_NONBLOCK, 0644);
 	if (_fd < 0){

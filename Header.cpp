@@ -503,7 +503,7 @@ void	Header::addAllowHeader(stringMap &_headersMap)
 		allowedMethods += "OPTIONS, ";
 	if ((*_location).deleteAvailable)
 		allowedMethods += "DELETE";
-	if (allowedMethods.at(allowedMethods.length() - 1) == ' ')
+	if (!allowedMethods.empty() && allowedMethods.at(allowedMethods.length() - 1) == ' ')
 		allowedMethods.resize(allowedMethods.length() - 2);
 	_headersMap.insert(std::pair<std::string, std::string>("Allow", allowedMethods));
 }

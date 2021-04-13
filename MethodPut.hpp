@@ -14,4 +14,5 @@ public:
 	~MethodPut();
 	virtual MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus);
 	virtual MethodStatus	manageRequest();
+	void					setUploadPath();
 };

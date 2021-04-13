@@ -61,14 +61,14 @@ OBJS = $(addprefix $(OBJ_DIR), $(OBJ_LIST))
 all: $(NAME)
 
 $(NAME): $(OBJ_DIR) $(OBJS)
-	@clang++ -g -D_GLIBCXX_DEBUG $(FLAGS) $(OBJS) -o $(NAME)
+	@clang++ -g -D_GLIBCXX_DEBUG -DTESTER $(FLAGS) $(OBJS) -o $(NAME)
 	@printf "$(_GREEN)\nDanone! ✅\n$(NAME) is ready to run! ✅\n$(_END)"
 
 $(OBJ_DIR):
 	@mkdir $(OBJ_DIR)
 
 $(OBJ_DIR)%.o: %.cpp
-	@clang++ -c -g -D_GLIBCXX_DEBUG $(FLAGS) $< -o $@
+	@clang++ -c -g -D_GLIBCXX_DEBUG -DTESTER $(FLAGS) $< -o $@
 	@printf "\033[2K\r $(_YELLOW)Compiling... $< $(_END)⌛"
 
 clean:
