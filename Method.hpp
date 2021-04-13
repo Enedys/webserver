@@ -28,6 +28,7 @@ protected:
 	static const size_t	_bs = 4096 * 448;
 	std::string			_remainder;
 	std::string			_body;
+	int					_sendingInProgress;
 
 	AMethod();
 

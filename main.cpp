@@ -17,7 +17,7 @@ mapIntStr scInit()
 	sc[202] = "Accepted";
 	sc[400] = "Bad Request";
 	sc[401] = "Unauthorized";
-	sc[403] = "Forbidden";//when autoindex is off and request is a folder
+	sc[403] = "Forbidden";
 	sc[404] = "Not Found";
 	sc[405] = "Method Not Allowed";
 	sc[406] = "Not Acceptable";
@@ -34,7 +34,7 @@ mapIntStr scInit()
 	sc[499] = "Client Closed Request";
 	sc[500] = "Internal Server Error";
 	sc[501] = "Not Implemented";
-	sc[503] = "Service Unavailable";//перегрузка сервера
+	sc[503] = "Service Unavailable";
 	sc[505] = "HTTP Version Not Supported";
 	return sc;
 }

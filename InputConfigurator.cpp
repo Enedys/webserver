@@ -74,7 +74,7 @@ MethodStatus	Configurator::inputConfigurator()
 	struct stat	st;
 	if (stat(_data.uri.script_name.c_str(), &st) == -1)
 	{
-		_statusCode = notFound;
+		_statusCode = 404;
 		return error;
 	}
 

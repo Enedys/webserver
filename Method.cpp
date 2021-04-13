@@ -8,6 +8,7 @@ AMethod::	AMethod(int &status, RequestData &datas) :
 	_sentBytesTotal = 0;
 	_bytesToSend = 0;
 	_fd = -1;
+	_sendingInProgress = 0;
 }
 
 const std::string	AMethod::Methods[AMethod::methodNums] = {
@@ -26,7 +27,7 @@ MethodStatus		AMethod::sendHeader(int socket)
 {
 	(void)socket;
 	return ok;
-};
+}
 
 int					AMethod::getStatusCode() { return _statusCode; }
 CGI					&AMethod::getCGI() { return cgi; }
@@ -51,7 +52,7 @@ int					AMethod::generateIdxPage(std::string &body)
 
 	dir = opendir(data.uri.script_name.c_str());
 	if (!dir){
-		_statusCode = errorOpeningURL;
+		_statusCode = 403;
 		return -1;
 	}
 	body = "<html><head><style> \
@@ -75,12 +76,10 @@ int					AMethod::generateIdxPage(std::string &body)
 		if (fullPath.at(fullPath.length() - 1) != '/')
 			fullPath.push_back('/');
 		fullPath += cur->d_name;
+
+		std::string lastModified = getLastModifiedTime(fullPath);
 		struct stat	st;
-		char buf[100];
 		stat(fullPath.c_str(), &st);
-		struct tm *tm2 = gmtime(&st.st_mtime);
-		strftime(buf, 100, "%d-%b-%Y %H:%M\n", tm2);
-		std::string lastModified(buf);
 		size_t size = st.st_size;
 		std::string fileSize = size2Dec(size);
 		if (S_ISDIR(st.st_mode))
@@ -113,23 +112,23 @@ MethodStatus		AMethod::createHeader()
 
 	if (_type == GET || _type == HEAD){
 		header.addContentLengthHeader(hmap, _body);
-		if (_statusCode < 400)
-		{
-			header.addLastModifiedHeader(hmap);
-			header.addContentTypeHeader(hmap);
-		}
+		header.addLastModifiedHeader(hmap);
+		header.addContentTypeHeader(hmap);
 	}
 	else
 		hmap.insert(std::pair<std::string, std::string>("Content-Length", "0"));//can it be specified in request before?
 
+	if (_type == PUT)
+	{
+		header.addContentLocationHeader(hmap);
+		header.addContentTypeHeader(hmap);
+	}
 	if (_type == OPTION || _statusCode == 405)
 		header.addAllowHeader(hmap);
 
-	// header.addContentLocationHeader(hmap);
-	// header.addLocationHeader(hmap, *data.location, data.uri.request_uri);//if redirect
 	// header.addRetryAfterHeader(hmap);//503 429
 	// header.addTransferEncodingHeader(hmap, hmapRequest);
-	// header.addAuthenticateHeader(hmap);
+	header.addAuthenticateHeader(hmap);
 
 	std::string headerStr;
 	header.headersToString(hmap, headerStr);
@@ -142,7 +141,7 @@ size_t			AMethod::defineRWlimits()
 {
 	size_t	readBuf = _bs;
 
-	if (_statusCode == okSendingInProgress)
+	if (_sendingInProgress == 1)
 	{
 		if (!_remainder.empty()){//что-то не отослалось в send
 			readBuf = _bs - _remainder.length();
@@ -171,7 +170,7 @@ MethodStatus	AMethod::readFromFileToBuf(size_t limit)
 	memset(buf, 0, _bs);
 	size_t res = read(_fd, buf, limit);
 	if (res < 0){
-		_statusCode = errorReadingURL;
+		_statusCode = 500;
 		close(_fd);
 		return error;
 	}
@@ -187,14 +186,14 @@ MethodStatus		AMethod::sendBuf(int socket, std::string const & response)
 	size_t sentBytes = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
 
 	if (sentBytes < 0 || errno == EMSGSIZE){
-		_statusCode = errorSendingResponse;
+		_statusCode = 500;
 		close(_fd);
 		return error;
 	}
 	if (sentBytes < response.length()){
 		_remainder.assign(response.c_str(), sentBytes, response.length() - sentBytes);
 		_sentBytesTotal += sentBytes;
-		_statusCode = okSendingInProgress;
+		_sendingInProgress = 1;
 		return inprogress;
 	};
 
@@ -205,11 +204,12 @@ MethodStatus		AMethod::sendBuf(int socket, std::string const & response)
 	_sentBytesTotal += sentBytes;
 	if (_sentBytesTotal < _bytesToSend){
 		_body.clear();
-		_statusCode = okSendingInProgress;
+		_sendingInProgress = 1;
 		return inprogress;
 	}
 
 	_statusCode = ok;
+	_sendingInProgress = 0;
 	if (_fd != -1)
 		close(_fd);
 

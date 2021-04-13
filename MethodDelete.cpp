@@ -11,12 +11,12 @@ MethodStatus	MethodDelete::processBody(const std::string &requestBody, MethodSta
 int				MethodDelete::deleteDirectory(std::string const &path)
 {
 	if (rmdir(path.c_str()) == 0)
-		return okSuccess;
+		return 200;
 
 	int status = 200;
 	DIR *dir = opendir(path.c_str());
 	if (!dir)
-		return errorOpeningURL;
+		return 403;
 
 	char cwd[256];
 	std::string curDir = getcwd(cwd, sizeof(cwd));
@@ -32,7 +32,7 @@ int				MethodDelete::deleteDirectory(std::string const &path)
 		if (S_ISDIR(st.st_mode))
 			status = deleteDirectory(cur->d_name);
 		else if (open(cur->d_name, 0) < 0 || unlink(cur->d_name) == -1)
-			status = ImaTeapot;
+			status = 418;
 	}
 	closedir(dir);
 	chdir(curDir.c_str());
@@ -44,12 +44,12 @@ int				MethodDelete::deleteDirectory(std::string const &path)
 MethodStatus	MethodDelete::manageRequest()
 {
 	// if (_bodyType == bodyIsAutoindex) // to disable folder deleting
-	// 	_statusCode = errorOpeningURL;
+	// 	_statusCode = 403;
 
 	_bodyType = bodyIsEmpty;
 
 	if (!data.location->deleteAvailable)
-		_statusCode = methodNotAllowed;
+		_statusCode = 405;
 	if (_statusCode != 0)
 		return error;
 
@@ -58,9 +58,9 @@ MethodStatus	MethodDelete::manageRequest()
 	if (S_ISDIR(st.st_mode))
 		_statusCode = deleteDirectory(data.uri.script_name);
 	else if (unlink(data.uri.script_name.c_str()) == -1)
-		_statusCode = errorOpeningURL;
+		_statusCode = 403;
 	else
-		_statusCode = okSuccess;
+		_statusCode = 200;
 
 	return ok;
 }

@@ -16,7 +16,7 @@ MethodStatus	MethodGet::manageRequest()
 	std::cout << "_bodyType manageRequest: " << _bodyType << std::endl;
 
 	if (!data.location->getAvailable)
-		_statusCode = methodNotAllowed;
+		_statusCode = 405;
 
 	else if (_bodyType == bodyIsAutoindex && (generateIdxPage(_body) < 0))
 		_statusCode = 404;
@@ -24,8 +24,11 @@ MethodStatus	MethodGet::manageRequest()
 	else if (_bodyType == bodyIsCGI)
 	{
 		constMapIter cgi_iter = data.location->cgi.find(data.uri.extension);
-		if (cgi_iter ==  data.location->cgi.cend())
+		if (cgi_iter ==  data.location->cgi.end())
+		{
+			_statusCode = 405;
 			return error;
+		}
 		data.setCGIbin((*cgi_iter).second);
 		// data.cgi_bin = (*cgi_iter).second;
 		// if (!fileExist(_data.cgi_bin))

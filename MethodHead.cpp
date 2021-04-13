@@ -15,7 +15,7 @@ MethodStatus	MethodHead::manageRequest()
 	std::cout << "_bodyType manageRequest: " << _bodyType << std::endl;
 
 	if (!data.location->headAvailable)
-		_statusCode = methodNotAllowed;
+		_statusCode = 405;
 
 	else if (_bodyType == bodyIsAutoindex)
 		_statusCode = 403;

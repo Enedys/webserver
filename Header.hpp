@@ -6,6 +6,8 @@
 # include <sys/time.h>
 
 #include "include_resources.hpp"
+#include "Parser.hpp"
+#include "RequestData.hpp"
 
 extern mapIntStr sc;
 
@@ -15,9 +17,9 @@ private:
 	std::string const		&_path;
 	std::string const		&_root;
 	std::string const		_extension;
+	std::string const		_request_uri;
 	s_loc const				*_location;
 	int const				_statusCode;
-	static const stringMap	_mimeMap;
 
 	Header();
 public:

@@ -42,25 +42,6 @@ typedef	enum
 
 typedef enum
 {
-	errorReadingURL = 1,	//may be replaced
-	errorSocket = 1,		//may be replaced
-	internalError = 1,
-
-	errorSendingResponse = 1,	//may be replaced
-	okWaitingMoreChunks = 1,//222 wtf
-	okSendingInProgress = 999,
-	okSuccess = 200,
-	created = 201,
-	accepted = 202,
-	nocontent = 204,
-	notFound = 404,
-	errorOpeningURL = 403,//
-	methodNotAllowed = 405,
-	ImaTeapot = 418
-}		statusCode;
-
-typedef enum
-{
 	GET,
 	HEAD,
 	POST,
@@ -73,10 +54,10 @@ typedef enum
 {
 	bodyNotDefined,
 	bodyIsEmpty,
-	bodyIsAutoindex,		// text
-	bodyIsTextErrorPage,	// text
-	bodyIsFile,				// file: regularFile, indexFile, errorFile
-	bodyIsCGI				// cgi
+	bodyIsAutoindex,
+	bodyIsTextErrorPage,
+	bodyIsFile,
+	bodyIsCGI
 }		bodyType;
 
 /* Typedefs */
@@ -92,3 +73,4 @@ int			string2Size(const std::string &str, int base=16);
 std::string	size2Hex(size_t num, int base = 16);
 std::string	size2Dec(size_t num, int base = 10);
 void		stringToLower(std::string &s);
+std::string	getLastModifiedTime(std::string const & path);

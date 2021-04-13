@@ -1,6 +1,10 @@
 #include <string>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <time.h>
+#include <sys/time.h>
 
-static int		isValidCh(int c, int base)
+static int	isValidCh(int c, int base)
 {
 	if (base <= 10)
 		return (c >= '0' && c <= '9');
@@ -65,4 +69,19 @@ void		stringToLower(std::string &s)
 {
 	for (size_t i = 0; i < s.length(); i++)
 		s[i] = std::tolower(s[i]);
+}
+
+std::string	getLastModifiedTime(std::string const & path)
+{
+	char			buf2[100];
+	struct stat		stats;
+	struct tm		*tm2;
+	std::string		lastModified;
+
+	if (stat(path.c_str(), &stats) == 0) {
+		tm2 = gmtime(&stats.st_mtime);
+		strftime(buf2, 100, "%a, %d %b %Y %H:%M:%S GMT", tm2);
+		lastModified = std::string(buf2);
+	}
+	return lastModified;
 }
