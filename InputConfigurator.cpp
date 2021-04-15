@@ -20,7 +20,8 @@ bool			Configurator::checkAndSetIndexPage(std::string const &indexPage)
 		return false;
 	if (isCGI(uri.extension))
 	{
-		_data.uri = uri;
+		_data.uri.extension = uri.extension;
+		_data.uri.script_name = uri.script_name;
 		_bodyType = bodyIsCGI;
 		return true;
 	}

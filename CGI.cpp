@@ -527,6 +527,7 @@ MethodStatus CGI::smartOutput(std::string &str)
 	if (!headersSent)
 	{
 		_header->headersToString(_headersMap, str);
+		delete _header;
 		headersSent = true;
 		return inprogress;
 	}
