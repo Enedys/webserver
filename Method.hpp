@@ -31,6 +31,8 @@ protected:
 	int					_sendingInProgress;
 
 	AMethod();
+	AMethod(AMethod const & src);
+	virtual AMethod &operator=(AMethod const & src);
 
 public:
 	AMethod(int &status, RequestData &data);

@@ -11,6 +11,25 @@ AMethod::	AMethod(int &status, RequestData &datas) :
 	_sendingInProgress = 0;
 }
 
+AMethod &AMethod::operator=(AMethod const & src)
+{
+	if (this == &src)
+		return *this;
+	_statusCode = src._statusCode;
+	cgi = src.cgi;
+	_fd = src._fd;
+	_type = src._type;
+	_bodyType = src._bodyType;
+	_output = src._output;
+	cgiStatus = src.cgiStatus;
+	_sentBytesTotal = src._sentBytesTotal;
+	_bytesToSend = src._bytesToSend;
+	_remainder = src._remainder;
+	_body = src._body;
+	_sendingInProgress = src._sendingInProgress;
+	return *this;
+}
+
 const std::string	AMethod::Methods[AMethod::methodNums] = {
 	"GET", "HEAD", "POST", "PUT", "OPTIONS", "DELETE"
 };
