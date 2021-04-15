@@ -534,7 +534,7 @@ void		RequestData::createCGIEnv()
 //	http://localhost:2026/wp-login.php?redirect_to=http%3A%2F%2Flocalhost%3A2026%2F&reauth=1
 //	addCgiVar(i++, "REQUEST_URI=/"); // todo: revert with condition
 	//addCgiVar(i++, "REQUEST_URI=" + uri.request_uri.substr(0,uri.request_uri.find_last_of('/')) + "/");
-	addCgiVar(i++, "REQUEST_URI=" + uri.raw_path);
+	addCgiVar(i++, "REQUEST_URI=" + uri.request_uri);
 	addCgiVar(i++, "PATH_INFO=" + uri.path_info);
 	addCgiVar(i++, "PATH_TRANSLATED=" + uri.path_translated);
 	addCgiVar(i++, "SCRIPT_FILENAME=" + uri.script_name);
