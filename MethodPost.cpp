@@ -25,24 +25,24 @@ MethodStatus	MethodPost::manageRequest()
 	{
 		_statusCode = 405;
 		_bodyType = bodyIsTextErrorPage;
-		// _bodyType = bodyNotDefined;
-		return ok;
-		// return error;
+		return error;
 	}
 	if (_bodyType == bodyIsAutoindex)
 	{
 		_statusCode = 403; // todo: !! ??
-		_bodyType = bodyNotDefined;
+		_bodyType = bodyIsTextErrorPage;
 		return error;
 	}
 	if (data.location->cgi.find(data.uri.extension) == data.location->cgi.end()) // todo: cend is c++11
 	{
 		_statusCode = 405;
+		_bodyType = bodyIsTextErrorPage;
 		return error;
 	}
 	if (_bodyType == bodyNotDefined)
 	{
 		_statusCode = 404;
+		_bodyType = bodyIsTextErrorPage;
 		return error;
 	}
 

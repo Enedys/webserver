@@ -40,10 +40,10 @@ MethodStatus		Client::refreshClient()
 	_statusCode = 0;
 	_request.cleanRequest();
 	procData.cleanData();
-	if ((_request.getRequestState() == Request::firstLine) &&\
-		_request.getBufferResidual() > 0)
-		return (requestInterraction());
-	else
+//	if ((_request.getRequestState() == Request::firstLine) &&\
+//		_request.getBufferResidual() > 0)
+//		return (requestInterraction());
+//	else
 		_state = defaultState;
 	return (ok);
 }
@@ -143,9 +143,9 @@ MethodStatus		Client::requestInterraction()
 
 	if (_state == readingBody)
 		_state = getNextState(_request.getRequestBody(_method));
-	else if (_request.getRequestState() == Request::body)	// cgi case, when we send answer,
-		if (_request.getRequestBody(_method) == error)		//  before read all request bodey
-			_state = sendingErrorState;
+//	else if (_request.getRequestState() == Request::body)	// cgi case, when we send answer,
+//		if (_request.getRequestBody(_method) == error)		//  before read all request bodey
+//			_state = sendingErrorState;
 
 	if (_state == configureOut)
 		_state = getNextState(configureOutput());
