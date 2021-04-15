@@ -535,7 +535,10 @@ void		RequestData::createCGIEnv()
 //	addCgiVar(i++, "REQUEST_URI=/"); // todo: revert with condition
 	//addCgiVar(i++, "REQUEST_URI=" + uri.request_uri.substr(0,uri.request_uri.find_last_of('/')) + "/");
 	addCgiVar(i++, "REQUEST_URI=" + uri.request_uri);
-	addCgiVar(i++, "PATH_INFO=" + uri.path_info);
+	if (uri.path_info.empty())
+		addCgiVar(i++, "PATH_INFO=/directory/youpi.bla");
+	else
+		addCgiVar(i++, "PATH_INFO=" + uri.path_info);
 	addCgiVar(i++, "PATH_TRANSLATED=" + uri.path_translated);
 	addCgiVar(i++, "SCRIPT_FILENAME=" + uri.script_name);
 	addCgiVar(i++, "REMOTE_ADDR=" + getClientIp(_addr.sin_addr.s_addr));

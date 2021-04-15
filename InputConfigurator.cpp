@@ -64,7 +64,11 @@ bodyType		Configurator::defineInputType(mode_t const &mode)
 	}
 	if (findIndexPageInConfig() == true)
 		return isCGI(_data.uri.extension) ? bodyIsCGI : bodyIsFile;
-
+	else
+	{
+		_statusCode = 404;
+		return bodyNotDefined;
+	}
 	_statusCode = 403;
 
 	return bodyNotDefined;

@@ -45,7 +45,7 @@ int main()
 {
 	//Server myServer("127.0.0.1", 3535);
 	Parser	parser;
-	parser.parse("webserv.conf");
+	parser.parse("webserv_tester.conf");
 
 	WebServer	myWebServer;
 	std::cout << parser.servers.size() << std::endl;

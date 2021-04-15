@@ -88,6 +88,7 @@ MethodStatus		Request::readFromSocket()
 		return (connectionClosed);
 	buffer[readBytes] = '\0';
 	_buffer += buffer;
+	// std::cout << "INBUFFER: " << _buffer << '\n';
 	return (inprogress);
 }
 
@@ -223,9 +224,9 @@ MethodStatus		Request::parseStartLine(size_t posCRLF)
 
 MethodStatus		Request::getRequestBody(AMethod *method)
 {
-	static	size_t	residBodysize = _bodySize;
-	static	size_t	trEnSize = 0;
-	if (_bodySize > _bodyLimit)
+	static	int	residBodysize = _bodySize;
+	static	int	trEnSize = 0;
+	if (_bodySize > (int)_bodyLimit)
 		return (setErrorCode(413));
 	MethodStatus	rbodyStatus = ok;
 	std::string		reqBody;
@@ -244,7 +245,7 @@ MethodStatus		Request::getRequestBody(AMethod *method)
 	{
 		rbodyStatus = getTrEncodedMsg(reqBody);
 		trEnSize += reqBody.size();
-		if (trEnSize > _bodyLimit)
+		if (trEnSize > (int)_bodyLimit)
 			return (setErrorCode(413));
 		if (rbodyStatus == ok)
 			trEnSize = 0;

@@ -35,16 +35,17 @@ int				Client::readyToSend() const
 
 MethodStatus		Client::refreshClient()
 {
+	int	finalStatus = _statusCode;
 	delete _method;
 	_method = NULL;
 	_statusCode = 0;
 	_request.cleanRequest();
 	procData.cleanData();
-//	if ((_request.getRequestState() == Request::firstLine) &&\
-//		_request.getBufferResidual() > 0)
-//		return (requestInterraction());
-//	else
-		_state = defaultState;
+	_state = defaultState;
+	if (finalStatus >= 400)
+		return (connectionClosed);
+	else if (_request.getBufferResidual() > 0)
+		return (requestInterraction());
 	return (ok);
 }
 
@@ -169,7 +170,7 @@ MethodStatus		Client::responseInterraction()
 
 	if (_state == finalState)
 		if (refreshClient() == connectionClosed)
-			return (connectionClosed);
+			_state = sendingErrorState;
 
 	if (stateBefore == _state)
 		return (inprogress);

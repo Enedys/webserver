@@ -48,7 +48,7 @@ private:
 	requestStatus						requestStage;
 	std::string							_buffer;
 	int									_socket;
-	size_t								_bodySize;
+	int									_bodySize;
 	int									&_errorCode;
 	size_t								_bodyLimit;
 	
