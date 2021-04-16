@@ -52,8 +52,8 @@ class CGI
 		MethodStatus outputContentLengthFromBuf(std::string &str);
 		MethodStatus cgiProcessStatus();
 		bool fileExists(char *filename);
-		static const int maxChunkSize = 8192;
-		static const int maxContentLengthOutput = 8192;
+		static const int maxChunkSize = BUFSIZ * 4;
+		static const int maxContentLengthOutput = BUFSIZ * 4;
 		MethodStatus cgiDone;
 		std::string script_name;
 		std::string root;
@@ -61,6 +61,7 @@ class CGI
 		int inpBytes;
 		int outpBytes;
 		int writePipe;
+		static const int outpBufSize = BUFSIZ * 4;
 	public:
 		void setScriptName(const std::string &scriptName);
 		void setRoot(const std::string &root);

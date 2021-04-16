@@ -2,6 +2,7 @@
 
 void CGI::initPipes()
 {
+	std::cout << " -- INIT PIPES -- \n";
 	if (pipe(pipein) < 0)
 	{
 		status = failed;
@@ -105,6 +106,7 @@ void CGI::input(const std::string &str, MethodStatus mStatus) // inputting body
 
 	if (str.empty() && inputBuf.empty() && mStatus == ok)
 	{
+		std::cout << "CLOSE PIPEIN[1]: " << pipein[1] << std::endl;
 		close(pipein[1]);//return
 		return ;
 	}
@@ -124,6 +126,7 @@ void CGI::input(const std::string &str, MethodStatus mStatus) // inputting body
 			inputBuf += str.substr(r, str.size());
 		else if (r == static_cast <int> (str.size()) && mStatus == ok)
 		{
+			std::cout << "CLOSE PIPEIN[1]: " << pipein[1] << std::endl;
 			close(pipein[1]);
 			pipein[1] = -1;
 		}
@@ -144,6 +147,7 @@ void CGI::input(const std::string &str, MethodStatus mStatus) // inputting body
 			inputBuf.clear();
 			if (str.empty() && mStatus == ok)
 			{
+				std::cout << "CLOSE PIPEIN[1]: " << pipein[1] << std::endl;
 				close(pipein[1]);
 				pipein[1] = -1;
 			}
@@ -175,6 +179,7 @@ void CGI::inputFromBuf()
 		else if (r == static_cast <int> (inputBuf.size()))
 		{
 			inputBuf.clear();
+			std::cout << "CLOSE PIPEIN[1]: " << pipein[1] << std::endl;
 			close(pipein[1]); // todo: SIMPLIFY IFS?
 			pipein[1] = -1;
 		}
@@ -338,7 +343,10 @@ CGI::CGI()
 
 CGI::~CGI()
 {
+	std::cout << " -- CGI DESTR -- \n";
 	freeMem();
+	//sleep(1);
+	//sleep(10);
 }
 
 void CGI::parseHeaders(std::string str)
@@ -370,10 +378,29 @@ void CGI::parseHeaders(std::string str)
 
 void CGI::freeMem()
 {
-	close(pipein[0]);
-	close(pipeout[1]);
-	close(pipein[1]);
-	close(pipeout[0]);
+	if (pipein[0] != -1)
+	{
+		close(pipein[0]);
+		std::cout << "CLOSE PIPEIN[0]: " << pipein[0] << std::endl;
+	}
+	if (pipein[1] != -1)
+	{
+		std::cout << "CLOSE PIPEIN[1]: " << pipein[1] << std::endl;
+		close(pipein[1]);
+	}
+	if (pipeout[0] != -1)
+	{
+		std::cout << "CLOSE PIPEOUT[0]: " << pipeout[0] << std::endl;
+		close(pipeout[0]);
+	}
+	if (pipeout[1] != -1)
+	{
+		std::cout << "CLOSE PIPEOUT[1]: " << pipeout[1] << std::endl;
+		close(pipeout[1]);
+	}
+
+
+
 	pipein[0] = -1;
 	pipein[1] = -1;
 	pipeout[1] = -1;
@@ -415,13 +442,13 @@ bool CGI::isHeadersNotFound() const
 
 MethodStatus CGI::getHeaders()
 {
-	char buf[BUFSIZ + 1];
-	bzero(buf, BUFSIZ + 1);
+	char buf[outpBufSize + 1];
+	bzero(buf, outpBufSize + 1);
 	std::string str;
 	size_t find;
 	int r;
 	inputFromBuf(); // todo: temporary
-	r = read(pipeout[0], buf, BUFSIZ); // read < 0 = pipe is empty..
+	r = read(pipeout[0], buf, outpBufSize); // read < 0 = pipe is empty..
 	if (r < 0)
 	{
 		MethodStatus st = cgiProcessStatus();
@@ -498,10 +525,10 @@ MethodStatus CGI::outputContentLengthFromBuf(std::string &str)
 }
 MethodStatus CGI::readFromProcess(std::string &str)
 {
-	char buf[BUFSIZ + 1];
-	bzero(buf, BUFSIZ + 1);
+	char buf[outpBufSize + 1];
+	bzero(buf, outpBufSize + 1);
 	int r;
-	r = read(pipeout[0], buf, BUFSIZ);
+	r = read(pipeout[0], buf, outpBufSize);
 	if (r > 0)
 		outpBytes += r;
 	std::cout << "Bytes output: " << outpBytes << " out of " << inpBytes << std:: endl;
