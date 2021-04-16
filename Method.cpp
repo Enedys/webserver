@@ -1,6 +1,10 @@
 #include "Method.hpp"
 
-AMethod::~AMethod() {}
+AMethod::~AMethod()
+{
+	if (_fd != -1)
+		close(_fd);
+}
 
 AMethod::	AMethod(int &status, RequestData &datas) :
 	_statusCode(status), data(datas), _bodyType(bodyNotDefined)

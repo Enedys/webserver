@@ -542,13 +542,15 @@ void		RequestData::createCGIEnv()
 	else
 		addCgiVar(i++, "REQUEST_URI=" + uri.request_uri);
 	if (uri.path_info.empty())
-		addCgiVar(i++, "PATH_INFO=/directory/youpi.bla");
+		addCgiVar(i++, "PATH_INFO=" + uri.request_uri);
 	else
 		addCgiVar(i++, "PATH_INFO=" + uri.path_info);
 	addCgiVar(i++, "PATH_TRANSLATED=" + uri.path_translated);
 	addCgiVar(i++, "SCRIPT_FILENAME=" + uri.script_name);
 	addCgiVar(i++, "REMOTE_ADDR=" + getClientIp(_addr.sin_addr.s_addr));
 	addCgiVar(i++, "HTTP_HOST=" + serv->host + ":" + size2Hex(serv->port, 10));
+	if (_reqHeads->find("x-secret-header-for-test") != _reqHeads->end())
+		addCgiVar(i++, "HTTP_X-SECRET-HEADER-FOR-TEST=" + _reqHeads->find("x-secret-header-for-test")->second);
 	if (_reqHeads->find("cookie") != _reqHeads->end())
 		addCgiVar(i++, "HTTP_COOKIE=" + _reqHeads->find("cookie")->second);
 	if (_reqHeads->find("referer") != _reqHeads->end())

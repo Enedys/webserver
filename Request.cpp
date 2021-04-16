@@ -3,6 +3,8 @@
 Request::Request(int fd, int &statusCode) :
 requestStage(firstLine), _socket(fd), _bodySize(0), _errorCode(statusCode)
 {
+	end_body = false;
+	chunkSize = 0;
 	createErrorCodesMap();
 }
 
@@ -19,6 +21,8 @@ Request::requestStatus
 
 MethodStatus		Request::cleanRequest()
 {
+	end_body = false;
+	chunkSize = 0;
 	_bodySize = 0;
 	requestStage = firstLine;
 	startLine.clear();
@@ -88,7 +92,7 @@ MethodStatus		Request::readFromSocket()
 		return (connectionClosed);
 	buffer[readBytes] = '\0';
 	_buffer += buffer;
-	// std::cout << "INBUFFER: " << _buffer << '\n';
+	//std::cout << "INBUFFER: " << _buffer << '\n';
 	return (inprogress);
 }
 
@@ -261,8 +265,6 @@ MethodStatus		Request::getRequestBody(AMethod *method)
 MethodStatus	Request::getTrEncodedMsg(std::string &dest)
 {
 	dest.clear();
-	static size_t	chunkSize = 0;
-	static bool		end_body = false;
 	size_t			pullBytes = 0;
 	size_t			posCRLF;
 	while (true)

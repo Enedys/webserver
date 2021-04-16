@@ -58,6 +58,9 @@ class CGI
 		std::string script_name;
 		std::string root;
 		Header *_header;
+		int inpBytes;
+		int outpBytes;
+		int writePipe;
 	public:
 		void setScriptName(const std::string &scriptName);
 		void setRoot(const std::string &root);

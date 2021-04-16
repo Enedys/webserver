@@ -42,6 +42,7 @@ struct s_loc
 	std::string root;////////error page
 	std::string fileRequestIsDir;
 	std::map<std::string, std::string> cgi;
+	int 		bodySizeLimit;
 	std::vector<std::string> index;
 	std::string auth;
 	std::string authLogPass;
@@ -132,6 +133,7 @@ class Parser
 		void	getLocUploadPass();
 		void 	getLocUploadStore();
 		void	getLocIndex();
+		void	getLocPageSize();
 		void 	initServ();
 		void 	initLoc();
 

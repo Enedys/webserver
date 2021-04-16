@@ -51,6 +51,8 @@ private:
 	int									_bodySize;
 	int									&_errorCode;
 	size_t								_bodyLimit;
+	size_t								chunkSize;
+	bool 								end_body;
 	
 	std::map<int, std::string>			_errors;
 

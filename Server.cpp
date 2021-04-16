@@ -54,7 +54,7 @@ int					Server::createSocket()
 	_sockAddr.sin_port = htons(_server.port);
 	if (bind(_socket, reinterpret_cast<sockaddr *>(&_sockAddr), sizeof(_sockAddr)))	/* set corresponding beteween socket and server ip:port */
 		throw ("Bind error.");
-	if (listen(_socket, 10))														/* open socket for listening and set max connections number for current server */
+	if (listen(_socket, 150))														/* open socket for listening and set max connections number for current server */
 		throw ("Listen failed.");
 	return (1);
 }

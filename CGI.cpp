@@ -50,15 +50,17 @@ void CGI::initFork()
 		close(pipeout[1]);
 		close(pipeout[0]);
 		execve(execpath, args, env);
+		close(0);
+		close(1);
 		std::cout << "ALARM! EXECVE FAILED!\n"; // what to do?
 		exit(4);
 	}
 	else
 	{
-//		close(pipein[0]);
-//		pipein[0] = -1;
-//		close(pipeout[1]);
-//		pipeout[1] = -1;
+//		close(pipein[1]);
+//		pipein[1] = -1;
+//		close(pipeout[0]);
+//		pipeout[0] = -1;
 	}
 
 }
@@ -69,6 +71,9 @@ void CGI::init()
 	pipein[1] = -1;
 	pipeout[0] = -1;
 	pipeout[1] = -1;
+	inpBytes = 0;
+	outpBytes = 0;
+	writePipe = 0;
 	status = not_started;
 	initPipes();
 	initFork();
@@ -87,25 +92,59 @@ void CGI::init()
 void CGI::input(const std::string &str, MethodStatus mStatus) // inputting body
 {
 	int r;
+
 	if (str.empty() && inputBuf.empty() && mStatus == ok)
 	{
 		close(pipein[1]);//return
 		return ;
 	}
+	inpBytes += str.length();
 	if (inputBuf.empty())
 	{
-		r = write(pipein[1], str.c_str(), str.length());
+		r = write(pipein[1], str.c_str(), str.size());
+		if (r > 0)
+		{
+			std::cout << "Send to pipe" << writePipe << std::endl;
+			writePipe += r;
+			std::cout << "Send to pipe" << writePipe << std::endl;
+		}
 		if (r == -1) // pipe is absolutely full
 			inputBuf += str;
 		else if (r < static_cast <int> (str.size())) // pipe is full;
 			inputBuf += str.substr(r, str.size());
+		else if (r == static_cast <int> (str.size()) && mStatus == ok)
+		{
+			close(pipein[1]);
+			pipein[1] = -1;
+		}
 	}
 	else
 	{
-		r = write(pipein[1], inputBuf.c_str(), 8192); // TODO: set bufsize
+		r = write(pipein[1], inputBuf.c_str(), inputBuf.size()); // TODO: set bufsize
+		if (r > 0)
+		{
+			std::cout << "Send to pipe" << writePipe << std::endl;
+			writePipe += r;
+			std::cout << "Send to pipe" << writePipe << std::endl;
+		}
 		if (r > 0 && r <  static_cast <int> (inputBuf.size()))
 			inputBuf = inputBuf.substr(r, inputBuf.size());
+		else if (r == static_cast <int> (inputBuf.size()))
+		{
+			inputBuf.clear();
+			if (str.empty() && mStatus == ok)
+			{
+				close(pipein[1]);
+				pipein[1] = -1;
+			}
+		}
 		inputBuf += str;
+	}
+	if (mStatus == ok)
+	{
+		std::cout << "WROTE TO PIPE: " << writePipe << std::endl;
+		std::cout << inputBuf.size() << std::endl;
+		//sleep(10);
 	}
 }
 
@@ -115,12 +154,19 @@ void CGI::inputFromBuf()
 	{
 		int r;
 		r = write(pipein[1], inputBuf.c_str(), inputBuf.size()); // TODO: set bufsize
+		if (r > 0)
+		{
+			std::cout << "Send to pipe" << writePipe << std::endl;
+			writePipe += r;
+			std::cout << "Send to pipe" << writePipe << std::endl;
+		}
 		if (r > 0 && r < static_cast <int> (inputBuf.size()))
 			inputBuf = inputBuf.substr(r, inputBuf.size());
-		if (r == static_cast <int> (inputBuf.size()))
+		else if (r == static_cast <int> (inputBuf.size()))
 		{
 			inputBuf.clear();
 			close(pipein[1]); // todo: SIMPLIFY IFS?
+			pipein[1] = -1;
 		}
 	}
 }
@@ -318,6 +364,10 @@ void CGI::freeMem()
 	close(pipeout[1]);
 	close(pipein[1]);
 	close(pipeout[0]);
+	pipein[0] = -1;
+	pipein[1] = -1;
+	pipeout[1] = -1;
+	pipeout[0] = -1;
 	inputBuf.clear();
 	outputBuf.clear();
 	if (args)
@@ -388,6 +438,7 @@ MethodStatus CGI::getHeaders()
 				httpStatus = 200; // if parseHeaders did not update http status, set it to 200;
 			}
 			concatHeaders();
+			outpBytes = outputBuf.size();
 			return ok;
 		}
 		else if (str.size() > 16000) // todo: CLARIFY
@@ -441,6 +492,9 @@ MethodStatus CGI::readFromProcess(std::string &str)
 	bzero(buf, BUFSIZ + 1);
 	int r;
 	r = read(pipeout[0], buf, BUFSIZ);
+	if (r > 0)
+		outpBytes += r;
+	std::cout << "Bytes output: " << outpBytes << " out of " << inpBytes << std:: endl;
 	if (r < 0)
 	{
 		str.clear();
@@ -517,6 +571,7 @@ MethodStatus CGI::sendOutput(std::string &output, int socket)
 // TODO: GET HTTP_STATUS WITHOUT STRING;
 MethodStatus CGI::smartOutput(std::string &str)
 {
+	str.clear();
 	MethodStatus mStatus;
 	if (!headersDone)
 	{

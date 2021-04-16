@@ -332,6 +332,25 @@ void Parser::parseServer()
 	}
 }
 
+void Parser::getLocPageSize()
+{
+	std::string value = getValue("location: page_size: ");
+	int num;
+
+	num = std::atoi(value.c_str());
+	for (unsigned int i = 0; i < value.size() - 1; i++)
+		if (value[i] < '0' || value[i] > '9')
+			error("location: page_size: bad number");
+	if (value[value.size() - 1] == 'M')
+		num *= 1048576;
+	else if (value[value.size() - 1] == 'K')
+		num *= 1024;
+	else if (value[value.size() - 1] < '0' || value[value.size() - 1] > '9')
+		error("location: page_size: bad number. Expected 'M' or 'K' or digit");
+	loc.bodySizeLimit = num;
+}
+
+
 void Parser::getLocCGI()
 {
 	std::vector<std::string> vecValues = getVectorValues("location: cgi: "); // TODO: error management .php .py
@@ -447,6 +466,8 @@ void Parser::parseLocValues()
 		getLocUploadStore();
 	else if (value == "index")
 		getLocIndex();
+	else if (value == "page_size")
+		getLocPageSize();
 	else
 		error("Location: invalid token");
 }
@@ -520,6 +541,7 @@ void Parser::initServ()
 
 void Parser::initLoc()
 {
+	loc.bodySizeLimit = -1;
 	loc.autoindex = false;
 	loc.root.clear();
 	loc.fileRequestIsDir.clear();
@@ -554,6 +576,8 @@ void Parser::fillRootLoc() // todo: not only fill root loc, probably rename
 {
 	for (unsigned int i = 0; i < serv.locs.size(); i++)
 	{
+		if (serv.locs[i].bodySizeLimit == -1)
+			serv.locs[i].bodySizeLimit = serv.bodySizeLimit;
 		if (serv.locs[i].root.empty())
 		{
 			if (root.empty())

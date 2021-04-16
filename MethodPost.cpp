@@ -35,18 +35,23 @@ MethodStatus	MethodPost::manageRequest()
 	}
 	if (data.location->cgi.find(data.uri.extension) == data.location->cgi.end()) // todo: cend is c++11
 	{
-		_statusCode = 405;
-		_bodyType = bodyIsTextErrorPage;
-		return error;
+		_statusCode = 201;
+		_bodyType = bodyIsCGI;
+		return ok;
 	}
+//	if (_bodyType == bodyNotDefined)
+//	{
+//		_statusCode = 200; // todo: is for tester;
+//		_bodyType = bodyIsCGI;
+//		return ok;
+//	}
 	if (_bodyType == bodyNotDefined)
 	{
-		_statusCode = 404;
-		_bodyType = bodyIsTextErrorPage;
-		return error;
-	}
 
-	if (_bodyType == bodyIsCGI){
+	}
+	if (_bodyType == bodyIsCGI || _bodyType == bodyNotDefined) {
+		_statusCode = 200; // todo: is for tester;
+		_bodyType = bodyIsCGI;
 		constMapIter cgi_iter = data.location->cgi.find(data.uri.extension);
 		if (cgi_iter ==  data.location->cgi.end()) // todo: cend is c++11
 		{
@@ -68,6 +73,8 @@ MethodStatus	MethodPost::manageRequest()
 
 MethodStatus MethodPost::processBody(const std::string &requestBody, MethodStatus bodyStatus)
 {
+	if (_statusCode == 201)
+		return bodyStatus;
 	if (_statusCode >= 400)
 		return bodyStatus;
 	// todo: bodystartus - ok, end of input;
