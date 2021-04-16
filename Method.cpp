@@ -213,8 +213,7 @@ MethodStatus	AMethod::readFromFileToBuf(size_t limit)
 MethodStatus		AMethod::sendBuf(int socket, std::string const & response)
 {
 	size_t sentBytes = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
-	// if (response.length() > 1)
-	// 	std::cout << "Send by OLya: " << response << '\n';
+
 	if (sentBytes < 0 || errno == EMSGSIZE){
 		_statusCode = 500;
 		close(_fd);
@@ -238,10 +237,7 @@ MethodStatus		AMethod::sendBuf(int socket, std::string const & response)
 		return inprogress;
 	}
 
-	// _statusCode = ok;
 	_sendingInProgress = 0;
-	if (_fd != -1)
-		close(_fd);
 
 	return ok;
 }
@@ -250,10 +246,6 @@ MethodStatus		AMethod::sendResponse(int socket)
 {
 	size_t readBuf = defineRWlimits();
 
-	// if (_statusCode == 999)
-	// {
-	// 	_statusCode = 200;
-	// }
 	if (_bodyType == bodyIsCGI && _remainder.empty())
 		if ((_statusCode = cgi.smartOutput(_body)) == inprogress && _body.empty())
 			return inprogress;
