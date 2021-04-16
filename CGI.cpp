@@ -141,7 +141,7 @@ void CGI::input(const std::string &str, MethodStatus mStatus) // inputting body
 			std::cout << "Send to pipe" << writePipe << std::endl;
 		}
 		if (r > 0 && r <  static_cast <int> (inputBuf.size()))
-			inputBuf = inputBuf.substr(r, inputBuf.size());
+			inputBuf.erase(0, r);
 		else if (r == static_cast <int> (inputBuf.size()))
 		{
 			inputBuf.clear();
@@ -175,7 +175,7 @@ void CGI::inputFromBuf()
 			std::cout << "Send to pipe" << writePipe << std::endl;
 		}
 		if (r > 0 && r < static_cast <int> (inputBuf.size()))
-			inputBuf = inputBuf.substr(r, inputBuf.size());
+			inputBuf.erase(0, r);
 		else if (r == static_cast <int> (inputBuf.size()))
 		{
 			inputBuf.clear();
