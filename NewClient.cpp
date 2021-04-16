@@ -9,6 +9,7 @@ Client::Client(int socket, sockaddr_in adr, t_ext_serv const &config) :
 Client::~Client()
 {
 	delete _method;
+	_method = NULL;
 	procData.cleanData();
 	_request.cleanRequest();
 	close(_socket);

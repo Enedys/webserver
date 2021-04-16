@@ -44,7 +44,11 @@ void		RequestData::setData(stringMap const *rHs, stringMap const *rFl, int contL
 	}
 }
 
-RequestData::~RequestData() {cleanCGIenv();}
+RequestData::~RequestData()
+{
+	if (cgi_conf)
+		cleanCGIenv();
+}
 
 std::string const
 			*RequestData::getMethod() const
