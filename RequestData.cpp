@@ -555,7 +555,7 @@ void		RequestData::createCGIEnv()
 		addCgiVar(i++, "HTTP_COOKIE=" + _reqHeads->find("cookie")->second);
 	if (_reqHeads->find("referer") != _reqHeads->end())
 		addCgiVar(i++, "HTTP_REFERER=" + _reqHeads->find("referer")->second);
-	if (error_code != 0)
+	if (error_code >=400)
 	{
 		addCgiVar(i++, "AUTH_TYPE=");
 		addCgiVar(i++, "CONTENT_TYPE=text/plain");

@@ -5,6 +5,8 @@ requestStage(firstLine), _socket(fd), _bodySize(0), _errorCode(statusCode)
 {
 	end_body = false;
 	chunkSize = 0;
+	trEnSize = 0;
+	residBodysize = 0;
 	createErrorCodesMap();
 }
 
@@ -23,7 +25,9 @@ MethodStatus		Request::cleanRequest()
 {
 	end_body = false;
 	chunkSize = 0;
+	trEnSize = 0;
 	_bodySize = 0;
+	residBodysize = 0;
 	requestStage = firstLine;
 	startLine.clear();
 	headersMap.clear();
@@ -63,6 +67,7 @@ MethodStatus		Request::setErrorCode(int code)
 void				Request::setBodyLimit(size_t lim)
 {
 	_bodyLimit = lim;
+	residBodysize = _bodySize;
 }
 
 MethodStatus		Request::getRequestHead()
@@ -228,8 +233,6 @@ MethodStatus		Request::parseStartLine(size_t posCRLF)
 
 MethodStatus		Request::getRequestBody(AMethod *method)
 {
-	static	int	residBodysize = _bodySize;
-	static	int	trEnSize = 0;
 	if (_bodySize > (int)_bodyLimit)
 		return (setErrorCode(413));
 	MethodStatus	rbodyStatus = ok;

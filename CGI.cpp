@@ -43,6 +43,11 @@ void CGI::initFork()
 	}
 	if (pid == 0)
 	{
+		for (int i = 3; i < 1024; i++)
+		{
+			if (i != pipein[0] && i != pipein[1] && i != pipeout[0] && i != pipeout[1])
+				close(i);
+		}
 		dup2(pipein[0], 0);
 		close(pipein[0]);
 		close(pipein[1]);
@@ -57,6 +62,11 @@ void CGI::initFork()
 	}
 	else
 	{
+		std::cout << "PID: " << pid << std::endl;
+		std::cout << "PIPEIN[0]: " << pipein[0] << std::endl;
+		std::cout << "PIPEIN[1]: " << pipein[1] << std::endl;
+		std::cout << "PIPEOUT[0]: " << pipeout[0] << std::endl;
+		std::cout << "PIPEOUT[1]: " << pipeout[1] << std::endl;
 //		close(pipein[1]);
 //		pipein[1] = -1;
 //		close(pipeout[0]);

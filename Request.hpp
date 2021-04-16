@@ -53,6 +53,8 @@ private:
 	size_t								_bodyLimit;
 	size_t								chunkSize;
 	bool 								end_body;
+	int									trEnSize;
+	int 								residBodysize;
 	
 	std::map<int, std::string>			_errors;
 
