@@ -42,9 +42,10 @@ void				WebServer::showServerList()
 WebServer::client	&WebServer::detachConnection(client &cIt)
 {
 	_webLogger << Message::warning << "Connection closed. socket: " << (*cIt)->getClientSocket() << Logger::endl;
-	close((*cIt)->getClientSocket());
+	// close((*cIt)->getClientSocket());
 	FD_CLR((*cIt)->getClientSocket(), &_fdsToRead);
 	FD_CLR((*cIt)->getClientSocket(), &_fdsToWrite);
+	(*cIt)->~Client();
 	cIt = _clientList.erase(cIt);
 	return (cIt);
 }
