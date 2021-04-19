@@ -19,7 +19,7 @@ MethodStatus	MethodPut::processBody(const std::string &requestBody, MethodStatus
 	if (data.location->uploadPass)
 		setUploadPath();
 
-	_fd = open(data.uri.script_name.c_str(), O_WRONLY | O_APPEND | O_CREAT| O_NONBLOCK, 0644);
+	_fd = open(data.uri.script_name.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_NONBLOCK, 0644);
 	if (_fd < 0){
 		_statusCode = 404;
 		return error;

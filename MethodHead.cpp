@@ -12,8 +12,6 @@ MethodStatus 	MethodHead::processBody(const std::string &requestBody, MethodStat
 
 MethodStatus	MethodHead::manageRequest()
 {
-	std::cout << "_bodyType manageRequest: " << _bodyType << std::endl;
-
 	if (!data.location->headAvailable)
 		_statusCode = 405;
 

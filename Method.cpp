@@ -79,13 +79,15 @@ int					AMethod::generateIdxPage(std::string &body)
 		return -1;
 	}
 	body = "<html><head><style> \
-					body {background-color: rgb(247, 247, 247);}\
-					h1   {color: rgb(235, 70, 52);}\
-					td   {color: rgb(75, 8, 23);}\
-					a    {color: rgba(255, 99, 71, 1);}\
-			</style></head><body>"
-			"<h1>Directory index</h1><table style=\"width:80%\">";
-
+	body {background-color: rgb(245, 240, 237);}\
+	h1   {color: rgb(235, 70, 52);\
+		  font-family: monospace;}\
+	a    {color: rgba(255, 110, 94, 1);}\
+	td   {color: rgb(75, 8, 23);\
+		  height: 20px; width: 20%;\
+		  font-family: monospace;}\
+	</style></head><body>"
+	"<h1>Directory index</h1><table style=\"width:80%\">";
 	std::string fname(data.uri.request_uri);
 	if (fname.at(fname.length() - 1) != '/')
 		fname.push_back('/');
@@ -114,7 +116,7 @@ int					AMethod::generateIdxPage(std::string &body)
 		body += "\">" + std::string(cur->d_name);
 		if (S_ISDIR(st.st_mode))
 			body += "/";
-		body += "</a></td><td><small>" + lastModified + "</small></td><td><small>" + fileSize + "</small></td></tr><br>";
+		body += "</a></td><td><small>" + lastModified + "</small></td><td><small>" + fileSize + "</small></td></tr>";
 	}
 	body += "</body>\n</html>\n";
 	closedir(dir);
@@ -123,7 +125,7 @@ int					AMethod::generateIdxPage(std::string &body)
 
 MethodStatus		AMethod::createHeader()
 {
-	std::cout << "createHeader: _bodyType: " << _bodyType << std::endl;
+	// std::cout << "createHeader: _bodyType: " << _bodyType << std::endl;
 
 	if (_bodyType == bodyIsCGI)
 		return ok;
@@ -254,7 +256,7 @@ MethodStatus		AMethod::sendResponse(int socket)
 		if (readFromFileToBuf(readBuf) == error)
 			return error;
 
-	std::cout << "_code: " << _statusCode << std::endl;
+	// std::cout << "_code: " << _statusCode << std::endl;
 	MethodStatus status = sendBuf(socket, _body);
 
 	return status;
