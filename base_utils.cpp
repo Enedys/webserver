@@ -85,3 +85,11 @@ std::string	getLastModifiedTime(std::string const & path)
 	}
 	return lastModified;
 }
+
+bool		fileExists(std::string const &f)
+{
+	struct stat st;
+	if (stat(f.c_str(), &st) == -1)
+		return false;
+	return true;
+}

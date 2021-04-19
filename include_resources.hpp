@@ -74,3 +74,4 @@ std::string	size2Hex(size_t num, int base = 16);
 std::string	size2Dec(size_t num, int base = 10);
 void		stringToLower(std::string &s);
 std::string	getLastModifiedTime(std::string const & path);
+bool		fileExists(std::string const &f);

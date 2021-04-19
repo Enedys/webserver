@@ -9,6 +9,9 @@ void			MethodPut::setUploadPath()
 	std::string fname =	data.uri.request_uri.substr(found, data.uri.request_uri.length() - 1);
 	uploadUri += fname;
 	data.uri.script_name = uploadUri;
+
+	if (fileExists(data.uri.script_name.c_str()))
+		_statusCode = 0;
 }
 
 MethodStatus	MethodPut::processBody(const std::string &requestBody, MethodStatus bodyStatus)
