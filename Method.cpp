@@ -57,13 +57,35 @@ CGI					&AMethod::getCGI() { return cgi; }
 bodyType			&AMethod::getBodyType() {return _bodyType; }
 int					&AMethod::getFd() {return _fd; }
 
+void				addAuthors(std::string & body)
+{
+	body = "<a href='https://github.com/Olkanaut'>\
+	<img src='/favicon.ico' alt='Bshabillum' style='width:100px;height:100px;' usemap='#links'>\
+	<map name='links'>\
+	<area shape='rect' coords='2,2,99,33' alt='bshang' href='https://github.com/Olkanaut'>\
+	<area shape='rect' coords='2,34,99,66' alt='abibi' href='https://github.com/AndreyTruesh'>\
+	<area shape='circle' coords='2,67,99,99' alt='kwillum' href='https://github.com/Enedys'>\
+	</map></a>";
+}
+
+void				addStyle(std::string & body)
+{
+	body += "<html><style>\
+	body {background-color: rgb(245, 240, 237);}\
+	h1   {color: rgb(75, 8, 23);\
+		  font-family: monospace;}\
+	a    {color: rgb(235, 70, 52);}\
+	td, e1 {color: rgb(75, 8, 23);\
+		  height: 20px; width: 20%;\
+		  font-family: monospace;}\
+	</style><table style=\"width:80%\">";
+}
+
 void				AMethod::generateErrorPage(std::string &body)
 {
-	body = "<html>"
-		"<style> body {background-color: rgb(247, 247, 247);}"
-		"h1 {color: rgb(235, 70, 52);}"
-		"e1 {color: rgb(69, 69, 69);} </style>"
-		"<body> <h1>ERROR</h1><br><e1>";
+	addAuthors(body);
+	addStyle(body);
+	body += "<body> <h1>ERROR</h1><br><e1>";
 	body += size2Dec(_statusCode) + " " + sc[_statusCode];
 	body += "</e1></body></html>\n";
 }
@@ -78,20 +100,12 @@ int					AMethod::generateIdxPage(std::string &body)
 		_statusCode = 403;
 		return -1;
 	}
-	body = "<html><head><style> \
-	body {background-color: rgb(245, 240, 237);}\
-	h1   {color: rgb(235, 70, 52);\
-		  font-family: monospace;}\
-	a    {color: rgba(255, 110, 94, 1);}\
-	td   {color: rgb(75, 8, 23);\
-		  height: 20px; width: 20%;\
-		  font-family: monospace;}\
-	</style></head><body>"
-	"<h1>Directory index</h1><table style=\"width:80%\">";
+	addAuthors(body);
+	addStyle(body);
+	body += "<body><h1>Directory index</h1>";
 	std::string fname(data.uri.request_uri);
 	if (fname.at(fname.length() - 1) != '/')
 		fname.push_back('/');
-
 	errno = 0;
 	while ((cur = readdir(dir)) != NULL){
 		if (strcmp(cur->d_name, ".") == 0)
@@ -118,15 +132,13 @@ int					AMethod::generateIdxPage(std::string &body)
 			body += "/";
 		body += "</a></td><td><small>" + lastModified + "</small></td><td><small>" + fileSize + "</small></td></tr>";
 	}
-	body += "</body>\n</html>\n";
+	body += "</body></html>";
 	closedir(dir);
 	return 0;
 }
 
 MethodStatus		AMethod::createHeader()
 {
-	// std::cout << "createHeader: _bodyType: " << _bodyType << std::endl;
-
 	if (_bodyType == bodyIsCGI)
 		return ok;
 	if ((_type == GET || _type == POST) && _bodyType == bodyIsTextErrorPage)
@@ -162,8 +174,6 @@ MethodStatus		AMethod::createHeader()
 	std::string headerStr;
 	header.headersToString(hmap, headerStr);
 	_body.insert(0, headerStr);
-
-	// std::cout << "_body: " << _body << std::endl;
 
 	return ok;
 }
@@ -256,7 +266,6 @@ MethodStatus		AMethod::sendResponse(int socket)
 		if (readFromFileToBuf(readBuf) == error)
 			return error;
 
-	// std::cout << "_code: " << _statusCode << std::endl;
 	MethodStatus status = sendBuf(socket, _body);
 
 	return status;
