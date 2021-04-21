@@ -158,25 +158,52 @@ void CGI::input(const std::string &str, MethodStatus mStatus) // inputting body
 	{
 		std::cout << "WROTE TO PIPE: " << writePipe << std::endl;
 		std::cout << inputBuf.size() << std::endl;
+		ptrString = (char *)inputBuf.c_str();
+		ptrStrlen = (int)inputBuf.size();
 		//sleep(10);
 	}
 }
+
+//void CGI::inputFromBuf()
+//{
+//	if (!inputBuf.empty())
+//	{
+//		int r;
+//		r = write(pipein[1], inputBuf.c_str(), inputBuf.size()); // TODO: set bufsize
+//		if (r > 0)
+//		{
+//			std::cout << "Send to pipe" << writePipe << std::endl;
+//			writePipe += r;
+//			std::cout << "Send to pipe" << writePipe << std::endl;
+//		}
+//		if (r > 0 && r < static_cast <int> (inputBuf.size()))
+//			inputBuf.erase(0, r);
+//		else if (r == static_cast <int> (inputBuf.size()))
+//		{
+//			inputBuf.clear();
+//			std::cout << "CLOSE PIPEIN[1]: " << pipein[1] << std::endl;
+//			close(pipein[1]); // todo: SIMPLIFY IFS?
+//			pipein[1] = -1;
+//		}
+//	}
+//}
 
 void CGI::inputFromBuf()
 {
 	if (!inputBuf.empty())
 	{
 		int r;
-		r = write(pipein[1], inputBuf.c_str(), inputBuf.size()); // TODO: set bufsize
+		r = write(pipein[1], ptrString, ptrStrlen); // TODO: set bufsize
 		if (r > 0)
 		{
 			std::cout << "Send to pipe" << writePipe << std::endl;
 			writePipe += r;
 			std::cout << "Send to pipe" << writePipe << std::endl;
+			ptrStrlen -= r;
 		}
-		if (r > 0 && r < static_cast <int> (inputBuf.size()))
-			inputBuf.erase(0, r);
-		else if (r == static_cast <int> (inputBuf.size()))
+		if (r > 0 && r < ptrStrlen)
+			ptrString += r;
+		else if (r == ptrStrlen)
 		{
 			inputBuf.clear();
 			std::cout << "CLOSE PIPEIN[1]: " << pipein[1] << std::endl;

@@ -58,6 +58,8 @@ class CGI
 		std::string script_name;
 		std::string root;
 		Header *_header;
+		char *ptrString;
+		int ptrStrlen;
 		int inpBytes;
 		int outpBytes;
 		int writePipe;
