@@ -27,6 +27,7 @@ private:
 //	std::string			_body;//ololo
 	MethodStatus	sendError(int socket);
 	bool fileExists (char *filename);
+	MethodStatus processFile(const std::string &requestBody, MethodStatus bodyStatus);
 
 		// RequestData const &reqData;
 

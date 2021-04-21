@@ -149,6 +149,12 @@ MethodStatus		AMethod::createHeader()
 
 	header.createGeneralHeaders(hmap);
 
+	if (_statusCode == 413 && _fd != -1)
+	{
+		close(_fd);
+		_fd = -1;
+		unlink(data.uri.script_name.c_str());
+	}
 	if (_type == GET || _type == HEAD || (_type == POST && _bodyType == bodyIsTextErrorPage))//post for debug
 		header.addContentLengthHeader(hmap, _body);
 	else
@@ -159,7 +165,7 @@ MethodStatus		AMethod::createHeader()
 		header.addLastModifiedHeader(hmap);
 		header.addContentTypeHeader(hmap);
 	}
-	if (_type == PUT)
+	if (_type == PUT || (_type == POST && _bodyType == bodyIsEmpty)) // todo: body is empty?
 	{
 		header.addContentLocationHeader(hmap);
 		header.addContentTypeHeader(hmap);
