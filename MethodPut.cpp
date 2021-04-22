@@ -14,23 +14,34 @@ void			MethodPut::setUploadPath()
 		_statusCode = 0;
 }
 
+MethodStatus	MethodPut::prepareFdToWrite()
+{
+	if (_fd == -1)
+		_fd = open(data.uri.script_name.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_NONBLOCK, 0644);
+	else
+		_fd = open(data.uri.script_name.c_str(), O_WRONLY | O_CREAT | O_APPEND | O_NONBLOCK, 0644);
+
+	if (_fd < 0){
+		_statusCode = 404;
+		return error;
+	}
+	return ok;
+}
+
 MethodStatus	MethodPut::processBody(const std::string &requestBody, MethodStatus bodyStatus)
 {
 	if (_statusCode == 403 || _statusCode == 405)
 		return ok;
 
-	if (data.location->uploadPass)
+	if (data.location->uploadPass && _fd == -1)
 		setUploadPath();
 
-	_fd = open(data.uri.script_name.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_NONBLOCK, 0644);
-	if (_fd < 0){
-		_statusCode = 404;
+	if (prepareFdToWrite() == error)
 		return error;
-	}
 
-	size_t res = write(_fd, requestBody.c_str(), requestBody.length());
+	ssize_t res = write(_fd, requestBody.c_str(), requestBody.length());
 	close(_fd);
-	if (res < requestBody.length()){
+	if (res < 0 || static_cast<size_t>(res) < requestBody.length()){
 		_statusCode = 404;
 		return error;
 	}

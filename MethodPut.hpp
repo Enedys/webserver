@@ -15,4 +15,5 @@ public:
 	virtual MethodStatus	processBody(const std::string &requestBody, MethodStatus bodyStatus);
 	virtual MethodStatus	manageRequest();
 	void					setUploadPath();
+	MethodStatus			prepareFdToWrite();
 };

@@ -139,6 +139,7 @@ int					AMethod::generateIdxPage(std::string &body)
 
 MethodStatus		AMethod::createHeader()
 {
+	std::cout << "_statusCode: " << _statusCode << std::endl;
 	if (_bodyType == bodyIsCGI)
 		return ok;
 	if ((_type == GET || _type == POST) && _bodyType == bodyIsTextErrorPage)
@@ -149,12 +150,12 @@ MethodStatus		AMethod::createHeader()
 
 	header.createGeneralHeaders(hmap);
 
-	if (_statusCode == 413 && _fd != -1)
-	{
-		close(_fd);
-		_fd = -1;
-		unlink(data.uri.script_name.c_str());
-	}
+	// if (_statusCode == 413 && _fd != -1)// надо убрать
+	// {
+	// 	close(_fd);
+	// 	_fd = -1;
+	// 	unlink(data.uri.script_name.c_str());
+	// }
 	if (_type == GET || _type == HEAD || (_type == POST && _bodyType == bodyIsTextErrorPage))//post for debug
 		header.addContentLengthHeader(hmap, _body);
 	else
@@ -215,7 +216,7 @@ MethodStatus	AMethod::readFromFileToBuf(size_t limit)
 	char	buf[_bs + 1];
 
 	memset(buf, 0, _bs);
-	size_t res = read(_fd, buf, limit);
+	ssize_t res = read(_fd, buf, limit);
 	if (res < 0){
 		_statusCode = 500;
 		close(_fd);
@@ -230,13 +231,14 @@ MethodStatus	AMethod::readFromFileToBuf(size_t limit)
 
 MethodStatus		AMethod::sendBuf(int socket, std::string const & response)
 {
-	size_t sentBytes = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
+	ssize_t res = send(socket, response.c_str(), response.length(), MSG_DONTWAIT);
 
-	if (sentBytes < 0 || errno == EMSGSIZE){
+	if (res < 0 || errno == EMSGSIZE){
 		_statusCode = 500;
 		close(_fd);
 		return error;
 	}
+	size_t sentBytes(res);
 	if (sentBytes < response.length()){
 		_remainder.assign(response.c_str(), sentBytes, response.length() - sentBytes);
 		_sentBytesTotal += sentBytes;
