@@ -266,6 +266,17 @@ void Parser::getCgi()
 		serv.cgi.insert(std::pair<std::string, std::string>(vecValues[i], vecValues[vecValues.size() - 1]));
 }
 
+void Parser::getCgiFile()
+{
+	std::string value = getValue("server: cgi_file: ");
+	if (value == "allow")
+		serv.cgiToFile = true;
+	else if (value == "deny")
+		serv.cgiToFile = false;
+	else
+		error("server: cgi_file: expected allow | deny");
+}
+
 void Parser::parseValues()
 {
 	std::string value;
@@ -293,6 +304,8 @@ void Parser::parseValues()
 			getPageSize();
 		else if (value == "cgi")
 			getCgi();
+		else if (value == "cgi_file")
+			getCgiFile();
 		else
 			error ("Server: invalid token " + value);
 	}
@@ -435,6 +448,18 @@ void Parser::getLocIndex()
 	loc.index = getVectorValues("location: index: ");
 }
 
+void Parser::getLocCgiFile()
+{
+	std::string value = getValue("location: cgi_file: ");
+	loc.cgiToFileSet = true;
+	if (value == "allow")
+		loc.cgiToFile = true;
+	else if (value == "deny")
+		loc.cgiToFile = false;
+	else
+		error("location: cgi_file: expected allow | deny");
+}
+
 void Parser::parseLocValues()
 {
 	std::string value;
@@ -468,6 +493,8 @@ void Parser::parseLocValues()
 		getLocIndex();
 	else if (value == "page_size")
 		getLocPageSize();
+	else if (value == "cgi_file")
+		getLocCgiFile();
 	else
 		error("Location: invalid token");
 }
@@ -537,6 +564,7 @@ void Parser::initServ()
 	serv.locs.clear();
 	serv.root.clear();
 	serv.cgi.clear();
+	serv.cgiToFile = false;
 }
 
 void Parser::initLoc()
@@ -555,6 +583,8 @@ void Parser::initLoc()
 	loc.putAvailable = true;
 	loc.optionsAvailable = true;
 	loc.deleteAvailable = true;
+	loc.cgiToFile = false;
+	loc.cgiToFileSet = false;
 	loc.path.clear();
 	loc.cgi.clear();
 	loc.index.clear();
@@ -589,6 +619,8 @@ void Parser::fillRootLoc() // todo: not only fill root loc, probably rename
 			if (serv.locs[i].cgi.empty())
 				serv.locs[i].cgi = serv.cgi; // todo: reference?
 		}
+		if (!serv.locs[i].cgiToFileSet)
+			serv.locs[i].cgiToFile = serv.cgiToFile;
 	}
 	for (unsigned int i = 0; i < serv.locs.size(); i++)
 	{

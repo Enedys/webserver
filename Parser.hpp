@@ -28,6 +28,7 @@ typedef struct s_serv
 {
 	std::string host;
 	int			port;
+	bool		cgiToFile;
 	std::map<int, std::string> error_pages;
 	std::string serverName;
 	int 		bodySizeLimit;
@@ -42,12 +43,13 @@ struct s_loc
 	std::string root;////////error page
 	std::string fileRequestIsDir;
 	std::map<std::string, std::string> cgi;
-	int 		bodySizeLimit;
 	std::vector<std::string> index;
 	std::string auth;
 	std::string authLogPass;
-	bool uploadPass;
 	std::string uploadStore;
+	int bodySizeLimit;
+	bool cgiToFile;
+	bool uploadPass;
 	bool autoindex;
 	bool getAvailable;
 	bool postAvailable;
@@ -55,6 +57,7 @@ struct s_loc
 	bool putAvailable;
 	bool optionsAvailable;
 	bool deleteAvailable;
+	bool cgiToFileSet;
 };
 
 typedef	struct s_ext_serv
@@ -123,6 +126,7 @@ class Parser
 		void 	getServerName();
 		void 	getErrorPage();
 		void 	getPageSize();
+		void 	getCgiFile();
 		void 	getLocRoot();
 		void 	getLocAutoindex();
 		void 	getLocFileIsDir();
@@ -134,6 +138,7 @@ class Parser
 		void 	getLocUploadStore();
 		void	getLocIndex();
 		void	getLocPageSize();
+		void 	getLocCgiFile();
 		void 	initServ();
 		void 	initLoc();
 
