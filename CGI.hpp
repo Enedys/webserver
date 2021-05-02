@@ -29,14 +29,18 @@ class CGI
 		int pipein[2], pipeout[2]; // 2 pipes
 		int pid; // fork id
 		int processStatus;
+		int tmpFile;
 		bool headersDone;
 		bool headersNotFound;
 		bool headersNotFoundProcessExited;
 		bool contentLength;
 		bool headersSent;
+		bool writeToFile;
+		bool processDone; // when we are using file;
 		std::string inputBuf;
 		std::string sendBuf;
 		std::string outputBuf; // Smaller string, just to get data to send;
+
 		const char *execpath; // remove const?
 		char **args;
 		char **env;
@@ -46,6 +50,8 @@ class CGI
 		void freeMem();
 		void initPipes();
 		void initFork();
+		void initForkFile();
+		void initPipesFile();
 		MethodStatus readFromProcess(std::string &str);
 		MethodStatus sendOutput(std::string &output, int socket);
 		MethodStatus outputChunkedFromBuf(std::string &str);

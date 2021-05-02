@@ -150,12 +150,6 @@ MethodStatus		AMethod::createHeader()
 
 	header.createGeneralHeaders(hmap);
 
-	// if (_statusCode == 413 && _fd != -1)// надо убрать
-	// {
-	// 	close(_fd);
-	// 	_fd = -1;
-	// 	unlink(data.uri.script_name.c_str());
-	// }
 	if (_type == GET || _type == HEAD || (_type == POST && _bodyType == bodyIsTextErrorPage))//post for debug
 		header.addContentLengthHeader(hmap, _body);
 	else

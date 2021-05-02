@@ -39,26 +39,35 @@ mapIntStr sc = scInit();
 int main()
 {
 	Parser	parser;
-	parser.parse("webserv_tester.conf");
-	// parser.parse("webserv.conf");
-
-	WebServer	myWebServer;
-	std::cout << parser.servers.size() << std::endl;
-
-	for (size_t i = 0; i < parser.servers_ext.size(); i++)
+	try
 	{
-		std::cout << "Host: " << parser.servers_ext[i].host << "\tPort: " << parser.servers_ext[i].port << std::endl;
-		try
+		parser.parse("webserv_tester.conf");
+		// parser.parse("webserv.conf");
+
+		WebServer myWebServer;
+		std::cout << parser.servers.size() << std::endl;
+
+		for (size_t i = 0; i < parser.servers_ext.size(); i++)
 		{
-			myWebServer.appendServer(new Server(parser.servers_ext[i]));
+			std::cout << "Host: " << parser.servers_ext[i].host << "\tPort: " << parser.servers_ext[i].port
+					  << std::endl;
+			try
+			{
+				myWebServer.appendServer(new Server(parser.servers_ext[i]));
+			}
+			catch (...)
+			{
+				std::cerr << "Creation server error" << std::endl;
+				return (1);
+			}
 		}
-		catch (...)
-		{
-			std::cerr << "Creation server error" << std::endl;
-			return (1);
-		}
+		myWebServer.showServerList();
+		myWebServer.runWebServer();
 	}
-	myWebServer.showServerList();
-	myWebServer.runWebServer();
+	catch (const std::bad_alloc &)
+	{
+		std::cout << "out of memory! Try to use cgi_file allow for cgi in config\n";
+		exit(1);
+	}
 	return (0);
 }

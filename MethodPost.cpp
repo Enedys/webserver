@@ -107,7 +107,7 @@ MethodStatus MethodPost::processBody(const std::string &requestBody, MethodStatu
 
 MethodStatus	MethodPost::createHeader()
 {
- 	if (_statusCode == 413 && _fd != -1)// надо убрать
+ 	if (_statusCode == 413 && _fd != -1)
 	{
 		close(_fd);
 	 	_fd = -1;

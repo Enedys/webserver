@@ -8,29 +8,34 @@ void CGI::initPipes()
 		status = failed;
 		throw CGI::pipeFailed();
 	}
-	if (pipe(pipeout) < 0)
+	if (!writeToFile)
 	{
-		status = failed;
-		close(pipein[0]);
-		close(pipein[1]);
-		throw CGI::pipeFailed();
+		if (pipe(pipeout) < 0)
+		{
+			status = failed;
+			close(pipein[0]);
+			close(pipein[1]);
+			throw CGI::pipeFailed();
+		}
+		if (fcntl(pipeout[0], F_SETFL, O_NONBLOCK) < 0)
+		{
+			freeMem();
+			status = failed;
+			throw CGI::lockCanNotSet();
+		}
 	}
-	processStatus = 0;
-	/*
-	 * next we need to set fd as unblockable, so we won't hang at write function. Write will return -1 if pipe is full;
- 	 */
+	else
+	{
+		tmpFile = open(".", O_TMPFILE | O_RDWR, 0644);
+		pipeout[0] = tmpFile;
+	}
 	if (fcntl(pipein[1], F_SETFL, O_NONBLOCK) < 0)
 	{
 		freeMem();
 		status = failed;
 		throw CGI::lockCanNotSet();
 	}
-	if (fcntl(pipeout[0], F_SETFL, O_NONBLOCK) < 0)
-	{
-		freeMem();
-		status = failed;
-		throw CGI::lockCanNotSet();
-	}
+	processStatus = 0;
 }
 
 void CGI::initFork()
@@ -46,15 +51,23 @@ void CGI::initFork()
 	{
 		for (int i = 3; i < 1024; i++)
 		{
-			if (i != pipein[0] && i != pipein[1] && i != pipeout[0] && i != pipeout[1])
+			if (i != pipein[0] && i != pipein[1] && i != pipeout[0] && i != pipeout[1] && i != tmpFile)
 				close(i);
 		}
 		dup2(pipein[0], 0);
 		close(pipein[0]);
 		close(pipein[1]);
-		dup2(pipeout[1], 1);
-		close(pipeout[1]);
-		close(pipeout[0]);
+		if (!writeToFile)
+		{
+			dup2(pipeout[1], 1);
+			close(pipeout[1]);
+			close(pipeout[0]);
+		}
+		else
+		{
+			dup2(tmpFile, 1);
+			close(tmpFile);
+		}
 		execve(execpath, args, env);
 		close(0);
 		close(1);
@@ -85,6 +98,8 @@ void CGI::init()
 	inpBytes = 0;
 	outpBytes = 0;
 	writePipe = 0;
+	tmpFile = -1;
+	processDone = false;
 	status = not_started;
 	initPipes();
 	initFork();
@@ -476,6 +491,15 @@ MethodStatus CGI::getHeaders()
 	int r;
 	inputFromBuf(); // todo: temporary
 	r = read(pipeout[0], buf, outpBufSize); // read < 0 = pipe is empty..
+	if (writeToFile && r == 0)
+	{
+		if (headersNotFoundProcessExited)
+		{
+			httpStatus = 200;
+			concatHeaders();
+		}
+		return ok;
+	}
 	if (r < 0)
 	{
 		MethodStatus st = cgiProcessStatus();
@@ -559,6 +583,11 @@ MethodStatus CGI::readFromProcess(std::string &str)
 	if (r > 0)
 		outpBytes += r;
 	std::cout << "Bytes output: " << outpBytes << " out of " << inpBytes << std:: endl;
+	if (writeToFile && r == 0)
+	{
+		str.clear();
+		return ok;
+	}
 	if (r < 0)
 	{
 		str.clear();
@@ -632,11 +661,26 @@ MethodStatus CGI::sendOutput(std::string &output, int socket)
 	sendBuf.clear();
 	return ok;
 }
-// TODO: GET HTTP_STATUS WITHOUT STRING;
+
 MethodStatus CGI::smartOutput(std::string &str)
 {
 	str.clear();
 	MethodStatus mStatus;
+	if (writeToFile && !processDone)
+	{
+		inputFromBuf();
+		mStatus = cgiProcessStatus();
+		if (mStatus == error)
+			return error;
+		else if (mStatus == ok)
+		{
+			headersDone = false;
+			headersNotFoundProcessExited = false;
+			lseek(tmpFile, 0L, SEEK_SET);
+			processDone = true;
+		}
+		return inprogress;
+	}
 	if (!headersDone)
 	{
 		getHeaders();
@@ -654,8 +698,11 @@ MethodStatus CGI::smartOutput(std::string &str)
 		mStatus = outputContentLength(str);
 	else
 		mStatus = outputChunked(str);
-	if (str.empty() && mStatus == ok && !contentLength)
+	if (str.empty() && (mStatus == ok || writeToFile) && !contentLength)
+	{
 		str = "0\r\n\r\n";
+		mStatus = ok;
+	}
 	return mStatus;
 }
 
@@ -732,6 +779,8 @@ int CGI::init(const RequestData &data)
 	args[0] = (char *)data.cgi_bin.c_str();
 	args[1] = (char *)data.uri.script_name.c_str();
 	args[2] = NULL;
+	if (data.location->cgiToFile)
+		writeToFile = true;
 	setExecpath(args[0]);
 	setRoot(data.location->root); // todo: need?
 	setScriptName(data.uri.script_name); // todo: need?
