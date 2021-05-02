@@ -797,6 +797,8 @@ int CGI::init(const RequestData &data)
 	args[2] = NULL;
 	if (data.location->cgiToFile)
 		writeToFile = true;
+	else
+		writeToFile = false;
 	setExecpath(args[0]);
 	setRoot(data.location->root); // todo: need?
 	setScriptName(data.uri.script_name); // todo: need?
