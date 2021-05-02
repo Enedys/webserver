@@ -105,7 +105,16 @@ MethodStatus MethodPost::processBody(const std::string &requestBody, MethodStatu
 	return (bodyStatus);
 }
 
-// MethodStatus	MethodPost::createHeader()
+MethodStatus	MethodPost::createHeader()
+{
+ 	if (_statusCode == 413 && _fd != -1)// надо убрать
+	{
+		close(_fd);
+	 	_fd = -1;
+	 	unlink(data.uri.script_name.c_str());
+	}
+	return AMethod::createHeader();
+}
 // {
 // 	std::cout << "_bodyType createHeader: " << _bodyType << std::endl;
 // 	if (_bodyType == bodyIsCGI){
