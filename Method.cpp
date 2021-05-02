@@ -60,7 +60,7 @@ int					&AMethod::getFd() {return _fd; }
 void				addAuthors(std::string & body)
 {
 	body = "<a href='https://github.com/Olkanaut'>\
-	<img src='/favicon.ico' alt='Bshabillum' style='width:100px;height:100px;' usemap='#links'>\
+	<img src='/logo.png' alt='Bshabillum' style='width:100px;height:100px;' usemap='#links'>\
 	<map name='links'>\
 	<area shape='rect' coords='2,2,99,33' alt='bshang' href='https://github.com/Olkanaut'>\
 	<area shape='rect' coords='2,34,99,66' alt='abibi' href='https://github.com/AndreyTruesh'>\
@@ -168,8 +168,6 @@ MethodStatus		AMethod::createHeader()
 	if (_type == OPTION || _statusCode == 405)
 		header.addAllowHeader(hmap);
 
-	// header.addRetryAfterHeader(hmap);//503 429
-	// header.addTransferEncodingHeader(hmap, hmapRequest);
 	header.addAuthenticateHeader(hmap);
 
 	std::string headerStr;
@@ -183,15 +181,18 @@ size_t			AMethod::defineRWlimits()
 {
 	size_t	readBuf = _bs;
 
+	//* sending the next part of the response
 	if (_sendingInProgress == 1)
 	{
-		if (!_remainder.empty()){//что-то не отослалось в send
+		//* smth was left to send from the prev iteration (send)
+		if (!_remainder.empty()){
 			readBuf = _bs - _remainder.length();
 			_body = _remainder;
 		}
 		return readBuf;
 	}
 
+	//* here for the first time
 	if (_bodyType == bodyIsFile)
 	{
 		struct stat sbuf;
@@ -233,6 +234,7 @@ MethodStatus		AMethod::sendBuf(int socket, std::string const & response)
 		return error;
 	}
 	size_t sentBytes(res);
+	//* saving what was not sent in remainder
 	if (sentBytes < response.length()){
 		_remainder.assign(response.c_str(), sentBytes, response.length() - sentBytes);
 		_sentBytesTotal += sentBytes;
@@ -240,11 +242,13 @@ MethodStatus		AMethod::sendBuf(int socket, std::string const & response)
 		return inprogress;
 	};
 
+	//* current buf was sent successfully
 	_remainder.clear();
 	if (_bodyType == bodyIsCGI)
 		return _statusCode == ok ? ok : inprogress;
 
 	_sentBytesTotal += sentBytes;
+	//* there is smth more to send, need next buf iteration
 	if (_sentBytesTotal < _bytesToSend){
 		_body.clear();
 		_sendingInProgress = 1;
@@ -258,6 +262,7 @@ MethodStatus		AMethod::sendBuf(int socket, std::string const & response)
 
 MethodStatus		AMethod::sendResponse(int socket)
 {
+	//* managing buf size for sending: file size, remainder
 	size_t readBuf = defineRWlimits();
 
 	if (_bodyType == bodyIsCGI && _remainder.empty())

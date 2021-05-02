@@ -10,14 +10,22 @@ void			MethodPut::setUploadPath()
 	uploadUri += fname;
 	data.uri.script_name = uploadUri;
 
+	//* checking in the updated folder
 	if (fileExists(data.uri.script_name.c_str()))
 		_statusCode = 0;
 }
 
 MethodStatus	MethodPut::prepareFdToWrite()
 {
+	//* never was opened
 	if (_fd == -1)
 		_fd = open(data.uri.script_name.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_NONBLOCK, 0644);
+
+	//* if fd was already opened bc of the chuncked body
+	else if (fcntl(_fd , F_GETFD) != -1)
+		return ok;
+
+	//* file was not opened, but it exists
 	else
 		_fd = open(data.uri.script_name.c_str(), O_WRONLY | O_CREAT | O_APPEND | O_NONBLOCK, 0644);
 
@@ -30,9 +38,11 @@ MethodStatus	MethodPut::prepareFdToWrite()
 
 MethodStatus	MethodPut::processBody(const std::string &requestBody, MethodStatus bodyStatus)
 {
-	if (_statusCode == 403 || _statusCode == 405)
+	//* if error occured earlier (but file may not exist before)
+	if (_statusCode >= 400 && _statusCode != 404)
 		return ok;
 
+	//* here for the first time, setting up the folder to load into if it was set
 	if (data.location->uploadPass && _fd == -1)
 		setUploadPath();
 
@@ -40,7 +50,7 @@ MethodStatus	MethodPut::processBody(const std::string &requestBody, MethodStatus
 		return error;
 
 	ssize_t res = write(_fd, requestBody.c_str(), requestBody.length());
-	close(_fd);
+
 	if (res < 0 || static_cast<size_t>(res) < requestBody.length()){
 		_statusCode = 404;
 		return error;
@@ -50,6 +60,8 @@ MethodStatus	MethodPut::processBody(const std::string &requestBody, MethodStatus
 
 	if (bodyStatus == inprogress)
 		return inprogress;
+	else
+		close(_fd);
 	return ok;
 }
 

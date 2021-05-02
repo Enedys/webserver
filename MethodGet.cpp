@@ -20,9 +20,6 @@ MethodStatus	MethodGet::processBody(const std::string &requestBody, MethodStatus
 
 MethodStatus	MethodGet::manageRequest()
 {
-	// std::cout << "_bodyType manageRequest: " << _bodyType << std::endl;
-	// std::cout << "retStatus manageRequest: " << _statusCode << std::endl;
-
 	if (!data.location->getAvailable)
 		_statusCode = 405;
 

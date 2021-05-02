@@ -526,7 +526,6 @@ void	Header::addTransferEncodingHeader(stringMap &_headersMap, stringMap const &
 	if (it != _headersMapRequest.end())
 	{
 		_headersMap.insert(std::pair<std::string, std::string>("Transfer-Encoding", it->second));
-		std::cout << it->second << std::endl;
 	}
 }
 

@@ -34,6 +34,13 @@ protected:
 	AMethod(AMethod const & src);
 	virtual AMethod &operator=(AMethod const & src);
 
+	virtual size_t			defineRWlimits();
+	virtual MethodStatus	readFromFileToBuf(size_t limit);
+	virtual MethodStatus	sendBuf(int socket, std::string const & buf);
+
+	virtual void			generateErrorPage(std::string &body);
+	virtual int				generateIdxPage(std::string &body);
+
 public:
 	AMethod(int &status, RequestData &data);
 	virtual ~AMethod();
@@ -47,15 +54,9 @@ public:
 	virtual MethodStatus	manageRequest() = 0;
 	virtual MethodStatus	sendResponse(int socket);
 
-	virtual size_t			defineRWlimits();
-	virtual MethodStatus	readFromFileToBuf(size_t limit);
-	virtual MethodStatus	sendBuf(int socket, std::string const & buf);
-
 	int						getStatusCode();
 	CGI						&getCGI();
 	bodyType				&getBodyType();
 	int						&getFd();
 
-	virtual void			generateErrorPage(std::string &body);
-	virtual int				generateIdxPage(std::string &body);
 };
