@@ -69,6 +69,7 @@ class CGI
 		int inpBytes;
 		int outpBytes;
 		int writePipe;
+		bool cgiInternalError;
 		static const int outpBufSize = BUFSIZ * 4;
 	public:
 		void setScriptName(const std::string &scriptName);

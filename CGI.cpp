@@ -104,6 +104,7 @@ void CGI::init()
 	initPipes();
 	initFork();
 	headersDone = false;
+	cgiInternalError = false;
 	headersNotFound = false;
 	headersNotFoundProcessExited = false;
 	contentLength = false;
@@ -277,9 +278,10 @@ MethodStatus CGI::cgiProcessStatus()
 {
 	std::string str;
 	int wp = waitpid(pid, &processStatus, WNOHANG); // returns > 0 if process stopped;
-	if (processStatus == 1024)
+	if (processStatus == 1024 || processStatus == 139) // todo: clarify
 	{
-		freeMem();
+		//freeMem();
+		cgiInternalError = true;
 		status = failed;
 		return (error); // execve failed;
 	}
@@ -666,12 +668,26 @@ MethodStatus CGI::smartOutput(std::string &str)
 {
 	str.clear();
 	MethodStatus mStatus;
+	if (cgiInternalError)
+	{
+		if (!headersSent)
+		{
+			httpStatus = 500;
+			concatHeaders();
+			_header->headersToString(_headersMap, str);
+			headersSent = true;
+			delete _header;
+			return inprogress;
+		}
+		str = "0\r\n\r\n";
+		return ok;
+	}
 	if (writeToFile && !processDone)
 	{
 		inputFromBuf();
 		mStatus = cgiProcessStatus();
 		if (mStatus == error)
-			return error;
+			return inprogress;
 		else if (mStatus == ok)
 		{
 			headersDone = false;
