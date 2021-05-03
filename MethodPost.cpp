@@ -79,7 +79,7 @@ MethodStatus MethodPost::processFile(const std::string &requestBody, MethodStatu
 		timeval tv;
 		gettimeofday(&tv, NULL);
 		data.uri.request_uri = "/" + size2Dec(tv.tv_sec * 1000000 + tv.tv_usec);
-		data.uri.script_name = data.uri.script_name + data.uri.request_uri;
+		data.uri.script_name = data.location->root + data.uri.request_uri;
 		_fd = open(data.uri.script_name.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_NONBLOCK, 0644);
 	}
 	size_t res = write(_fd, requestBody.c_str(), requestBody.length());
