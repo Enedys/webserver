@@ -520,7 +520,7 @@ void		RequestData::createCGIEnv()
 	int	i = 0;
 	if (cgi_conf)
 		cleanCGIenv();
-	if (!(cgi_conf = (char **)malloc(envCgiSize * sizeof(char *))))
+	if (!(cgi_conf = (char **)malloc((envCgiSize + _reqHeads->size() + 1) * sizeof(char *))))
 		return ;
 	addCgiVar(i++, "GATEWAY_INTERFACE=CGI/1.1");
 	addCgiVar(i++, "SERVER_PROTOCOL=HTTP/1.1");
@@ -553,14 +553,28 @@ void		RequestData::createCGIEnv()
 	addCgiVar(i++, "SCRIPT_FILENAME=" + uri.script_name);
 	addCgiVar(i++, "REMOTE_ADDR=" + getClientIp(_addr.sin_addr.s_addr));
 	addCgiVar(i++, "HTTP_HOST=" + serv->host + ":" + size2Hex(serv->port, 10));
-	if (_reqHeads->find("x-secret-header-for-test") != _reqHeads->end())
-		addCgiVar(i++, "HTTP_X-SECRET-HEADER-FOR-TEST=" + _reqHeads->find("x-secret-header-for-test")->second);
-	if (_reqHeads->find("cookie") != _reqHeads->end())
-		addCgiVar(i++, "HTTP_COOKIE=" + _reqHeads->find("cookie")->second);
-	if (_reqHeads->find("referer") != _reqHeads->end())
-		addCgiVar(i++, "HTTP_REFERER=" + _reqHeads->find("referer")->second);
-	if (_reqHeads->find("x-requested-with") != _reqHeads->end())
-		addCgiVar(i++, "HTTP_X-REQUESTED-WITH=" + _reqHeads->find("x-requested-with")->second);
+//	if (_reqHeads->find("x-secret-header-for-test") != _reqHeads->end())
+//		addCgiVar(i++, "HTTP_X-SECRET-HEADER-FOR-TEST=" + _reqHeads->find("x-secret-header-for-test")->second);
+//	if (_reqHeads->find("cookie") != _reqHeads->end())
+//		addCgiVar(i++, "HTTP_COOKIE=" + _reqHeads->find("cookie")->second);
+//	if (_reqHeads->find("referer") != _reqHeads->end())
+//		addCgiVar(i++, "HTTP_REFERER=" + _reqHeads->find("referer")->second);
+//	if (_reqHeads->find("x-requested-with") != _reqHeads->end())
+//		addCgiVar(i++, "HTTP_X-REQUESTED-WITH=" + _reqHeads->find("x-requested-with")->second);
+//accept-charset accept-language content-language user-agent content-type host
+	constMapIter hIt = _reqHeads->begin();
+	for (constMapIter hIt = _reqHeads->begin(); hIt != _reqHeads->end(); hIt++)
+	{
+		if (hIt->first != "accept-charset" && hIt->first != "accept-language" && hIt->first != "content-language" &&
+		hIt->first != "user-agent" && hIt->first != "content-type" && hIt->first != "host" && hIt->first != "accept-encoding")
+		{
+			std::string confPar = "HTTP_" + hIt->first + "=";
+			for (std::string::iterator sIt = confPar.begin(); sIt != confPar.end(); sIt++)
+				*sIt = static_cast <char> (std::toupper(*sIt));
+			confPar += hIt->second;
+			addCgiVar(i++, confPar);
+		}
+	}
 	if (error_code >=400)
 	{
 		addCgiVar(i++, "AUTH_TYPE=");
