@@ -144,7 +144,7 @@ MethodStatus
 		return (error);
 	URI		uri;
 	uri.procUri(ep.second);
-	uri.setTranslatedPath(_data.serv->root);
+	//uri.setTranslatedPath(_data.serv->root);
 	_data.uri = uri;
 	if (!fileExist(uri.script_name))
 		return (error);
