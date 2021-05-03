@@ -18,6 +18,7 @@ private:
 	std::string const		&_root;
 	std::string const		_extension;
 	std::string const		_request_uri;
+	std::string				_server_name;
 	s_loc const				*_location;
 	int const				_statusCode;
 

@@ -398,6 +398,7 @@ Header::Header(RequestData const &data, int const statusCode)
 	  _root(data.location->root),
 	  _extension(data.uri.extension),
 	  _request_uri(data.uri.request_uri),
+	  _server_name(data.serv->serverName),
 	  _location(data.location),
 	  _statusCode(statusCode) {}
 
@@ -423,7 +424,9 @@ void	Header::createGeneralHeaders(stringMap &headersMap)
 	tm1 = gmtime(&tv.tv_sec);
 	strftime(buf1, 100, "%a, %d %b %Y %H:%M:%S GMT", tm1);
 	std::string date = std::string(buf1);
-	headersMap.insert(std::pair<std::string, std::string>("Server", "Bshabillum/1.0.7"));
+	if (_server_name.empty())
+		_server_name = "Bshabillum";
+	headersMap.insert(std::pair<std::string, std::string>("Server", _server_name + "/1.0.7"));
 	headersMap.insert(std::pair<std::string, std::string>("Date", date));
 }
 

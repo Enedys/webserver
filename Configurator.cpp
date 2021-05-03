@@ -162,7 +162,9 @@ mapIntStr defaultErrorPages;
 static struct defaultErrorPagesInit
 {
 	defaultErrorPagesInit(){
-		defaultErrorPages[404] = "/errors/404-error.jpg";
+		defaultErrorPages[403] = "/errors/403.png";
+		defaultErrorPages[404] = "/errors/404.png";
+		defaultErrorPages[405] = "/errors/405.png";
 	}
 } defaultErrorPagesInit;
 

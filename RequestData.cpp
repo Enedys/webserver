@@ -611,5 +611,5 @@ void		RequestData::prepareData()
 	procServer();
 	procUri();
 	procAuthorization();
-	std::cout << "LOCATION_ROOT: " << location->root << std::endl;
+	// std::cout << "LOCATION_ROOT: " << location->root << std::endl;
 }
