@@ -13,7 +13,8 @@ void	Configurator::setFd(int &fd) const
 		return ;
 	if (fd == _fd)
 		return ;
-	close(fd);
+	if (fd != -1)
+		close(fd);
 	fd = _fd;
 }
 
@@ -157,6 +158,14 @@ MethodStatus
 	return (ok);
 }
 
+mapIntStr defaultErrorPages;
+static struct defaultErrorPagesInit
+{
+	defaultErrorPagesInit(){
+		defaultErrorPages[404] = "/errors/404-error.jpg";
+	}
+} defaultErrorPagesInit;
+
 MethodStatus
 		Configurator::configurateErrorOutput()
 {
@@ -172,7 +181,7 @@ MethodStatus
 	MethodStatus	_status = setErrorPage(configErrorPage);
 	if (_status != error)
 		return (_status);
-	bsPair	defaultErrorPage = getPageByCode(_data.serv->error_pages, _statusCode); // here default pages need to find
+	bsPair	defaultErrorPage = getPageByCode(defaultErrorPages, _statusCode); // here default pages need to find
 	_status = setErrorPage(defaultErrorPage);
 	if (_status != error)
 		return (_status);

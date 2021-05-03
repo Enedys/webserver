@@ -388,14 +388,6 @@ stringMap mimeInit()
 }
 stringMap mime = mimeInit();
 
-mapIntStr defaultErrorPages;
-static struct defaultErrorPagesInit
-{
-	defaultErrorPagesInit(){
-		defaultErrorPages[404] = "/errors/404-error.jpg";
-	}
-} defaultErrorPagesInit;
-
 Header::Header(std::string const &path, std::string const &root, int const statusCode)
 	: _path(path),
 	  _root(root),
