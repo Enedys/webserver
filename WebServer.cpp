@@ -45,7 +45,7 @@ WebServer::client	&WebServer::detachConnection(client &cIt)
 	// close((*cIt)->getClientSocket());
 	FD_CLR((*cIt)->getClientSocket(), &_fdsToRead);
 	FD_CLR((*cIt)->getClientSocket(), &_fdsToWrite);
-	(*cIt)->~Client();
+	delete *cIt;
 	cIt = _clientList.erase(cIt);
 	return (cIt);
 }
