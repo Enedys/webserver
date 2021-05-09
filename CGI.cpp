@@ -69,9 +69,10 @@ void CGI::initFork()
 			close(tmpFile);
 		}
 		execve(execpath, args, env);
+		std::cout << "ALARM! EXECVE FAILED!\n"; // what to do?
 		close(0);
 		close(1);
-		std::cout << "ALARM! EXECVE FAILED!\n"; // what to do?
+		close(2);
 		exit(4);
 	}
 	else
@@ -124,6 +125,7 @@ void CGI::input(const std::string &str, MethodStatus mStatus) // inputting body
 	{
 		std::cout << "CLOSE PIPEIN[1]: " << pipein[1] << std::endl;
 		close(pipein[1]);//return
+		pipein[1] = -1;
 		return ;
 	}
 	inpBytes += str.length();
@@ -278,7 +280,7 @@ MethodStatus CGI::cgiProcessStatus()
 {
 	std::string str;
 	int wp = waitpid(pid, &processStatus, WNOHANG); // returns > 0 if process stopped;
-	if (processStatus == 1024 || processStatus == 139) // todo: clarify
+	if (processStatus == 1024 || (processStatus > 128 && processStatus < 160)) // todo: clarify
 	{
 		//freeMem();
 		cgiInternalError = true;
@@ -389,6 +391,7 @@ CGI::~CGI()
 {
 	std::cout << " -- CGI DESTR -- \n";
 	freeMem();
+	//cgiProcessStatus();
 	//sleep(1);
 	//sleep(10);
 }
