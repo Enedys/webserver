@@ -562,7 +562,6 @@ void		RequestData::createCGIEnv()
 //	if (_reqHeads->find("x-requested-with") != _reqHeads->end())
 //		addCgiVar(i++, "HTTP_X-REQUESTED-WITH=" + _reqHeads->find("x-requested-with")->second);
 //accept-charset accept-language content-language user-agent content-type host
-	constMapIter hIt = _reqHeads->begin();
 	for (constMapIter hIt = _reqHeads->begin(); hIt != _reqHeads->end(); hIt++)
 	{
 		if (hIt->first != "accept-charset" && hIt->first != "accept-language" && hIt->first != "content-language" &&
