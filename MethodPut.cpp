@@ -61,7 +61,10 @@ MethodStatus	MethodPut::processBody(const std::string &requestBody, MethodStatus
 	if (bodyStatus == inprogress)
 		return inprogress;
 	else
+	{
 		close(_fd);
+		_fd = -1;
+	}
 	return ok;
 }
 
