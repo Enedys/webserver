@@ -17,18 +17,8 @@ void			MethodPut::setUploadPath()
 
 MethodStatus	MethodPut::prepareFdToWrite()
 {
-	//* never was opened
 	if (_fd == -1)
 		_fd = open(data.uri.script_name.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_NONBLOCK, 0644);
-
-	//* if fd was already opened bc of the chuncked body
-	else if (fcntl(_fd , F_GETFD) != -1)
-		return ok;
-
-	//* file was not opened, but it exists
-	else
-		_fd = open(data.uri.script_name.c_str(), O_WRONLY | O_CREAT | O_APPEND | O_NONBLOCK, 0644);
-
 	if (_fd < 0){
 		_statusCode = 404;
 		return error;
@@ -60,11 +50,8 @@ MethodStatus	MethodPut::processBody(const std::string &requestBody, MethodStatus
 
 	if (bodyStatus == inprogress)
 		return inprogress;
-	else
-	{
-		close(_fd);
-		_fd = -1;
-	}
+	close(_fd);
+	_fd = -1;
 	return ok;
 }
 
